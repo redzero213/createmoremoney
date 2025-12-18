@@ -1,1029 +1,972 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="回贈哥">
-    <title>個人理財與信用卡管家</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>回贈哥 - 智能簽賬管理</title>
+    <!-- 引入 Chart.js 畫圖表 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            /* 深色模式 (預設) */
-            --bg-color: #121212;
-            --surface-color: #1e1e1e;
+            --primary: #00d26a; /* 回贈哥綠 */
+            --primary-dark: #00a855;
+            --bg: #121212;
+            --surface: #1e1e1e;
             --surface-hover: #2d2d2d;
-            --primary-color: #bb86fc;
-            --primary-bg-subtle: rgba(187, 134, 252, 0.1);
-            --secondary-color: #03dac6;
-            --danger-color: #cf6679;
-            --success-color: #4caf50;
-            --text-primary: #e0e0e0;
-            --text-secondary: #a0a0a0;
-            --border-color: #333333;
-            --input-bg: #121212;
-            --btn-text-color: #000000;
-            
-            --border-radius: 12px;
-            --transition: all 0.3s ease;
-            --safe-area-bottom: env(safe-area-inset-bottom);
+            --text: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --danger: #ff4d4d;
+            --income: #4facfe; /* 收入藍 */
+            --repay: #ff9f43; /* 還款橙 */
+            --border: #333;
+            --card-gradient: linear-gradient(135deg, #2c3e50, #000000);
         }
 
-        /* 淺色模式變數 */
-        body.light-mode {
-            --bg-color: #f5f5f5;
-            --surface-color: #ffffff;
-            --surface-hover: #e0e0e0;
-            --primary-color: #6200ee;
-            --primary-bg-subtle: rgba(98, 0, 238, 0.1);
-            --secondary-color: #018786;
-            --danger-color: #b00020;
-            --success-color: #2e7d32;
-            --text-primary: #000000;
-            --text-secondary: #666666;
-            --border-color: #cccccc;
-            --input-bg: #ffffff;
-            --btn-text-color: #ffffff;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        input, textarea {
-            -webkit-user-select: text;
-            user-select: text;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
+        /* Header */
+        header {
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
             display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            padding: 20px 20px calc(20px + var(--safe-area-bottom)) 20px;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            justify-content: space-between;
+            align-items: center;
         }
+        h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+        .logo-icon { font-size: 1.4rem; }
 
         /* Layout */
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            width: 100%;
-            position: relative;
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+
+        /* Dashboard Stats */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Lists */
+        .list-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px solid var(--border);
         }
+        .list-item:last-child { border-bottom: none; }
+        .item-main { flex: 1; }
+        .item-title { font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .item-sub { font-size: 0.8rem; color: var(--text-muted); }
+        .item-amount { font-weight: bold; font-size: 1.1rem; text-align: right; margin-left: 10px; }
+        
+        .cat-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: #333; color: #ccc; }
+        .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+        
+        /* Repayment Tag */
+        .repay-tag { font-size: 0.75rem; color: var(--repay); border: 1px solid var(--repay); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
 
-        header {
-            margin-bottom: 30px;
-            text-align: center;
-            padding-top: 10px;
-            position: relative;
-        }
-
-        header h1 {
-            font-weight: 300;
-            letter-spacing: 1px;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-
-        .theme-toggle-btn {
-            position: absolute;
-            top: 5px;
-            right: 0;
-            background: var(--surface-hover);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: var(--transition);
-        }
-
-        .nav-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: var(--surface-color);
-            padding: 5px;
-            border-radius: var(--border-radius);
-            overflow-x: auto;
-            scrollbar-width: none; 
-        }
-        .nav-tabs::-webkit-scrollbar { display: none; }
-
-        .nav-btn {
-            flex: 1;
-            padding: 12px;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            border-radius: 8px;
-            font-size: 1rem;
-            white-space: nowrap;
-            transition: var(--transition);
-        }
-
-        .nav-btn.active {
-            background-color: var(--primary-color);
-            color: var(--btn-text-color);
-            font-weight: bold;
-        }
-
-        .panel {
-            background-color: var(--surface-color);
-            padding: 20px;
-            border-radius: var(--border-radius);
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .panel.active { display: block; }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: var(--surface-hover);
-            padding: 15px;
-            border-radius: var(--border-radius);
-            text-align: center;
-        }
-
-        .stat-card h3 {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 5px;
-        }
-
-        .stat-card .value {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .text-green { color: var(--success-color); }
-        .text-red { color: var(--danger-color); }
-        .text-blue { color: var(--secondary-color); }
-
+        /* Forms */
         .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
+        input, select {
+            width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 1rem; outline: none;
+        }
+        input:focus, select:focus { border-color: var(--primary); }
 
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+        /* Toggle Switch (Expense/Income/Repay) */
+        .type-toggle { display: flex; background: var(--bg); border-radius: 8px; padding: 4px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .type-option { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; color: var(--text-muted); transition: all 0.2s; font-size: 0.9rem; font-weight: 500; }
+        .type-option.active.expense { background: rgba(255, 77, 77, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .type-option.active.income { background: rgba(79, 172, 254, 0.2); color: var(--income); border: 1px solid var(--income); }
+        .type-option.active.repayment { background: rgba(255, 159, 67, 0.2); color: var(--repay); border: 1px solid var(--repay); }
+
+        /* Buttons */
+        .btn {
+            background: var(--primary); color: #000; border: none; padding: 12px; width: 100%;
+            border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-small { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
+        .btn-text { background: none; border: none; color: var(--text-muted); padding: 5px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .btn-help { color: var(--income); font-size: 0.9rem; }
+
+        /* Credit Card Visual */
+        .credit-card {
+            background: var(--card-gradient);
+            padding: 15px; border-radius: 10px; margin-bottom: 10px; position: relative; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card-name { font-weight: bold; font-size: 1.1rem; }
+        .card-info { font-size: 0.85rem; color: #ccc; margin-top: 5px; display: flex; justify-content: space-between; }
+        .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed; bottom: 20px; right: 20px;
+            background: var(--primary); color: #000;
+            width: 56px; height: 56px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4);
+            cursor: pointer; border: none; z-index: 90;
         }
 
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            outline: none;
-            -webkit-appearance: none;
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); display: none;
+            align-items: center; justify-content: center; z-index: 200;
+            opacity: 0; transition: opacity 0.2s;
         }
-
-        input:focus, select:focus { border-color: var(--primary-color); }
-
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content {
+            background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto;
+            padding: 25px; border-radius: 16px; position: relative;
+            transform: translateY(20px); transition: transform 0.2s;
         }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
 
-        .category-btn {
-            padding: 10px 5px;
-            background: var(--surface-hover);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            cursor: pointer;
+        /* Help Content */
+        .help-section { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .help-section:last-child { border-bottom: none; }
+        .help-title { color: var(--primary); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .help-step { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4; color: #ddd; }
+        .ios-icon { display: inline-block; width: 20px; height: 20px; background: #333; border-radius: 4px; vertical-align: middle; text-align: center; line-height: 20px; font-size: 12px; }
+
+        /* Tabs */
+        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 15px; }
+        .tab { flex: 1; padding: 10px; text-align: center; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Chart Containers */
+        .chart-container {
+            position: relative; 
+            height: 250px; 
+            width: 100%; 
+            margin-bottom: 20px;
+        }
+        
+        /* Footer */
+        .footer {
             text-align: center;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .category-btn.selected {
-            background-color: var(--primary-color);
-            color: var(--btn-text-color);
-            border-color: var(--primary-color);
-            font-weight: bold;
-            box-shadow: 0 0 8px var(--primary-bg-subtle);
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 15px;
-            background-color: var(--primary-color);
-            color: var(--btn-text-color);
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .btn-primary:active { transform: scale(0.98); }
-
-        .btn-small {
-            padding: 5px 10px;
-            background: var(--surface-hover);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .card-item {
-            background: var(--surface-hover);
-            padding: 15px;
-            border-radius: var(--border-radius);
-            margin-bottom: 15px;
-            position: relative;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .progress-container {
-            width: 100%;
-            background-color: #444;
-            height: 10px;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 5px;
-        }
-        
-        body.light-mode .progress-container { background-color: #ddd; }
-
-        .progress-bar {
-            height: 100%;
-            background-color: var(--secondary-color);
-            width: 0%;
-            transition: width 0.5s ease;
-        }
-
-        .progress-text {
+            color: var(--text-muted);
             font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-top: 5px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .transaction-list { list-style: none; }
-
-        .transaction-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .transaction-item:last-child { border-bottom: none; }
-
-        .t-info h4 { font-size: 1rem; margin-bottom: 4px; }
-        .t-info .sub-note { font-size: 0.85rem; color: var(--text-secondary); opacity: 0.8; display: block; margin-top: 2px;}
-        .t-info span { font-size: 0.8rem; color: var(--text-secondary); }
-        .t-amount { font-weight: bold; }
-
-        .delete-btn {
-            background: transparent;
-            border: none;
-            color: var(--danger-color);
-            margin-left: 10px;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            text-align: left;
-            padding: 10px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        th { color: var(--text-secondary); font-size: 0.9rem; }
-
-        .hidden { display: none; }
-        .flex-row { display: flex; gap: 10px; }
-        
-        .badge {
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            margin-left: 5px;
-            vertical-align: middle;
-        }
-        .badge-income { background: rgba(76, 175, 80, 0.2); color: var(--success-color); }
-        .badge-expense { background: rgba(207, 102, 121, 0.2); color: var(--danger-color); }
-        .badge-card { background: rgba(3, 218, 198, 0.2); color: var(--secondary-color); }
-
-        .split-bill-box {
-            background: var(--primary-bg-subtle);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border: 1px dashed var(--primary-color);
-        }
-        .split-bill-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            cursor: pointer;
-            color: var(--primary-color);
+            margin-top: 30px;
+            padding-bottom: 20px;
+            opacity: 0.7;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
 
+<header>
+    <h1><span class="logo-icon">💰</span> 回贈哥</h1>
+    <div style="display:flex; gap:10px; align-items:center;">
+        <button class="btn-text btn-help" onclick="openModal('help')">❓ 教學</button>
+        <button class="btn-small" onclick="exportData()" style="color:#fff; background:var(--surface-hover); border-color:#666; padding:4px 8px;">📥 匯出</button>
+        <button class="btn-small" onclick="resetData()" style="color:var(--danger); border-color:var(--danger); padding:4px 8px;">重置</button>
+    </div>
+</header>
+
 <div class="container">
-    <header>
-        <h1>💰 回贈哥</h1>
-        <button class="theme-toggle-btn" onclick="toggleTheme()" title="切換深淺色模式">🌙</button>
-        <p style="color: var(--text-secondary);">自動記憶 · 信用卡回贈管理 · 消費追蹤</p>
-    </header>
 
-    <nav class="nav-tabs">
-        <button class="nav-btn active" onclick="switchTab('dashboard')">概覽</button>
-        <button class="nav-btn" onclick="switchTab('add')">記帳</button>
-        <button class="nav-btn" onclick="switchTab('cards')">信用卡</button>
-        <button class="nav-btn" onclick="switchTab('report')">報表</button>
-    </nav>
-
-    <!-- 1. Dashboard Panel -->
-    <div id="dashboard" class="panel active">
-        <h2 style="margin-bottom: 15px;">本月概況</h2>
+    <!-- Overview Stats -->
+    <div class="panel">
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>總收入</h3>
-                <div class="value text-green" id="dash-income">$0</div>
+                <div class="stat-label">本月支出</div>
+                <div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div>
             </div>
             <div class="stat-card">
-                <h3>總支出 (現金+卡)</h3>
-                <div class="value text-red" id="dash-expense">$0</div>
+                <div class="stat-label">本月收入</div>
+                <div class="stat-value" id="total-income" style="color:var(--income)">$0</div>
             </div>
             <div class="stat-card">
-                <h3>本月結餘</h3>
-                <div class="value text-blue" id="dash-balance">$0</div>
+                <div class="stat-label">預計回贈</div>
+                <div class="stat-value" id="total-cashback" style="color:var(--primary)">$0</div>
             </div>
         </div>
-
-        <h3 style="margin-top: 30px; margin-bottom: 15px;">最近 5 筆交易</h3>
-        <ul class="transaction-list" id="recent-list">
-            <!-- JS will populate -->
-        </ul>
     </div>
 
-    <!-- 2. Add Transaction Panel -->
-    <div id="add" class="panel">
-        <h2 style="margin-bottom: 20px;">新增交易</h2>
-        
-        <form id="transaction-form">
-            <div class="form-group">
-                <label class="form-label">類型</label>
-                <div class="flex-row">
-                    <select id="t-type" onchange="toggleCardSelect()">
-                        <option value="expense">現金/轉帳支出</option>
-                        <option value="card_expense">信用卡簽帳</option>
-                        <option value="income">收入</option>
-                        <option value="repayment">信用卡還款</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group" id="card-select-group" style="display:none;">
-                <label class="form-label">選擇信用卡</label>
-                <select id="t-card">
-                    <option value="" disabled selected>請選擇信用卡...</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">日期與時間</label>
-                <input type="datetime-local" id="t-date" required>
-            </div>
-
-            <div class="split-bill-box">
-                <div class="split-bill-toggle" onclick="toggleSplitBill()">
-                    <span>👯 夾錢小幫手 (點擊展開)</span>
-                    <span id="split-arrow">▼</span>
-                </div>
-                <div id="split-form" style="display:none;">
-                    <div class="flex-row">
-                        <div style="flex:1">
-                            <label class="form-label">總金額</label>
-                            <input type="number" id="split-total" placeholder="0.00" oninput="calcSplit()">
-                        </div>
-                        <div style="flex:1">
-                            <label class="form-label">總人數</label>
-                            <input type="number" id="split-people" placeholder="例如: 4" oninput="calcSplit()">
-                        </div>
-                    </div>
-                    <div style="margin-top:10px; font-size:0.9rem; color:var(--text-secondary);">
-                        人均: <strong id="split-result" style="color:var(--primary-color)">$0</strong>
-                    </div>
-                    <button type="button" class="btn-small" style="margin-top:10px; width:100%; border-color:var(--primary-color); color:var(--primary-color);" onclick="applySplit()">
-                        使用此金額並填入備註
-                    </button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">金額</label>
-                <input type="number" id="t-amount" placeholder="0.00" step="0.01" required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">類別 (點擊快速選擇或手動輸入)</label>
-                <div class="category-grid">
-                    <div class="category-btn" onclick="selectCategory(this, '早餐')">早餐</div>
-                    <div class="category-btn" onclick="selectCategory(this, '午餐')">午餐</div>
-                    <div class="category-btn" onclick="selectCategory(this, '晚餐')">晚餐</div>
-                    <div class="category-btn" onclick="selectCategory(this, '購物')">購物</div>
-                    <div class="category-btn" onclick="selectCategory(this, '交通')">交通</div>
-                    <div class="category-btn" onclick="selectCategory(this, '水費')">水費</div>
-                    <div class="category-btn" onclick="selectCategory(this, '電費')">電費</div>
-                    <div class="category-btn" onclick="selectCategory(this, '租金')">租金</div>
-                </div>
-                <input type="text" id="t-category" placeholder="例如：早餐、租金..." required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">備註 (可留空)</label>
-                <input type="text" id="t-note" placeholder="例如：同阿強食、壽司郎">
-            </div>
-
-            <button type="submit" class="btn-primary">儲存交易</button>
-        </form>
+    <!-- Tabs Navigation -->
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('transactions')">賬目紀錄</div>
+        <div class="tab" onclick="switchTab('cards')">信用卡管理</div>
+        <div class="tab" onclick="switchTab('analysis')">統計分析</div>
     </div>
 
-    <!-- 3. Cards Management Panel -->
-    <div id="cards" class="panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2>信用卡管理</h2>
-            <button class="btn-small" onclick="toggleAddCardForm()">+ 新增卡片</button>
+    <!-- Tab 1: Transactions -->
+    <div id="tab-transactions" class="tab-content active">
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0; font-size:1.1rem;">最近賬目</h2>
+                <span class="stat-label" id="tx-count">0 筆</span>
+            </div>
+            <div id="transaction-list">
+                <!-- Transactions will be injected here -->
+                <div style="text-align:center; padding:20px; color:var(--text-muted);">暫無紀錄</div>
+            </div>
         </div>
-
-        <div id="add-card-form" style="display:none; background:var(--surface-hover); padding:15px; border-radius:8px; margin-bottom:20px;">
-            <div class="form-group">
-                <label class="form-label">信用卡名稱</label>
-                <input type="text" id="c-name" placeholder="例如：HSBC Red Card">
-            </div>
-            <div class="form-group">
-                <label class="form-label">回贈百分比 (%)</label>
-                <input type="number" id="c-percent" placeholder="例如：4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label class="form-label">每月回贈簽帳上限 (輸入 0 為無上限)</label>
-                <input type="number" id="c-cap" placeholder="例如：12500">
-            </div>
-            <div class="form-group">
-                <label class="form-label">備註</label>
-                <input type="text" id="c-note" placeholder="例如：網購專用、餐飲特化">
-            </div>
-            <button class="btn-primary" onclick="addCard()">新增卡片</button>
-        </div>
-
-        <div id="cards-list"></div>
-        <p style="margin-top:20px; font-size:0.8rem; color:#666; text-align:center;">* 進度條顯示本月簽帳金額相對於回贈上限的比例</p>
     </div>
 
-    <!-- 4. Report Panel -->
-    <div id="report" class="panel">
-        <h2>月度報表</h2>
-        <div class="form-group" style="margin-top:15px;">
-            <label class="form-label">選擇月份</label>
-            <input type="month" id="report-month" onchange="generateReport()">
+    <!-- Tab 2: Cards -->
+    <div id="tab-cards" class="tab-content">
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0; font-size:1.1rem;">我的卡包</h2>
+                <div style="display:flex; gap:8px;">
+                     <button class="btn-small" onclick="importPresetCards()" style="background:rgba(0,210,106,0.1); border-color:var(--primary); color:var(--primary);">📥 更新推薦</button>
+                    <button class="btn-small" onclick="openModal('card')">+ 新增</button>
+                </div>
+            </div>
+            <div id="card-list">
+                <!-- Cards will be injected here -->
+            </div>
         </div>
+    </div>
 
-        <div id="report-content"></div>
+    <!-- Tab 3: Analysis -->
+    <div id="tab-analysis" class="tab-content">
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0; font-size:1.1rem;">月度支出分析</h2>
+                <input type="month" id="analysis-month" style="width:auto; padding:5px;" onchange="renderCharts()">
+            </div>
+            
+            <div style="margin-bottom:30px;">
+                <h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">卡片簽賬分佈</h3>
+                <div class="chart-container">
+                    <canvas id="chart-cards"></canvas>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">每日支出趨勢</h3>
+                <div class="chart-container">
+                    <canvas id="chart-daily"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        Copyright © Redezero | Powered by Gemini<br>
+        <span style="font-size:0.75rem; opacity:0.8; color:#777;">*信用卡資料只供參考，回贈及條款以銀行最新公佈為準</span>
     </div>
 
 </div>
 
-<script>
-    // JS Logic
-    const DB_KEY = 'finance_tracker_data_v1';
-    const THEME_KEY = 'finance_tracker_theme';
-    
-    let data = {
-        transactions: [],
-        cards: []
-    };
+<!-- Floating Add Button -->
+<button class="fab" onclick="openModal('transaction')">+</button>
 
-    // --- Check URL Params for Shortcuts ---
-    function checkURLParams() {
-        const params = new URLSearchParams(window.location.search);
+<!-- Add Transaction Modal -->
+<div id="modal-transaction" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2>新增紀錄</h2>
         
-        // 預期的參數: amount, category, note
-        const amount = params.get('amount');
-        const category = params.get('category');
-        const note = params.get('note');
+        <div class="type-toggle">
+            <div class="type-option active expense" id="type-expense" onclick="setTxType('expense')">💸 支出</div>
+            <div class="type-option" id="type-income" onclick="setTxType('income')">💰 收入</div>
+            <div class="type-option" id="type-repayment" onclick="setTxType('repayment')">💳 還款</div>
+        </div>
 
-        if (amount || category || note) {
-            // 自動切換到記帳頁
-            switchTab('add');
+        <form id="tx-form" onsubmit="addTransaction(event)">
+            <input type="hidden" id="tx-type" value="expense">
             
-            if (amount) document.getElementById('t-amount').value = amount;
-            if (note) document.getElementById('t-note').value = note;
+            <div class="form-group">
+                <label>金額 (HKD)</label>
+                <input type="number" id="tx-amount" step="0.1" placeholder="0.00" required>
+            </div>
             
-            if (category) {
-                document.getElementById('t-category').value = category;
-                // 嘗試高亮按鈕
-                const buttons = document.querySelectorAll('.category-btn');
-                buttons.forEach(btn => {
-                    if (btn.innerText === category) {
-                        btn.classList.add('selected');
-                    }
-                });
-            }
-        }
-    }
+            <div class="form-group" id="group-category">
+                <label>類別</label>
+                <select id="tx-category" required>
+                    <!-- Populated by JS -->
+                </select>
+            </div>
 
-    function loadData() {
-        const stored = localStorage.getItem(DB_KEY);
-        if (stored) {
-            data = JSON.parse(stored);
-        } else {
-            data.cards = [
-                { id: 1, name: '一般信用卡', cap: 10000, percent: 0, note: '預設卡片' },
-            ];
-        }
-
-        const storedTheme = localStorage.getItem(THEME_KEY);
-        if (storedTheme === 'light') {
-            document.body.classList.add('light-mode');
-            updateThemeIcon(true);
-        } else {
-            updateThemeIcon(false);
-        }
-    }
-
-    function saveData() {
-        localStorage.setItem(DB_KEY, JSON.stringify(data));
-        updateUI();
-    }
-
-    function toggleTheme() {
-        const body = document.body;
-        body.classList.toggle('light-mode');
-        const isLight = body.classList.contains('light-mode');
-        localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
-        updateThemeIcon(isLight);
-    }
-
-    function updateThemeIcon(isLight) {
-        const btn = document.querySelector('.theme-toggle-btn');
-        btn.textContent = isLight ? '☀️' : '🌙';
-        btn.title = isLight ? "切換至深色模式" : "切換至淺色模式";
-    }
-
-    function setNowDateTime() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        document.getElementById('t-date').value = `${year}-${month}-${day}T${hours}:${minutes}`;
-    }
-
-    function switchTab(tabId) {
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        
-        document.getElementById(tabId).classList.add('active');
-        const buttons = Array.from(document.querySelectorAll('.nav-btn'));
-        const btn = buttons.find(b => b.getAttribute('onclick').includes(tabId));
-        if(btn) btn.classList.add('active');
-
-        if (tabId === 'dashboard') renderDashboard();
-        if (tabId === 'cards') renderCards();
-        if (tabId === 'add') {
-            // 如果輸入框是空的才設定時間
-            if (!document.getElementById('t-date').value) setNowDateTime();
-            renderCardOptions();
-        }
-        if (tabId === 'report') {
-            if(!document.getElementById('report-month').value) {
-                const now = new Date();
-                const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                document.getElementById('report-month').value = monthStr;
-            }
-            generateReport();
-        }
-    }
-
-    function toggleCardSelect() {
-        const type = document.getElementById('t-type').value;
-        const cardGroup = document.getElementById('card-select-group');
-        if (type === 'card_expense' || type === 'repayment') {
-            cardGroup.style.display = 'block';
-            renderCardOptions();
-        } else {
-            cardGroup.style.display = 'none';
-        }
-    }
-
-    function toggleAddCardForm() {
-        const form = document.getElementById('add-card-form');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function selectCategory(btn, value) {
-        document.getElementById('t-category').value = value;
-        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-    }
-
-    document.getElementById('t-category').addEventListener('input', function() {
-        const val = this.value;
-        const buttons = document.querySelectorAll('.category-btn');
-        buttons.forEach(btn => {
-            if (btn.innerText === val) {
-                btn.classList.add('selected');
-            } else {
-                btn.classList.remove('selected');
-            }
-        });
-    });
-
-    function toggleSplitBill() {
-        const form = document.getElementById('split-form');
-        const arrow = document.getElementById('split-arrow');
-        if (form.style.display === 'none') {
-            form.style.display = 'block';
-            arrow.textContent = '▲';
-        } else {
-            form.style.display = 'none';
-            arrow.textContent = '▼';
-        }
-    }
-
-    function calcSplit() {
-        const total = parseFloat(document.getElementById('split-total').value) || 0;
-        const people = parseInt(document.getElementById('split-people').value) || 1;
-        const result = people > 0 ? total / people : 0;
-        document.getElementById('split-result').textContent = '$' + result.toFixed(2);
-    }
-
-    function applySplit() {
-        const total = parseFloat(document.getElementById('split-total').value) || 0;
-        const people = parseInt(document.getElementById('split-people').value) || 1;
-        
-        if (total === 0 || people <= 0) return;
-
-        const perPerson = total / people;
-        document.getElementById('t-amount').value = perPerson.toFixed(2);
-        
-        const currentNote = document.getElementById('t-note').value;
-        const splitNote = `(總數 $${total}, ${people}人夾錢)`;
-        
-        if (currentNote) {
-            document.getElementById('t-note').value = currentNote + ' ' + splitNote;
-        } else {
-            document.getElementById('t-note').value = splitNote;
-        }
-        toggleSplitBill();
-    }
-
-    function addCard() {
-        const name = document.getElementById('c-name').value;
-        const cap = parseFloat(document.getElementById('c-cap').value) || 0;
-        const percent = parseFloat(document.getElementById('c-percent').value) || 0;
-        const note = document.getElementById('c-note').value;
-        
-        if (!name) return alert('請輸入卡片名稱');
-
-        data.cards.push({
-            id: Date.now(),
-            name: name,
-            cap: cap,
-            percent: percent,
-            note: note
-        });
-
-        document.getElementById('c-name').value = '';
-        document.getElementById('c-cap').value = '';
-        document.getElementById('c-percent').value = '';
-        document.getElementById('c-note').value = '';
-        toggleAddCardForm();
-        saveData();
-        renderCards();
-    }
-
-    function deleteCard(id) {
-        if(confirm('確定要刪除這張卡片嗎？相關的歷史交易保留，但無法再選擇此卡。')) {
-            data.cards = data.cards.filter(c => c.id !== id);
-            saveData();
-            renderCards();
-        }
-    }
-
-    function renderCardOptions() {
-        const select = document.getElementById('t-card');
-        const selectedValue = select.value; // 保存當前選擇
-        select.innerHTML = '<option value="" disabled selected>請選擇信用卡...</option>';
-        data.cards.forEach(card => {
-            const option = document.createElement('option');
-            option.value = card.id;
-            option.textContent = card.name;
-            select.appendChild(option);
-        });
-        if(selectedValue) select.value = selectedValue;
-    }
-
-    document.getElementById('transaction-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const type = document.getElementById('t-type').value;
-        const amount = parseFloat(document.getElementById('t-amount').value);
-        const date = document.getElementById('t-date').value;
-        
-        const category = document.getElementById('t-category').value;
-        const note = document.getElementById('t-note').value;
-        
-        const cardId = (type === 'card_expense' || type === 'repayment') ? document.getElementById('t-card').value : null;
-
-        if ((type === 'card_expense' || type === 'repayment') && !cardId) {
-            return alert('請選擇信用卡');
-        }
-
-        data.transactions.push({
-            id: Date.now(),
-            date,
-            type,
-            amount,
-            category,
-            note,
-            cardId: cardId ? parseInt(cardId) : null
-        });
-
-        alert('交易已儲存！');
-        document.getElementById('transaction-form').reset();
-        document.getElementById('split-total').value = '';
-        document.getElementById('split-people').value = '';
-        document.getElementById('split-result').textContent = '$0';
-        document.getElementById('split-form').style.display = 'none';
-        
-        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
-
-        setNowDateTime();
-        saveData();
-    });
-
-    function deleteTransaction(id) {
-        if(confirm('確定刪除此紀錄？')) {
-            data.transactions = data.transactions.filter(t => t.id !== id);
-            saveData();
-        }
-    }
-
-    function getMonthStats(year, month) {
-        const filtered = data.transactions.filter(t => {
-            const d = new Date(t.date);
-            return d.getFullYear() === year && d.getMonth() === month;
-        });
-
-        const income = filtered.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-        const expense = filtered.filter(t => t.type === 'expense' || t.type === 'card_expense').reduce((acc, t) => acc + t.amount, 0);
-
-        return { income, expense, balance: income - expense };
-    }
-
-    function renderDashboard() {
-        const now = new Date();
-        const stats = getMonthStats(now.getFullYear(), now.getMonth());
-
-        document.getElementById('dash-income').textContent = `${stats.income.toLocaleString()}`;
-        document.getElementById('dash-expense').textContent = `${stats.expense.toLocaleString()}`;
-        
-        const balanceEl = document.getElementById('dash-balance');
-        balanceEl.textContent = `${stats.balance.toLocaleString()}`;
-        balanceEl.className = `value ${stats.balance >= 0 ? 'text-green' : 'text-red'}`;
-
-        const list = document.getElementById('recent-list');
-        list.innerHTML = '';
-        const sorted = [...data.transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
-        
-        sorted.forEach(t => {
-            let colorClass = '';
-            let sign = '';
-            let typeLabel = '';
-            
-            if (t.type === 'income') { colorClass = 'text-green'; sign = '+'; typeLabel = '收入'; }
-            else if (t.type === 'repayment') { colorClass = 'text-blue'; sign = '-'; typeLabel = '還款'; }
-            else { colorClass = 'text-red'; sign = '-'; typeLabel = t.type === 'card_expense' ? '卡數' : '支出'; }
-
-            const dateDisplay = t.date.replace('T', ' ');
-            const displayCategory = t.category || t.note;
-            const displayNote = t.category ? t.note : '';
-
-            const li = document.createElement('li');
-            li.className = 'transaction-item';
-            li.innerHTML = `
-                <div class="t-info">
-                    <h4>
-                        ${displayCategory} 
-                        <span class="badge ${t.type === 'income' ? 'badge-income' : t.type === 'repayment' ? 'badge-card' : 'badge-expense'}">${typeLabel}</span>
-                    </h4>
-                    ${displayNote ? '<span class="sub-note">' + displayNote + '</span>' : ''}
-                    <span>${dateDisplay} ${t.cardId ? ' | ' + (data.cards.find(c=>c.id===t.cardId)?.name || '未知卡') : ''}</span>
-                </div>
-                <div class="t-amount ${colorClass}">
-                    ${sign}${t.amount.toLocaleString()}
-                    <button class="delete-btn" onclick="deleteTransaction(${t.id})">×</button>
-                </div>
-            `;
-            list.appendChild(li);
-        });
-    }
-
-    function renderCards() {
-        const container = document.getElementById('cards-list');
-        container.innerHTML = '';
-        
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-
-        data.cards.forEach(card => {
-            const spentThisMonth = data.transactions
-                .filter(t => {
-                    const d = new Date(t.date);
-                    return t.cardId === card.id && 
-                           t.type === 'card_expense' &&
-                           d.getMonth() === currentMonth &&
-                           d.getFullYear() === currentYear;
-                })
-                .reduce((acc, t) => acc + t.amount, 0);
-
-            let percent = 0;
-            let barColor = 'var(--secondary-color)';
-            
-            if (card.cap > 0) {
-                percent = (spentThisMonth / card.cap) * 100;
-                if (percent > 100) {
-                    percent = 100;
-                    barColor = 'var(--danger-color)';
-                }
-            }
-
-            const div = document.createElement('div');
-            div.className = 'card-item';
-            div.innerHTML = `
-                <div class="card-header">
-                    <div>
-                        <strong>💳 ${card.name}</strong>
-                        <span style="font-size:0.8rem; color:var(--primary-color); margin-left:8px; background:var(--primary-bg-subtle); padding:2px 6px; border-radius:4px;">
-                            ${card.percent ? card.percent + '% 回贈' : '無回贈設定'}
-                        </span>
-                    </div>
-                    <button class="btn-small" onclick="deleteCard(${card.id})" style="color:var(--danger-color); border:none;">刪除</button>
-                </div>
-                <div style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:10px; font-style:italic;">
-                    ${card.note ? '📝 ' + card.note : ''}
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                    <div style="font-size:1.2rem; font-weight:bold;">${spentThisMonth.toLocaleString()}</div>
-                    <div style="font-size:0.9rem; color:var(--text-secondary);">上限: ${card.cap > 0 ? card.cap.toLocaleString() : '無上限'}</div>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-bar" style="width: ${percent}%; background-color: ${barColor}"></div>
-                </div>
-                <div class="progress-text">
-                    <span>${percent.toFixed(1)}%</span>
-                    <span>${card.cap > 0 ? (card.cap - spentThisMonth > 0 ? '剩餘 ' + (card.cap - spentThisMonth).toLocaleString() : '已超額') : ''}</span>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function generateReport() {
-        const monthInput = document.getElementById('report-month').value;
-        if (!monthInput) return;
-        
-        const [year, month] = monthInput.split('-').map(Number);
-        
-        const filtered = data.transactions.filter(t => {
-            const d = new Date(t.date);
-            return d.getFullYear() === year && d.getMonth() === (month - 1);
-        });
-
-        const cardSpending = {};
-        data.cards.forEach(c => cardSpending[c.name] = 0);
-        
-        let totalIncome = 0;
-        let totalExpense = 0;
-        let totalRepayment = 0;
-
-        filtered.forEach(t => {
-            if (t.type === 'income') totalIncome += t.amount;
-            if (t.type === 'expense') totalExpense += t.amount;
-            if (t.type === 'repayment') totalRepayment += t.amount;
-            if (t.type === 'card_expense') {
-                totalExpense += t.amount;
-                const cardName = data.cards.find(c => c.id === t.cardId)?.name || 'Deleted Card';
-                cardSpending[cardName] = (cardSpending[cardName] || 0) + t.amount;
-            }
-        });
-
-        const reportDiv = document.getElementById('report-content');
-        
-        let cardRows = '';
-        for (const [name, amount] of Object.entries(cardSpending)) {
-            if (amount > 0) {
-                cardRows += `<tr><td>💳 ${name}</td><td style="text-align:right;">${amount.toLocaleString()}</td></tr>`;
-            }
-        }
-
-        reportDiv.innerHTML = `
-            <div style="margin-bottom:20px; background:var(--surface-hover); padding:15px; border-radius:8px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span>本月總收入</span>
-                    <span class="text-green">+${totalIncome.toLocaleString()}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span>本月總支出 (現金+卡)</span>
-                    <span class="text-red">-${totalExpense.toLocaleString()}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border-color); padding-top:5px; margin-top:5px;">
-                    <strong>淨現金流</strong>
-                    <strong class="${(totalIncome - totalExpense) >= 0 ? 'text-green' : 'text-red'}">${(totalIncome - totalExpense).toLocaleString()}</strong>
+            <div class="form-group" id="group-card">
+                <label>選擇信用卡</label>
+                <select id="tx-card">
+                    <!-- Options populated by JS -->
+                </select>
+                <div id="card-hint" style="font-size:0.8rem; color:var(--primary); margin-top:5px; display:none;">
+                    回贈: <span id="hint-rate"></span>%
                 </div>
             </div>
 
-            <h3>信用卡消費細項</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>卡片名稱</th>
-                        <th style="text-align:right">簽帳金額</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${cardRows || '<tr><td colspan="2" style="text-align:center; color:#666;">無信用卡消費</td></tr>'}
-                </tbody>
-            </table>
+            <div class="form-group">
+                <label>描述</label>
+                <input type="text" id="tx-desc" placeholder="例如: 午餐、出糧" required>
+            </div>
+            
+            <div class="form-group">
+                <label>日期時間</label>
+                <input type="datetime-local" id="tx-date" required>
+            </div>
+            <button type="submit" class="btn" id="btn-submit">記賬</button>
+        </form>
+    </div>
+</div>
 
-            <h3 style="margin-top:20px;">信用卡還款紀錄</h3>
-            <p style="font-size:0.9rem; color:var(--text-secondary);">本月償還總額: ${totalRepayment.toLocaleString()}</p>
-        `;
-    }
+<!-- Add Card Modal -->
+<div id="modal-card" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2>新增信用卡</h2>
+        <form id="card-form" onsubmit="addCard(event)">
+            <div class="form-group">
+                <label>卡片名稱</label>
+                <input type="text" id="card-name" placeholder="例如: HSBC Red" required>
+            </div>
+            <div class="form-group">
+                <label>回贈比率 (%)</label>
+                <input type="number" id="card-percent" step="0.1" placeholder="4" required>
+            </div>
+            <div class="form-group">
+                <label>簽賬上限 (留空為無限)</label>
+                <input type="number" id="card-cap" placeholder="例如: 12500">
+            </div>
+            <div class="form-group">
+                <label>備註 (選填)</label>
+                <input type="text" id="card-note" placeholder="例如: 網購專用">
+            </div>
+            <button type="submit" class="btn">新增卡片</button>
+        </form>
+    </div>
+</div>
 
-    function updateUI() {
-        const activeId = document.querySelector('.panel.active').id;
-        switchTab(activeId);
-    }
+<!-- Help Modal -->
+<div id="modal-help" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2 style="margin-top:0;">💡 使用說明 & 教學</h2>
+        
+        <div class="help-section">
+            <div class="help-title">💾 匯出資料</div>
+            <div class="help-step">撳右上角<strong>「📥 匯出」</strong>，會即刻下載一個 CSV 檔案。你可以用 Excel、Numbers 或者 Google 試算表打開，自己整圖表或者做備份。</div>
+        </div>
 
-    // Init
-    window.onload = function() {
-        loadData();
-        checkURLParams(); // 啟動時檢查網址參數
+        <div class="help-section">
+            <div class="help-title">📱 iOS 捷徑 (Apple Pay 自動記賬)</div>
+            <div class="help-step">1. 打開 iPhone 內置<strong>「捷徑 (Shortcuts)」</strong>App。</div>
+            <div class="help-step">2. 揀下方<strong>「自動化 (Automation)」</strong> -> 右上角「+」 -> <strong>「交易 (Transaction)」</strong>。</div>
+            <div class="help-step">3. 揀選你想連結嘅信用卡 (例如 Visa / MasterCard) -> 下一步。</div>
+            <div class="help-step">4. 加入動作：搜尋<strong>「開啟 URL (Open URL)」</strong>。</div>
+            <div class="help-step">5. 喺 URL 欄位輸入你放呢個網頁嘅網址 (例如 https://your-site.com)。</div>
+            <div class="help-step">✨ 完成！以後用 Apple Pay 俾錢，電話就會彈通知叫你入黎記賬！</div>
+        </div>
+
+        <div class="help-section">
+            <div class="help-title">📲 加入主畫面 (變身 App)</div>
+            <div class="help-step">1. 喺 Safari 下方工具列撳 <span class="ios-icon">↑</span> (分享)。</div>
+            <div class="help-step">2. 拉落去搵 <span class="ios-icon">+</span> <strong>「加至主畫面」</strong>。</div>
+            <div class="help-step">3. 撳右上角「加入」，搞掂！</div>
+        </div>
+        
+        <button class="btn" onclick="closeModals()">明白哂！</button>
+    </div>
+</div>
+
+<script>
+    // --- Data & Config ---
+    const DB_KEY = 'rebate_bro_data_v2';
+    
+    // Categories Config
+    const CATEGORIES = {
+        expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他'],
+        income: ['薪金', '賣野', '投資', '其他'],
+        repayment: ['信用卡還款']
     };
-    switchTab('dashboard');
 
+    // 預設推薦卡片
+    const PRESET_CARDS = [
+        { name: 'WeWa Card (食飯)', cap: 5200, percent: 10, note: '🔥12月食飯10% (實體卡/單筆$100+)' },
+        { name: '富邦 iN Visa', cap: 3947, percent: 8, note: '👑8% (上限$3,947/CBF手續費)' },
+        { name: 'sim Credit', cap: 2500, percent: 8, note: '網購8% (單筆$500+/實體$1000+)' },
+        { name: 'AEON WAKUWAKU', cap: 3571, percent: 6, note: '👑6% (上限$3,571)' },
+        { name: '信銀 Motion', cap: 3571, percent: 6, note: '👑6% (上限$3,571/月簽$3,800)' },
+        { name: 'DBS Eminent VS', cap: 8000, percent: 5, note: '餐飲/健身/醫療 5% (單簽$300+)' },
+        { name: '恒生 MMPOWER', cap: 10870, percent: 5, note: '👑5% (上限$10,870/月簽$5,000)' },
+        { name: '中銀 Chill World', cap: 3260, percent: 5, note: '👑5% (上限$3,260)' },
+        { name: '東亞 BEA GOAL', cap: 5000, percent: 4.4, note: '4.4% (上限$5,000/月簽$2,000)' },
+        { name: '滙豐 Red 卡', cap: 10000, percent: 4, note: '4% (上限$10,000/無下限)' },
+        { name: '中銀 Chill Platinum', cap: 4166, percent: 4, note: '4% (上限$4,166)' },
+        { name: '東亞 i-Titanium', cap: 8333, percent: 4, note: '4% (上限$8,333/月簽$2,000)' },
+        { name: 'HSBC Visa Sig', cap: 100000, percent: 3.6, note: '最紅自主(賞滋味) 3.6%' },
+        { name: 'Citi Cash Back', cap: 0, percent: 2, note: '食肆/酒店 2% (自動回贈)' },
+        { name: 'Mox Credit', cap: 0, percent: 2, note: '2% 無上限 (需活存$25萬)' },
+        { name: '安信 EarnMORE', cap: 150000, percent: 2, note: '2% 每年首15萬' }
+    ];
+
+    let state = {
+        transactions: [],
+        cards: []
+    };
+    
+    // Chart Instances
+    let pieChart = null;
+    let barChart = null;
+
+    // --- Core Logic ---
+
+    function init() {
+        const stored = localStorage.getItem(DB_KEY);
+        if (stored) {
+            state = JSON.parse(stored);
+        } else {
+            state.cards = generatePresetCards();
+            saveData();
+        }
+
+        setDefaultTime();
+        document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
+        
+        // Initialize form category
+        setTxType('expense');
+        
+        render();
+    }
+    
+    // Helper to get local time string for datetime-local input
+    function setDefaultTime() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('tx-date').value = now.toISOString().slice(0, 16);
+    }
+
+    function generatePresetCards() {
+        return PRESET_CARDS.map((c, idx) => ({
+            ...c,
+            id: Date.now() + idx,
+            spent: 0
+        }));
+    }
+
+    function saveData() {
+        localStorage.setItem(DB_KEY, JSON.stringify(state));
+    }
+
+    function calculateStats() {
+        let totalSpent = 0;
+        let totalIncome = 0;
+        let totalCashback = 0;
+        const cardSpending = {};
+        state.cards.forEach(c => cardSpending[c.id] = 0);
+
+        const nowMonth = new Date().toISOString().slice(0, 7);
+
+        state.transactions.forEach(tx => {
+            const txMonth = tx.date.slice(0, 7);
+            
+            if (txMonth === nowMonth) {
+                const type = tx.type || 'expense';
+                
+                if (type === 'expense') {
+                    totalSpent += tx.amount;
+                    const card = state.cards.find(c => c.id == tx.cardId);
+                    if (card) {
+                        cardSpending[card.id] += tx.amount;
+                        let rate = card.percent;
+                        totalCashback += (tx.amount * rate / 100);
+                    }
+                } else if (type === 'income') {
+                    totalIncome += tx.amount;
+                }
+            }
+        });
+
+        document.getElementById('total-spent').innerText = '$' + totalSpent.toLocaleString();
+        document.getElementById('total-income').innerText = '$' + totalIncome.toLocaleString();
+        document.getElementById('total-cashback').innerText = '$' + totalCashback.toFixed(1);
+        document.getElementById('tx-count').innerText = state.transactions.length + ' 筆(總)';
+
+        state.cards.forEach(card => {
+            const spent = cardSpending[card.id] || 0;
+            const progressEl = document.getElementById(`prog-${card.id}`);
+            const spentEl = document.getElementById(`spent-${card.id}`);
+            
+            if (progressEl && spentEl) {
+                spentEl.innerText = `$${spent.toLocaleString()}`;
+                if (card.cap > 0) {
+                    const percent = Math.min((spent / card.cap) * 100, 100);
+                    progressEl.style.width = `${percent}%`;
+                    if(percent >= 100) progressEl.style.backgroundColor = 'var(--danger)';
+                    else progressEl.style.backgroundColor = 'var(--primary)';
+                } else {
+                    progressEl.style.width = '0%';
+                }
+            }
+        });
+    }
+
+    function render() {
+        renderCards();
+        renderTransactions();
+        updateFormOptions();
+        calculateStats();
+        if (document.getElementById('tab-analysis').classList.contains('active')) {
+            renderCharts();
+        }
+    }
+
+    // --- Chart Logic ---
+    function renderCharts() {
+        const month = document.getElementById('analysis-month').value;
+        if(!month) return;
+
+        // Filter transactions for selected month AND type='expense'
+        const monthlyTx = state.transactions.filter(tx => 
+            tx.date.startsWith(month) && (tx.type === 'expense' || !tx.type)
+        );
+
+        // Pie Chart (By Card)
+        const cardTotals = {};
+        state.cards.forEach(c => cardTotals[c.name] = 0); 
+        monthlyTx.forEach(tx => {
+            const card = state.cards.find(c => c.id == tx.cardId);
+            const name = card ? card.name : 'Unknown';
+            if(!cardTotals[name]) cardTotals[name] = 0;
+            cardTotals[name] += tx.amount;
+        });
+
+        const pieLabels = Object.keys(cardTotals).filter(k => cardTotals[k] > 0);
+        const pieData = pieLabels.map(k => cardTotals[k]);
+
+        // Bar Chart (Daily Spending)
+        const daysInMonth = new Date(parseInt(month.slice(0,4)), parseInt(month.slice(5,7)), 0).getDate();
+        const dailyTotals = new Array(daysInMonth).fill(0);
+        
+        monthlyTx.forEach(tx => {
+            const day = parseInt(tx.date.slice(8, 10)) - 1; 
+            if(day >= 0 && day < daysInMonth) {
+                dailyTotals[day] += tx.amount;
+            }
+        });
+        
+        const barLabels = Array.from({length: daysInMonth}, (_, i) => (i + 1).toString());
+
+        if(pieChart) pieChart.destroy();
+        if(barChart) barChart.destroy();
+
+        const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7'];
+
+        const ctxPie = document.getElementById('chart-cards').getContext('2d');
+        pieChart = new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: pieLabels,
+                datasets: [{
+                    data: pieData,
+                    backgroundColor: colors,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#e0e0e0' } }
+                }
+            }
+        });
+
+        const ctxBar = document.getElementById('chart-daily').getContext('2d');
+        barChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: barLabels,
+                datasets: [{
+                    label: '每日支出 ($)',
+                    data: dailyTotals,
+                    backgroundColor: '#ff4d4d',
+                    borderRadius: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { color: '#a0a0a0' }, grid: { display: false } },
+                    y: { ticks: { color: '#a0a0a0' }, grid: { color: '#333' } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    // --- UI Rendering ---
+
+    function renderCards() {
+        const list = document.getElementById('card-list');
+        list.innerHTML = '';
+        state.cards.forEach(card => {
+            const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
+            const el = document.createElement('div');
+            el.className = 'credit-card';
+            el.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div>
+                        <div class="card-name">${card.name}</div>
+                        <div class="card-info" style="color:var(--primary); font-weight:bold;">${card.percent}% 回贈</div>
+                        <div class="card-info">${card.note || ''}</div>
+                    </div>
+                    <button class="btn-text" onclick="deleteCard(${card.id})" style="color:var(--text-muted);">&times;</button>
+                </div>
+                <div class="progress-bar">
+                    <div id="prog-${card.id}" class="progress-fill"></div>
+                </div>
+                <div class="card-info">
+                    <span>本月已簽: <span id="spent-${card.id}" style="color:#fff;">$0</span>${capText}</span>
+                </div>
+            `;
+            list.appendChild(el);
+        });
+        if (state.cards.length === 0) {
+            list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡，請按新增或匯入推薦</div>';
+        }
+    }
+
+    function renderTransactions() {
+        const list = document.getElementById('transaction-list');
+        list.innerHTML = '';
+        const sorted = [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        sorted.forEach(tx => {
+            const type = tx.type || 'expense';
+            const category = tx.category || (type === 'income' ? '收入' : '其他');
+            
+            // Format datetime: YYYY-MM-DD HH:MM
+            const dateStr = tx.date.replace('T', ' ');
+
+            let amountDisplay, colorClass, cashbackTag, cardName;
+            
+            if (type === 'income') {
+                amountDisplay = `+ $${tx.amount.toLocaleString()}`;
+                colorClass = 'color:var(--income);';
+                cashbackTag = ''; // No cashback for income
+                cardName = '收入'; 
+            } else if (type === 'repayment') {
+                amountDisplay = `- $${tx.amount.toLocaleString()}`;
+                colorClass = 'color:var(--repay);';
+                cashbackTag = '<div class="repay-tag">還款紀錄</div>';
+                const card = state.cards.find(c => c.id == tx.cardId);
+                cardName = card ? card.name : '未知卡片';
+            } else {
+                amountDisplay = `$${tx.amount.toLocaleString()}`;
+                colorClass = 'color:var(--text);';
+                
+                const card = state.cards.find(c => c.id == tx.cardId);
+                cardName = card ? card.name : '未知卡片';
+                const rate = card ? card.percent : 0;
+                const cashback = (tx.amount * rate / 100).toFixed(1);
+                cashbackTag = `<div class="cashback-tag">賺 $${cashback}</div>`;
+            }
+
+            const el = document.createElement('div');
+            el.className = 'list-item';
+            el.innerHTML = `
+                <div class="item-main">
+                    <div class="item-title">
+                        <span class="cat-tag">${category}</span>
+                        ${tx.desc}
+                    </div>
+                    <div class="item-sub">${dateStr} • ${cardName}</div>
+                    ${cashbackTag}
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                    <div class="item-amount" style="${colorClass}">${amountDisplay}</div>
+                    <button class="btn-text" style="font-size:0.8rem; margin-top:4px;" onclick="deleteTransaction(${tx.id})">刪除</button>
+                </div>
+            `;
+            list.appendChild(el);
+        });
+    }
+
+    // --- Form Logic ---
+    
+    function setTxType(type) {
+        // Toggle UI
+        document.getElementById('tx-type').value = type;
+        document.getElementById('type-expense').className = `type-option ${type === 'expense' ? 'active expense' : ''}`;
+        document.getElementById('type-income').className = `type-option ${type === 'income' ? 'active income' : ''}`;
+        document.getElementById('type-repayment').className = `type-option ${type === 'repayment' ? 'active repayment' : ''}`;
+        
+        // Update Categories
+        const catSelect = document.getElementById('tx-category');
+        catSelect.innerHTML = '';
+        
+        // Repayment doesn't really need a category list, just one default, but code structure is cleaner with lists
+        CATEGORIES[type].forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.innerText = cat;
+            catSelect.appendChild(opt);
+        });
+        
+        // Toggle Fields
+        const cardGroup = document.getElementById('group-card');
+        const catGroup = document.getElementById('group-category');
+        
+        if (type === 'income') {
+            cardGroup.style.display = 'none';
+            catGroup.style.display = 'block';
+        } else if (type === 'repayment') {
+            cardGroup.style.display = 'block';
+            catGroup.style.display = 'none'; // Auto set to Repayment
+        } else {
+            cardGroup.style.display = 'block';
+            catGroup.style.display = 'block';
+        }
+    }
+
+    function updateFormOptions() {
+        const select = document.getElementById('tx-card');
+        select.innerHTML = '';
+        state.cards.forEach(card => {
+            const opt = document.createElement('option');
+            opt.value = card.id;
+            opt.text = `${card.name} (${card.percent}%)`;
+            select.appendChild(opt);
+        });
+        if(state.cards.length > 0) updateCardHint();
+    }
+
+    function updateCardHint() {
+        const select = document.getElementById('tx-card');
+        const hintBox = document.getElementById('card-hint');
+        const hintRate = document.getElementById('hint-rate');
+        const type = document.getElementById('tx-type').value;
+        
+        // Don't show hint for Repayment
+        if (type === 'repayment') {
+            hintBox.style.display = 'none';
+            return;
+        }
+
+        const cardId = select.value;
+        const card = state.cards.find(c => c.id == cardId);
+        
+        if (card && type === 'expense') {
+            hintBox.style.display = 'block';
+            hintRate.innerText = card.percent;
+        } else {
+            hintBox.style.display = 'none';
+        }
+    }
+    
+    document.getElementById('tx-card').addEventListener('change', updateCardHint);
+
+    // --- Actions ---
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        if(tabName === 'transactions') {
+            document.querySelectorAll('.tab')[0].classList.add('active');
+            document.getElementById('tab-transactions').classList.add('active');
+        } else if (tabName === 'cards') {
+            document.querySelectorAll('.tab')[1].classList.add('active');
+            document.getElementById('tab-cards').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab')[2].classList.add('active');
+            document.getElementById('tab-analysis').classList.add('active');
+            renderCharts();
+        }
+    }
+
+    function addTransaction(e) {
+        e.preventDefault();
+        const type = document.getElementById('tx-type').value;
+        const desc = document.getElementById('tx-desc').value;
+        const amount = parseFloat(document.getElementById('tx-amount').value);
+        let category = document.getElementById('tx-category').value;
+        const date = document.getElementById('tx-date').value;
+        
+        let cardId = null;
+        if (type === 'expense' || type === 'repayment') {
+            cardId = document.getElementById('tx-card').value;
+            if (!cardId) {
+                alert('請先新增信用卡！');
+                return;
+            }
+        }
+        
+        if (type === 'repayment') {
+            category = '信用卡還款';
+        }
+
+        const newTx = {
+            id: Date.now(),
+            type,
+            category,
+            desc,
+            amount,
+            cardId,
+            date
+        };
+
+        state.transactions.unshift(newTx);
+        saveData();
+        render();
+        closeModals();
+        e.target.reset();
+        
+        // Restore defaults
+        setDefaultTime();
+        setTxType('expense'); // Reset to expense
+    }
+
+    function addCard(e) {
+        e.preventDefault();
+        const name = document.getElementById('card-name').value;
+        const percent = parseFloat(document.getElementById('card-percent').value);
+        const capVal = document.getElementById('card-cap').value;
+        const cap = capVal ? parseFloat(capVal) : 0;
+        const note = document.getElementById('card-note').value;
+
+        const newCard = {
+            id: Date.now(),
+            name,
+            percent,
+            cap,
+            note
+        };
+
+        state.cards.push(newCard);
+        saveData();
+        render();
+        closeModals();
+        e.target.reset();
+        if(state.cards.length === 1) updateFormOptions();
+    }
+
+    function importPresetCards() {
+        if (!confirm('確定要更新或匯入最新信用卡列表 (包括食飯卡、網購卡) 嗎？')) return;
+        
+        let addedCount = 0;
+        let updatedCount = 0;
+        
+        PRESET_CARDS.forEach(p => {
+            const existingCard = state.cards.find(c => c.name === p.name);
+            
+            if (existingCard) {
+                existingCard.percent = p.percent;
+                existingCard.cap = p.cap;
+                existingCard.note = p.note;
+                updatedCount++;
+            } else {
+                state.cards.push({
+                    ...p,
+                    id: Date.now() + Math.floor(Math.random() * 100000), 
+                    spent: 0
+                });
+                addedCount++;
+            }
+        });
+
+        saveData();
+        render();
+        alert(`成功新增 ${addedCount} 張新卡，更新 ${updatedCount} 張現有卡片！`);
+    }
+
+    function deleteTransaction(id) {
+        if(confirm('確定刪除此紀錄?')) {
+            state.transactions = state.transactions.filter(t => t.id !== id);
+            saveData();
+            render();
+        }
+    }
+
+    function deleteCard(id) {
+        if(confirm('確定刪除此卡片? (相關消費紀錄將保留，但會顯示為未知卡片)')) {
+            state.cards = state.cards.filter(c => c.id !== id);
+            saveData();
+            render();
+        }
+    }
+    
+    function resetData() {
+        if(confirm('警告：這將會清除所有資料！確定嗎？')) {
+            localStorage.removeItem(DB_KEY);
+            location.reload();
+        }
+    }
+    
+    // Export Data as CSV
+    function exportData() {
+        // UTF-8 BOM to fix Chinese encoding in Excel
+        let csvContent = "\uFEFF";
+        // Header
+        csvContent += "日期,時間,類型,類別,描述,金額,信用卡,預計回贈\n";
+        
+        state.transactions.forEach(tx => {
+            const date = tx.date.split('T')[0];
+            const time = tx.date.split('T')[1] || '';
+            const typeMap = { 'expense': '支出', 'income': '收入', 'repayment': '還款' };
+            const type = typeMap[tx.type] || '支出';
+            const desc = `"${tx.desc.replace(/"/g, '""')}"`; // Escape quotes
+            
+            let cardName = '';
+            let cashback = 0;
+            
+            if (tx.type !== 'income') {
+                const card = state.cards.find(c => c.id == tx.cardId);
+                cardName = card ? card.name : '';
+                if(card && tx.type === 'expense') {
+                   cashback = (tx.amount * card.percent / 100).toFixed(2);
+                }
+            }
+            
+            csvContent += `${date},${time},${type},${tx.category},${desc},${tx.amount},${cardName},${cashback}\n`;
+        });
+        
+        // Create download link
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `finance_data_${new Date().toISOString().slice(0,10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function openModal(type) {
+        document.getElementById(`modal-${type}`).classList.add('active');
+        if (type === 'transaction') {
+            // Re-initialize default
+            setTxType('expense');
+            setDefaultTime();
+        }
+    }
+
+    function closeModals() {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+    }
+
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            closeModals();
+        }
+    }
+
+    init();
 </script>
+
 </body>
 </html>
