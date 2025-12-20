@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>回贈哥 - 智能簽賬管理</title>
+    <!-- 引入 Chart.js 畫圖表 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -211,6 +212,7 @@
 
 <header>
     <h1><span class="logo-icon">💰</span> 回贈哥</h1>
+    <!-- New Action Bar with Icons -->
     <div class="header-actions">
         <button class="icon-btn" onclick="openModal('data')" title="備份與同步">☁️</button>
         <button class="icon-btn" onclick="openModal('log')" title="更新日誌">📋</button>
@@ -221,6 +223,7 @@
 
 <div class="container">
 
+    <!-- Overview Stats -->
     <div class="panel">
         <div class="stats-grid">
             <div class="stat-card">
@@ -238,12 +241,14 @@
         </div>
     </div>
 
+    <!-- Tabs Navigation -->
     <div class="tabs">
         <div class="tab active" onclick="switchTab('transactions')">賬目紀錄</div>
         <div class="tab" onclick="switchTab('cards')">信用卡管理</div>
         <div class="tab" onclick="switchTab('analysis')">統計分析</div>
     </div>
 
+    <!-- Tab 1: Transactions -->
     <div id="tab-transactions" class="tab-content active">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -251,11 +256,13 @@
                 <span class="stat-label" id="tx-count">0 筆</span>
             </div>
             <div id="transaction-list">
+                <!-- Transactions will be injected here -->
                 <div style="text-align:center; padding:20px; color:var(--text-muted);">暫無紀錄</div>
             </div>
         </div>
     </div>
 
+    <!-- Tab 2: Cards -->
     <div id="tab-cards" class="tab-content">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -266,10 +273,12 @@
                 </div>
             </div>
             <div id="card-list">
-                </div>
+                <!-- Cards will be injected here -->
+            </div>
         </div>
     </div>
 
+    <!-- Tab 3: Analysis -->
     <div id="tab-analysis" class="tab-content">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -300,8 +309,10 @@
 
 </div>
 
+<!-- Floating Add Button -->
 <button class="fab" onclick="openModal('transaction')">+</button>
 
+<!-- Add Transaction Modal -->
 <div id="modal-transaction" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
@@ -324,13 +335,15 @@
             <div class="form-group" id="group-category">
                 <label>類別</label>
                 <select id="tx-category" required>
-                    </select>
+                    <!-- Populated by JS -->
+                </select>
             </div>
 
             <div class="form-group" id="group-card">
                 <label>選擇信用卡</label>
                 <select id="tx-card">
-                    </select>
+                    <!-- Options populated by JS -->
+                </select>
                 <div id="card-hint" style="font-size:0.8rem; color:var(--primary); margin-top:5px; display:none;">
                     回贈: <span id="hint-rate"></span>%
                 </div>
@@ -350,6 +363,7 @@
     </div>
 </div>
 
+<!-- Add Card Modal -->
 <div id="modal-card" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
@@ -376,6 +390,7 @@
     </div>
 </div>
 
+<!-- Data Management Modal -->
 <div id="modal-data" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
@@ -412,6 +427,7 @@
     </div>
 </div>
 
+<!-- Log Modal -->
 <div id="modal-log" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
@@ -449,6 +465,7 @@
     </div>
 </div>
 
+<!-- Help Modal -->
 <div id="modal-help" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
@@ -1126,4 +1143,3 @@
 
 </body>
 </html>
-```eof
