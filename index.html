@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="zh-HK" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
+            /* 預設 (深色模式) Dark Theme Variables */
             --primary: #00d26a; /* 回贈哥綠 */
             --primary-dark: #00a855;
             --bg: #121212;
@@ -20,15 +21,34 @@
             --repay: #ff9f43; /* 還款橙 */
             --border: #333;
             --card-gradient: linear-gradient(135deg, #2c3e50, #000000);
+            --shadow: 0 4px 6px rgba(0,0,0,0.3);
+            --chart-text: #e0e0e0;
+        }
+
+        /* 淺色模式 Light Theme Variables */
+        [data-theme="light"] {
+            --primary: #00b85c;
+            --primary-dark: #008f45;
+            --bg: #f4f6f8;
+            --surface: #ffffff;
+            --surface-hover: #eef2f5;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --danger: #d93025;
+            --income: #1a73e8;
+            --repay: #e37400;
+            --border: #e0e0e0;
+            --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af); /* 淺色模式下卡片保持深色質感或微調 */
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --chart-text: #333333;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; transition: background-color 0.3s, color 0.3s; }
 
         /* Header */
         header {
-            background: rgba(30, 30, 30, 0.95);
-            backdrop-filter: blur(10px);
+            background: var(--surface); /* Changed to surface for better light mode blending */
             padding: 15px 20px;
             position: sticky;
             top: 0;
@@ -37,17 +57,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: var(--shadow);
+            transition: background 0.3s;
         }
         h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
         .logo-icon { font-size: 1.4rem; }
 
         /* Layout */
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: background 0.3s; }
 
         /* Dashboard Stats */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; }
         .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
 
@@ -62,7 +84,7 @@
         .item-sub { font-size: 0.8rem; color: var(--text-muted); }
         .item-amount { font-weight: bold; font-size: 1.1rem; text-align: right; margin-left: 10px; }
         
-        .cat-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: #333; color: #ccc; }
+        .cat-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: var(--surface-hover); border: 1px solid var(--border); color: var(--text-muted); }
         .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
         
         /* Repayment Tag */
@@ -73,43 +95,47 @@
         label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
         input, select {
             width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border);
-            border-radius: 8px; color: var(--text); font-size: 1rem; outline: none;
+            border-radius: 8px; color: var(--text); font-size: 1rem; outline: none; transition: background 0.3s;
         }
         input:focus, select:focus { border-color: var(--primary); }
 
         /* Toggle Switch (Expense/Income/Repay) */
-        .type-toggle { display: flex; background: var(--bg); border-radius: 8px; padding: 4px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .type-toggle { display: flex; background: var(--bg); border-radius: 8px; padding: 4px; border: 1px solid var(--border); margin-bottom: 15px; transition: background 0.3s; }
         .type-option { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; color: var(--text-muted); transition: all 0.2s; font-size: 0.9rem; font-weight: 500; }
-        .type-option.active.expense { background: rgba(255, 77, 77, 0.2); color: var(--danger); border: 1px solid var(--danger); }
-        .type-option.active.income { background: rgba(79, 172, 254, 0.2); color: var(--income); border: 1px solid var(--income); }
-        .type-option.active.repayment { background: rgba(255, 159, 67, 0.2); color: var(--repay); border: 1px solid var(--repay); }
+        .type-option.active.expense { background: rgba(255, 77, 77, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); border: 1px solid var(--income); }
+        .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); border: 1px solid var(--repay); }
 
         /* Buttons */
         .btn {
-            background: var(--primary); color: #000; border: none; padding: 12px; width: 100%;
+            background: var(--primary); color: #fff; border: none; padding: 12px; width: 100%;
             border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 8px;
         }
         .btn:active { transform: scale(0.98); }
-        .btn-small { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
+        .btn-small { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); cursor: pointer; transition: background 0.3s; }
         .btn-text { background: none; border: none; color: var(--text-muted); padding: 5px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
         .btn-help { color: var(--income); font-size: 0.9rem; }
+        
+        /* Theme Toggle Button */
+        .btn-theme { font-size: 1.2rem; background: none; border: none; cursor: pointer; padding: 0 5px; }
 
         /* Credit Card Visual */
         .credit-card {
             background: var(--card-gradient);
             padding: 15px; border-radius: 10px; margin-bottom: 10px; position: relative; overflow: hidden;
             border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; /* Always white text on card */
         }
-        .card-name { font-weight: bold; font-size: 1.1rem; }
-        .card-info { font-size: 0.85rem; color: #ccc; margin-top: 5px; display: flex; justify-content: space-between; }
+        .card-name { font-weight: bold; font-size: 1.1rem; color: #fff; }
+        .card-info { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-top: 5px; display: flex; justify-content: space-between; }
         .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
 
         /* Floating Action Button */
         .fab {
             position: fixed; bottom: 20px; right: 20px;
-            background: var(--primary); color: #000;
+            background: var(--primary); color: #fff;
             width: 56px; height: 56px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4);
@@ -127,7 +153,7 @@
         .modal-content {
             background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto;
             padding: 25px; border-radius: 16px; position: relative;
-            transform: translateY(20px); transition: transform 0.2s;
+            transform: translateY(20px); transition: transform 0.2s; color: var(--text);
         }
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
@@ -136,8 +162,8 @@
         .help-section { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
         .help-section:last-child { border-bottom: none; }
         .help-title { color: var(--primary); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-        .help-step { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4; color: #ddd; }
-        .ios-icon { display: inline-block; width: 20px; height: 20px; background: #333; border-radius: 4px; vertical-align: middle; text-align: center; line-height: 20px; font-size: 12px; }
+        .help-step { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4; color: var(--text); opacity: 0.9; }
+        .ios-icon { display: inline-block; width: 20px; height: 20px; background: #eee; color: #333; border-radius: 4px; vertical-align: middle; text-align: center; line-height: 20px; font-size: 12px; font-weight: bold; }
 
         /* Tabs */
         .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 15px; }
@@ -171,8 +197,9 @@
 <header>
     <h1><span class="logo-icon">💰</span> 回贈哥</h1>
     <div style="display:flex; gap:10px; align-items:center;">
+        <button class="btn-theme" id="btn-theme" onclick="toggleTheme()">☀️</button>
         <button class="btn-text btn-help" onclick="openModal('help')">❓ 教學</button>
-        <button class="btn-small" onclick="exportData()" style="color:#fff; background:var(--surface-hover); border-color:#666; padding:4px 8px;">📥 匯出</button>
+        <button class="btn-small" onclick="exportData()" style="color:var(--text); border-color:var(--border); padding:4px 8px;">📥 匯出</button>
         <button class="btn-small" onclick="resetData()" style="color:var(--danger); border-color:var(--danger); padding:4px 8px;">重置</button>
     </div>
 </header>
@@ -259,8 +286,8 @@
     </div>
     
     <div class="footer">
-        Copyright © Redezero | Powered by Gemini<br>
-        <span style="font-size:0.75rem; opacity:0.8; color:#777;">*信用卡資料只供參考，回贈及條款以銀行最新公佈為準</span>
+        Copyright © Redzero | Powered by Gemini<br>
+        <span style="font-size:0.75rem; opacity:0.8; color:var(--text-muted);">*信用卡資料只供參考，回贈及條款以銀行最新公佈為準</span>
     </div>
 
 </div>
@@ -353,6 +380,11 @@
         <h2 style="margin-top:0;">💡 使用說明 & 教學</h2>
         
         <div class="help-section">
+            <div class="help-title">🌗 切換深色/淺色模式</div>
+            <div class="help-step">撳左上角嘅 ☀️/🌙 按鈕，即可切換介面風格。系統會自動記住你嘅選擇。</div>
+        </div>
+
+        <div class="help-section">
             <div class="help-title">💾 匯出資料</div>
             <div class="help-step">撳右上角<strong>「📥 匯出」</strong>，會即刻下載一個 CSV 檔案。你可以用 Excel、Numbers 或者 Google 試算表打開，自己整圖表或者做備份。</div>
         </div>
@@ -381,6 +413,7 @@
 <script>
     // --- Data & Config ---
     const DB_KEY = 'rebate_bro_data_v2';
+    const THEME_KEY = 'rebate_bro_theme';
     
     // Categories Config
     const CATEGORIES = {
@@ -428,6 +461,10 @@
             state.cards = generatePresetCards();
             saveData();
         }
+        
+        // Init Theme
+        const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+        applyTheme(savedTheme);
 
         setDefaultTime();
         document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
@@ -436,6 +473,24 @@
         setTxType('expense');
         
         render();
+    }
+    
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        const btn = document.getElementById('btn-theme');
+        btn.innerText = theme === 'dark' ? '☀️' : '🌙';
+        
+        // If charts are currently visible, we might need to update them for text color
+        if (document.getElementById('tab-analysis').classList.contains('active')) {
+            renderCharts();
+        }
+    }
+    
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const target = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem(THEME_KEY, target);
+        applyTheme(target);
     }
     
     // Helper to get local time string for datetime-local input
@@ -560,6 +615,10 @@
         if(barChart) barChart.destroy();
 
         const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7'];
+        
+        // Get text color based on CSS variable
+        const style = getComputedStyle(document.body);
+        const textColor = style.getPropertyValue('--chart-text').trim();
 
         const ctxPie = document.getElementById('chart-cards').getContext('2d');
         pieChart = new Chart(ctxPie, {
@@ -576,7 +635,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'right', labels: { color: '#e0e0e0' } }
+                    legend: { position: 'right', labels: { color: textColor } }
                 }
             }
         });
@@ -597,8 +656,8 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    x: { ticks: { color: '#a0a0a0' }, grid: { display: false } },
-                    y: { ticks: { color: '#a0a0a0' }, grid: { color: '#333' } }
+                    x: { ticks: { color: textColor }, grid: { display: false } },
+                    y: { ticks: { color: textColor }, grid: { color: textColor === '#e0e0e0' ? '#333' : '#e0e0e0' } }
                 },
                 plugins: {
                     legend: { display: false }
@@ -623,7 +682,7 @@
                         <div class="card-info" style="color:var(--primary); font-weight:bold;">${card.percent}% 回贈</div>
                         <div class="card-info">${card.note || ''}</div>
                     </div>
-                    <button class="btn-text" onclick="deleteCard(${card.id})" style="color:var(--text-muted);">&times;</button>
+                    <button class="btn-text" onclick="deleteCard(${card.id})" style="color:rgba(255,255,255,0.7);">&times;</button>
                 </div>
                 <div class="progress-bar">
                     <div id="prog-${card.id}" class="progress-fill"></div>
