@@ -19,6 +19,7 @@
             --danger: #ff4d4d;
             --income: #4facfe; /* 收入藍 */
             --repay: #ff9f43; /* 還款橙 */
+            --miles: #a29bfe; /* 里數紫 */
             --border: #333;
             --card-gradient: linear-gradient(135deg, #2c3e50, #000000);
             --shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -37,6 +38,7 @@
             --danger: #d93025;
             --income: #1a73e8;
             --repay: #e37400;
+            --miles: #6c5ce7;
             --border: #e0e0e0;
             --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af);
             --shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -97,8 +99,8 @@
 
         /* Dashboard Stats */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; }
-        .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; }
+        .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; display: flex; flex-direction: column; justify-content: center; }
+        .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
 
         /* Lists */
@@ -114,6 +116,7 @@
         
         .cat-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: var(--surface-hover); border: 1px solid var(--border); color: var(--text-muted); }
         .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+        .miles-tag { font-size: 0.75rem; color: var(--miles); background: rgba(162, 155, 254, 0.15); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
         .repay-tag { font-size: 0.75rem; color: var(--repay); border: 1px solid var(--repay); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
 
         /* Forms */
@@ -235,8 +238,8 @@
                 <div class="stat-value" id="total-income" style="color:var(--income)">$0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">預計回贈</div>
-                <div class="stat-value" id="total-cashback" style="color:var(--primary)">$0</div>
+                <div class="stat-label">預計回贈 (現金+里數)</div>
+                <div class="stat-value" id="total-cashback" style="color:var(--primary); font-size: 1rem;">$0</div>
             </div>
         </div>
     </div>
@@ -244,7 +247,7 @@
     <!-- Tabs Navigation -->
     <div class="tabs">
         <div class="tab active" onclick="switchTab('transactions')">賬目紀錄</div>
-        <div class="tab" onclick="switchTab('cards')">信用卡管理</div>
+        <div class="tab" onclick="switchTab('cards')">卡包 / 帳戶</div>
         <div class="tab" onclick="switchTab('analysis')">統計分析</div>
     </div>
 
@@ -266,9 +269,9 @@
     <div id="tab-cards" class="tab-content">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; font-size:1.1rem;">我的卡包</h2>
+                <h2 style="margin:0; font-size:1.1rem;">我的卡包 / 帳戶</h2>
                 <div style="display:flex; gap:8px;">
-                     <button class="btn-small" onclick="importPresetCards()" style="background:rgba(0,210,106,0.1); border-color:var(--primary); color:var(--primary);">📥 更新推薦</button>
+                     <button class="btn-small" onclick="importPresetCards()" style="background:rgba(0,210,106,0.1); border-color:var(--primary); color:var(--primary);">📥 匯入預設</button>
                     <button class="btn-small" onclick="openModal('card')">+ 新增</button>
                 </div>
             </div>
@@ -287,7 +290,7 @@
             </div>
             
             <div style="margin-bottom:30px;">
-                <h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">卡片簽賬分佈</h3>
+                <h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">卡片/帳戶 簽賬分佈</h3>
                 <div class="chart-container">
                     <canvas id="chart-cards"></canvas>
                 </div>
@@ -304,7 +307,7 @@
     
     <div class="footer">
         Copyright © Redezero | Powered by Gemini<br>
-        <span style="font-size:0.75rem; opacity:0.8; color:var(--text-muted);">*信用卡資料只供參考，回贈及條款以銀行最新公佈為準</span>
+        <span style="font-size:0.75rem; opacity:0.8; color:var(--text-muted);">*信用卡及里數資料只供參考，以銀行最新條款為準</span>
     </div>
 
 </div>
@@ -340,12 +343,12 @@
             </div>
 
             <div class="form-group" id="group-card">
-                <label>選擇信用卡</label>
+                <label>付款方式 / 信用卡</label>
                 <select id="tx-card">
                     <!-- Options populated by JS -->
                 </select>
                 <div id="card-hint" style="font-size:0.8rem; color:var(--primary); margin-top:5px; display:none;">
-                    回贈: <span id="hint-rate"></span>%
+                    預計回贈: <span id="hint-rate"></span>
                 </div>
             </div>
 
@@ -367,15 +370,22 @@
 <div id="modal-card" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
-        <h2>新增信用卡</h2>
+        <h2>新增 卡片 / 帳戶</h2>
         <form id="card-form" onsubmit="addCard(event)">
             <div class="form-group">
-                <label>卡片名稱</label>
-                <input type="text" id="card-name" placeholder="例如: HSBC Red" required>
+                <label>名稱 (例如: 八達通, SC Cathay)</label>
+                <input type="text" id="card-name" required>
             </div>
             <div class="form-group">
-                <label>回贈比率 (%)</label>
-                <input type="number" id="card-percent" step="0.1" placeholder="4" required>
+                <label>回贈類型</label>
+                <select id="card-type" onchange="toggleCardRateInput()">
+                    <option value="cashback">現金回贈 (%)</option>
+                    <option value="miles">里數 (HKD/里)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label id="lbl-rate">回贈比率 (%)</label>
+                <input type="number" id="card-rate" step="0.1" placeholder="例如 4 或 6" required>
             </div>
             <div class="form-group">
                 <label>簽賬上限 (留空為無限)</label>
@@ -385,7 +395,7 @@
                 <label>備註 (選填)</label>
                 <input type="text" id="card-note" placeholder="例如: 網購專用">
             </div>
-            <button type="submit" class="btn">新增卡片</button>
+            <button type="submit" class="btn">新增</button>
         </form>
     </div>
 </div>
@@ -434,11 +444,21 @@
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         
         <div class="log-entry">
-            <div class="log-ver">v1.8 (最新)</div>
+            <div class="log-ver">v1.9 (最新)</div>
+            <div class="log-date">2025-12-20</div>
+            <div class="log-desc">
+                - 新增「里數卡」支援 (HKD/Mile)。<br>
+                - 預設加入渣打國泰、DBS Black、HSBC EveryMile。<br>
+                - 新增八達通、PayMe、Alipay、WeChat Pay 選項。<br>
+                - 統計版面同時顯示現金回贈及總里數。
+            </div>
+        </div>
+
+        <div class="log-entry">
+            <div class="log-ver">v1.8</div>
             <div class="log-date">2025-12-20</div>
             <div class="log-desc">
                 - 新增 iOS 捷徑「一開即記」功能 (?new_tx=true)。<br>
-                - 更新教學內容，解釋 Apple Pay 自動化限制。<br>
                 - 介面大整容：頂部選單升級為圖示風格。
             </div>
         </div>
@@ -447,17 +467,7 @@
             <div class="log-ver">v1.7</div>
             <div class="log-date">2025-12-20</div>
             <div class="log-desc">
-                - 新增「備份與同步」中心，加入上次備份時間。<br>
-                - Copyright 修正為 Redezero。
-            </div>
-        </div>
-
-        <div class="log-entry">
-            <div class="log-ver">v1.6</div>
-            <div class="log-date">2025-12-20</div>
-            <div class="log-desc">
-                - 新增黑夜/白天模式切換。<br>
-                - 升級「日期時間」選擇，記賬更精準。
+                - 新增「備份與同步」中心。
             </div>
         </div>
         
@@ -472,19 +482,22 @@
         <h2 style="margin-top:0;">💡 使用說明 & 教學</h2>
         
         <div class="help-section">
-            <div class="help-title">📱 iOS 捷徑 (Apple Pay 一開即記)</div>
+            <div class="help-title">✈️ 里數卡設定</div>
+            <div class="help-step">新增卡片時，回贈類型選「里數」。回贈比率輸入「幾多蚊一里」(例如 $4/里，就輸入 4)。系統會自動幫你分開計現金同里數。</div>
+        </div>
+
+        <div class="help-section">
+            <div class="help-title">📱 iOS 捷徑 (一開即記)</div>
             <div class="help-step">由於 Apple 私隱限制，無法自動讀取交易金額。但你可以設定「一開即彈輸入框」：</div>
-            <div class="help-step">1. 複製你的網站網址，並在後面加上 <code style="background:#444; padding:2px 4px; border-radius:4px; color:#fff;">?new_tx=true</code></div>
+            <div class="help-step">1. 複製此網址 (已加捷徑指令)：<br><code style="background:#444; padding:4px; border-radius:4px; color:#fff; word-break: break-all; font-size: 0.8rem; display:block; margin-top:4px;">https://redzero213.github.io/createmoremoney/?new_tx=true</code></div>
             <div class="help-step">2. 在捷徑 App -> 自動化 -> 交易 -> 選擇信用卡。</div>
-            <div class="help-step">3. 動作選<strong>「開啟 URL」</strong>，填入上面那條「加料」網址。</div>
+            <div class="help-step">3. 動作選<strong>「開啟 URL」</strong>，填入上面那條網址。</div>
             <div class="help-step">✨ 以後嘟卡，電話通知一撳就即刻彈出記賬畫面！</div>
         </div>
 
         <div class="help-section">
-            <div class="help-title">☁️ 點樣過機 (轉移資料)？</div>
-            <div class="help-step">1. <strong>舊機</strong>：撳右上角「☁️」 -> 「💾 下載備份檔 (JSON)」。</div>
-            <div class="help-step">2. <strong>傳送</strong>：將個 File Send 去新手機 (WhatsApp/Email)。</div>
-            <div class="help-step">3. <strong>新機</strong>：開 App -> 「☁️」 -> 「📂 選擇並還原備份檔」。</div>
+            <div class="help-title">☁️ 轉移資料</div>
+            <div class="help-step">舊機按「☁️」下載備份檔，Send 去新機再還原。</div>
         </div>
         
         <button class="btn" onclick="closeModals()">明白哂！</button>
@@ -504,24 +517,26 @@
         repayment: ['信用卡還款']
     };
 
-    // 預設推薦卡片
+    // 預設推薦卡片 (v1.9 升級：加入里數卡及電子錢包)
+    // type: 'cashback' (rate is %), 'miles' (rate is HKD/Mile)
     const PRESET_CARDS = [
-        { name: 'WeWa Card (食飯)', cap: 5200, percent: 10, note: '🔥12月食飯10% (實體卡/單筆$100+)' },
-        { name: '富邦 iN Visa', cap: 3947, percent: 8, note: '👑8% (上限$3,947/CBF手續費)' },
-        { name: 'sim Credit', cap: 2500, percent: 8, note: '網購8% (單筆$500+/實體$1000+)' },
-        { name: 'AEON WAKUWAKU', cap: 3571, percent: 6, note: '👑6% (上限$3,571)' },
-        { name: '信銀 Motion', cap: 3571, percent: 6, note: '👑6% (上限$3,571/月簽$3,800)' },
-        { name: 'DBS Eminent VS', cap: 8000, percent: 5, note: '餐飲/健身/醫療 5% (單簽$300+)' },
-        { name: '恒生 MMPOWER', cap: 10870, percent: 5, note: '👑5% (上限$10,870/月簽$5,000)' },
-        { name: '中銀 Chill World', cap: 3260, percent: 5, note: '👑5% (上限$3,260)' },
-        { name: '東亞 BEA GOAL', cap: 5000, percent: 4.4, note: '4.4% (上限$5,000/月簽$2,000)' },
-        { name: '滙豐 Red 卡', cap: 10000, percent: 4, note: '4% (上限$10,000/無下限)' },
-        { name: '中銀 Chill Platinum', cap: 4166, percent: 4, note: '4% (上限$4,166)' },
-        { name: '東亞 i-Titanium', cap: 8333, percent: 4, note: '4% (上限$8,333/月簽$2,000)' },
-        { name: 'HSBC Visa Sig', cap: 100000, percent: 3.6, note: '最紅自主(賞滋味) 3.6%' },
-        { name: 'Citi Cash Back', cap: 0, percent: 2, note: '食肆/酒店 2% (自動回贈)' },
-        { name: 'Mox Credit', cap: 0, percent: 2, note: '2% 無上限 (需活存$25萬)' },
-        { name: '安信 EarnMORE', cap: 150000, percent: 2, note: '2% 每年首15萬' }
+        { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, cap: 5200, note: '🔥12月食飯10% (實體卡/單筆$100+)' },
+        { name: '渣打國泰 (食/網/外)', type: 'miles', rate: 4, cap: 0, note: '✈️ 食肆/網購/外幣 $4/里 (其他$6)' },
+        { name: 'HSBC EveryMile', type: 'miles', rate: 5, cap: 0, note: '✈️ 指定商戶 $2/里 (其他$5)' },
+        { name: 'DBS Black World', type: 'miles', rate: 6, cap: 0, note: '✈️ 本地 $6/里 (外幣$4)' },
+        { name: '八達通', type: 'cashback', rate: 0, cap: 0, note: '一般交通/便利店' },
+        { name: 'PayMe', type: 'cashback', rate: 0, cap: 0, note: 'P2P / 商戶付款' },
+        { name: 'AlipayHK', type: 'cashback', rate: 0, cap: 0, note: '淘寶/商戶 (連結信用卡請自行改%)' },
+        { name: 'WeChat Pay HK', type: 'cashback', rate: 0, cap: 0, note: '國內消費/商戶' },
+        { name: '富邦 iN Visa', type: 'cashback', rate: 8, cap: 3947, note: '👑8% (上限$3,947/CBF手續費)' },
+        { name: 'sim Credit', type: 'cashback', rate: 8, cap: 2500, note: '網購8% (單筆$500+/實體$1000+)' },
+        { name: 'AEON WAKUWAKU', type: 'cashback', rate: 6, cap: 3571, note: '👑6% (上限$3,571)' },
+        { name: '信銀 Motion', type: 'cashback', rate: 6, cap: 3571, note: '👑6% (上限$3,571/月簽$3,800)' },
+        { name: '恒生 MMPOWER', type: 'cashback', rate: 5, cap: 10870, note: '👑5% (上限$10,870/月簽$5,000)' },
+        { name: '中銀 Chill World', type: 'cashback', rate: 5, cap: 3260, note: '👑5% (上限$3,260)' },
+        { name: '滙豐 Red 卡', type: 'cashback', rate: 4, cap: 10000, note: '4% (上限$10,000/無下限)' },
+        { name: 'Citi Cash Back', type: 'cashback', rate: 2, cap: 0, note: '食肆/酒店 2% (自動回贈)' },
+        { name: '安信 EarnMORE', type: 'cashback', rate: 2, cap: 150000, note: '2% 每年首15萬' }
     ];
 
     let state = {
@@ -538,6 +553,13 @@
         const stored = localStorage.getItem(DB_KEY);
         if (stored) {
             state = JSON.parse(stored);
+            // v1.9 Migration: Add type/rate if missing
+            state.cards.forEach(c => {
+                if (!c.type) {
+                    c.type = 'cashback';
+                    c.rate = c.percent || 0; // Migrate old percent to rate
+                }
+            });
         } else {
             state.cards = generatePresetCards();
             saveData();
@@ -553,7 +575,6 @@
         setTxType('expense');
         render();
 
-        // Check for shortcut deep link
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('new_tx') === 'true') {
             openModal('transaction');
@@ -598,6 +619,8 @@
         let totalSpent = 0;
         let totalIncome = 0;
         let totalCashback = 0;
+        let totalMiles = 0;
+        
         const cardSpending = {};
         state.cards.forEach(c => cardSpending[c.id] = 0);
 
@@ -614,8 +637,11 @@
                     const card = state.cards.find(c => c.id == tx.cardId);
                     if (card) {
                         cardSpending[card.id] += tx.amount;
-                        let rate = card.percent;
-                        totalCashback += (tx.amount * rate / 100);
+                        if (card.type === 'miles' && card.rate > 0) {
+                            totalMiles += Math.floor(tx.amount / card.rate);
+                        } else {
+                            totalCashback += (tx.amount * card.rate / 100);
+                        }
                     }
                 } else if (type === 'income') {
                     totalIncome += tx.amount;
@@ -625,7 +651,13 @@
 
         document.getElementById('total-spent').innerText = '$' + totalSpent.toLocaleString();
         document.getElementById('total-income').innerText = '$' + totalIncome.toLocaleString();
-        document.getElementById('total-cashback').innerText = '$' + totalCashback.toFixed(1);
+        
+        // Display both Cashback and Miles
+        let rewardText = `$${totalCashback.toFixed(1)}`;
+        if (totalMiles > 0) {
+            rewardText += ` + ${totalMiles.toLocaleString()} AM`;
+        }
+        document.getElementById('total-cashback').innerText = rewardText;
         document.getElementById('tx-count').innerText = state.transactions.length + ' 筆(總)';
 
         state.cards.forEach(card => {
@@ -657,6 +689,7 @@
         }
     }
 
+    // --- Chart Logic ---
     function renderCharts() {
         const month = document.getElementById('analysis-month').value;
         if(!month) return;
@@ -692,7 +725,7 @@
         if(pieChart) pieChart.destroy();
         if(barChart) barChart.destroy();
 
-        const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7'];
+        const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7', '#a29bfe', '#fab1a0', '#81ecec'];
         
         const style = getComputedStyle(document.body);
         const textColor = style.getPropertyValue('--chart-text').trim();
@@ -743,18 +776,29 @@
         });
     }
 
+    // --- UI Rendering ---
+
     function renderCards() {
         const list = document.getElementById('card-list');
         list.innerHTML = '';
         state.cards.forEach(card => {
             const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
+            
+            // Format rate text based on type
+            let rateText = '';
+            if (card.type === 'miles') {
+                rateText = `$${card.rate}/里`;
+            } else {
+                rateText = `${card.rate}% 回贈`;
+            }
+
             const el = document.createElement('div');
             el.className = 'credit-card';
             el.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:start;">
                     <div>
                         <div class="card-name">${card.name}</div>
-                        <div class="card-info" style="color:var(--primary); font-weight:bold;">${card.percent}% 回贈</div>
+                        <div class="card-info" style="color:var(--primary); font-weight:bold;">${rateText}</div>
                         <div class="card-info">${card.note || ''}</div>
                     </div>
                     <button class="btn-text" onclick="deleteCard(${card.id})" style="color:rgba(255,255,255,0.7);">&times;</button>
@@ -769,7 +813,7 @@
             list.appendChild(el);
         });
         if (state.cards.length === 0) {
-            list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡，請按新增或匯入推薦</div>';
+            list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有卡片或帳戶，請按匯入或新增</div>';
         }
     }
 
@@ -781,7 +825,6 @@
         sorted.forEach(tx => {
             const type = tx.type || 'expense';
             const category = tx.category || (type === 'income' ? '收入' : '其他');
-            
             const dateStr = tx.date.replace('T', ' ');
 
             let amountDisplay, colorClass, cashbackTag, cardName;
@@ -803,9 +846,19 @@
                 
                 const card = state.cards.find(c => c.id == tx.cardId);
                 cardName = card ? card.name : '未知卡片';
-                const rate = card ? card.percent : 0;
-                const cashback = (tx.amount * rate / 100).toFixed(1);
-                cashbackTag = `<div class="cashback-tag">賺 $${cashback}</div>`;
+                
+                // Calculate Reward Display
+                if (card) {
+                    if (card.type === 'miles' && card.rate > 0) {
+                        const miles = Math.floor(tx.amount / card.rate);
+                        cashbackTag = `<div class="miles-tag">賺 ${miles} AM</div>`;
+                    } else {
+                        const cashback = (tx.amount * card.rate / 100).toFixed(1);
+                        cashbackTag = `<div class="cashback-tag">賺 $${cashback}</div>`;
+                    }
+                } else {
+                    cashbackTag = '';
+                }
             }
 
             const el = document.createElement('div');
@@ -865,7 +918,10 @@
         state.cards.forEach(card => {
             const opt = document.createElement('option');
             opt.value = card.id;
-            opt.text = `${card.name} (${card.percent}%)`;
+            let label = card.name;
+            if(card.type === 'miles') label += ` ($${card.rate}/里)`;
+            else label += ` (${card.rate}%)`;
+            opt.text = label;
             select.appendChild(opt);
         });
         if(state.cards.length > 0) updateCardHint();
@@ -887,13 +943,33 @@
         
         if (card && type === 'expense') {
             hintBox.style.display = 'block';
-            hintRate.innerText = card.percent;
+            if (card.type === 'miles') {
+                hintRate.innerText = `$${card.rate}/里`;
+                hintRate.style.color = 'var(--miles)';
+            } else {
+                hintRate.innerText = `${card.rate}%`;
+                hintRate.style.color = 'var(--primary)';
+            }
         } else {
             hintBox.style.display = 'none';
         }
     }
     
     document.getElementById('tx-card').addEventListener('change', updateCardHint);
+
+    function toggleCardRateInput() {
+        const type = document.getElementById('card-type').value;
+        const lbl = document.getElementById('lbl-rate');
+        const input = document.getElementById('card-rate');
+        
+        if (type === 'miles') {
+            lbl.innerText = '里數兌換率 ($/里)';
+            input.placeholder = '例如: 4 (代表 $4 換 1 里)';
+        } else {
+            lbl.innerText = '回贈比率 (%)';
+            input.placeholder = '例如: 4 (代表 4%)';
+        }
+    }
 
     function switchTab(tabName) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -924,7 +1000,7 @@
         if (type === 'expense' || type === 'repayment') {
             cardId = document.getElementById('tx-card').value;
             if (!cardId) {
-                alert('請先新增信用卡！');
+                alert('請先新增信用卡/帳戶！');
                 return;
             }
         }
@@ -956,7 +1032,8 @@
     function addCard(e) {
         e.preventDefault();
         const name = document.getElementById('card-name').value;
-        const percent = parseFloat(document.getElementById('card-percent').value);
+        const type = document.getElementById('card-type').value;
+        const rate = parseFloat(document.getElementById('card-rate').value);
         const capVal = document.getElementById('card-cap').value;
         const cap = capVal ? parseFloat(capVal) : 0;
         const note = document.getElementById('card-note').value;
@@ -964,7 +1041,8 @@
         const newCard = {
             id: Date.now(),
             name,
-            percent,
+            type,
+            rate,
             cap,
             note
         };
@@ -974,11 +1052,12 @@
         render();
         closeModals();
         e.target.reset();
+        toggleCardRateInput(); // reset label
         if(state.cards.length === 1) updateFormOptions();
     }
 
     function importPresetCards() {
-        if (!confirm('確定要更新或匯入最新信用卡列表 (包括食飯卡、網購卡) 嗎？')) return;
+        if (!confirm('確定要匯入「回贈哥」推薦的列表 (包括里數卡、八達通等) 嗎？')) return;
         
         let addedCount = 0;
         let updatedCount = 0;
@@ -987,7 +1066,8 @@
             const existingCard = state.cards.find(c => c.name === p.name);
             
             if (existingCard) {
-                existingCard.percent = p.percent;
+                existingCard.rate = p.rate;
+                existingCard.type = p.type; // Ensure type is updated
                 existingCard.cap = p.cap;
                 existingCard.note = p.note;
                 updatedCount++;
@@ -1038,7 +1118,6 @@
     }
     
     function exportData(format) {
-        // Update backup time
         const now = new Date().toLocaleString();
         localStorage.setItem(BACKUP_TIME_KEY, now);
         updateBackupTimeDisplay();
@@ -1053,7 +1132,7 @@
             link.click();
         } else {
             let csvContent = "\uFEFF";
-            csvContent += "日期,時間,類型,類別,描述,金額,信用卡,預計回贈\n";
+            csvContent += "日期,時間,類型,類別,描述,金額,帳戶/信用卡,預計回贈\n";
             
             state.transactions.forEach(tx => {
                 const date = tx.date.split('T')[0];
@@ -1063,17 +1142,21 @@
                 const desc = `"${tx.desc.replace(/"/g, '""')}"`;
                 
                 let cardName = '';
-                let cashback = 0;
+                let reward = '';
                 
                 if (tx.type !== 'income') {
                     const card = state.cards.find(c => c.id == tx.cardId);
                     cardName = card ? card.name : '';
                     if(card && tx.type === 'expense') {
-                       cashback = (tx.amount * card.percent / 100).toFixed(2);
+                        if (card.type === 'miles' && card.rate > 0) {
+                            reward = Math.floor(tx.amount / card.rate) + ' AM';
+                        } else {
+                            reward = '$' + (tx.amount * card.rate / 100).toFixed(2);
+                        }
                     }
                 }
                 
-                csvContent += `${date},${time},${type},${tx.category},${desc},${tx.amount},${cardName},${cashback}\n`;
+                csvContent += `${date},${time},${type},${tx.category},${desc},${tx.amount},${cardName},${reward}\n`;
             });
             
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1099,7 +1182,6 @@
         reader.onload = function(e) {
             try {
                 const imported = JSON.parse(e.target.result);
-                // Basic validation
                 if (imported.transactions && imported.cards) {
                     if(confirm(`準備還原資料：\n\n發現 ${imported.transactions.length} 筆交易\n發現 ${imported.cards.length} 張卡片\n\n確定覆蓋現有資料嗎？`)) {
                         state = imported;
@@ -1116,7 +1198,6 @@
             }
         };
         reader.readAsText(file);
-        // Reset input so same file can be selected again if needed
         input.value = ''; 
     }
 
