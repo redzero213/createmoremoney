@@ -2,7 +2,7 @@
 <html lang="zh-HK" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>回贈哥 - 智能簽賬管理</title>
     <!-- 引入 Chart.js 畫圖表 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -181,6 +181,8 @@
             background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto;
             padding: 25px; border-radius: 16px; position: relative;
             transform: translateY(20px); transition: transform 0.2s; color: var(--text);
+            /* Input fix for mobile keyboard */
+            padding-bottom: 50px;
         }
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
@@ -221,6 +223,12 @@
         
         /* Footer */
         .footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 30px; padding-bottom: 20px; opacity: 0.7; line-height: 1.5; }
+        
+        /* Mode Indicator */
+        .mode-indicator {
+            text-align: center; padding: 8px; font-size: 0.75rem; background: var(--surface-hover); color: var(--text-muted); margin-bottom: 10px; border-radius: 4px;
+        }
+        .mode-warning { color: var(--repay); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -237,6 +245,9 @@
 </header>
 
 <div class="container">
+    
+    <!-- Environment Indicator -->
+    <div id="env-indicator" class="mode-indicator" style="display:none;"></div>
 
     <!-- Overview Stats -->
     <div class="panel">
@@ -327,7 +338,7 @@
 <!-- Floating Add Button -->
 <button class="fab" onclick="openModal('transaction')">+</button>
 
-<!-- Add/Edit Transaction Modal -->
+<!-- Add Transaction Modal -->
 <div id="modal-transaction" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
@@ -432,14 +443,11 @@
         </div>
 
         <div class="help-section">
-            <div class="help-title">📥 還原資料 (新機/手機)</div>
-            <div class="help-step">選擇剛才下載的 JSON 備份檔，即刻還原所有紀錄。</div>
+            <div class="help-title">📥 還原/合併資料</div>
+            <div class="help-step">選擇備份檔以還原或合併現有資料。</div>
             <div class="data-btn-group">
-                <button class="btn" style="background:#333; border:1px solid #666;" onclick="triggerImport()">📂 選擇並還原備份檔</button>
+                <button class="btn" style="background:#333; border:1px solid #666;" onclick="triggerImport()">📂 選擇並還原/合併</button>
                 <input type="file" id="file-input" style="display:none;" accept=".json" onchange="importData(this)">
-            </div>
-            <div class="help-step" style="margin-top:10px; color:var(--danger);">
-                <small>⚠️ 還原會覆蓋現有資料，請謹慎操作！</small>
             </div>
         </div>
 
@@ -463,31 +471,29 @@
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         
         <div class="log-entry">
-            <div class="log-ver">v1.10 (最新)</div>
-            <div class="log-date">2025-12-20</div>
+            <div class="log-ver">v1.12 (最新)</div>
+            <div class="log-date">2025-12-21</div>
             <div class="log-desc">
-                - 新增「✏️ 編輯交易」功能，入錯數可以隨時改。<br>
-                - 新增「版本偵測」，自動提示更新。<br>
-                - 加入「強制更新」按鈕解決 GitHub 緩存問題。
+                - 新增「智能合併」：可選擇保留現有資料並合併舊備份。<br>
+                - 優化同步指引。
             </div>
         </div>
 
         <div class="log-entry">
-            <div class="log-ver">v1.9</div>
-            <div class="log-date">2025-12-20</div>
+            <div class="log-ver">v1.11</div>
+            <div class="log-date">2025-12-21</div>
             <div class="log-desc">
-                - 新增「里數卡」支援 (HKD/Mile)。<br>
-                - 新增八達通、PayMe、Alipay、WeChat Pay 選項。<br>
-                - 統計版面同時顯示現金回贈及總里數。
+                - 新增「環境偵測」：提示 Safari vs App 模式。<br>
+                - 優化：修正手機鍵盤遮擋輸入框問題。
             </div>
         </div>
 
         <div class="log-entry">
-            <div class="log-ver">v1.8</div>
+            <div class="log-ver">v1.10</div>
             <div class="log-date">2025-12-20</div>
             <div class="log-desc">
-                - 新增 iOS 捷徑「一開即記」功能 (?new_tx=true)。<br>
-                - 介面大整容：頂部選單升級為圖示風格。
+                - 新增「✏️ 編輯交易」功能。<br>
+                - 新增「版本偵測」及「強制更新」按鈕。
             </div>
         </div>
         
@@ -502,22 +508,18 @@
         <h2 style="margin-top:0;">💡 使用說明 & 教學</h2>
         
         <div class="help-section">
-            <div class="help-title">✏️ 修改入錯數</div>
-            <div class="help-step">在「賬目紀錄」列表，撳每條數右邊的「✏️」按鈕，就可以修改金額、日期或信用卡。</div>
-        </div>
-
-        <div class="help-section">
-            <div class="help-title">✈️ 里數卡設定</div>
-            <div class="help-step">新增卡片時，回贈類型選「里數」。回贈比率輸入「幾多蚊一里」(例如 $4/里，就輸入 4)。系統會自動幫你分開計現金同里數。</div>
+            <div class="help-title">⚠️ 資料合併救星</div>
+            <div class="help-step">如果你在「主畫面App」和「Safari」都有資料：</div>
+            <div class="help-step">1. 去 App 版 -> 匯出 JSON。</div>
+            <div class="help-step">2. 去 Safari 版 -> 選擇剛才的檔案 -> 揀 <strong>「🔗 合併」</strong>。</div>
+            <div class="help-step">3. 之後就可以統一用 Safari 版啦！</div>
         </div>
 
         <div class="help-section">
             <div class="help-title">📱 iOS 捷徑 (一開即記)</div>
-            <div class="help-step">由於 Apple 私隱限制，無法自動讀取交易金額。但你可以設定「一開即彈輸入框」：</div>
-            <div class="help-step">1. 複製此網址 (已加捷徑指令)：<br><code style="background:#444; padding:4px; border-radius:4px; color:#fff; word-break: break-all; font-size: 0.8rem; display:block; margin-top:4px;">https://redzero213.github.io/createmoremoney/?new_tx=true</code></div>
+            <div class="help-step">1. 複製此網址：<br><code style="background:#444; padding:4px; border-radius:4px; color:#fff; word-break: break-all; font-size: 0.8rem; display:block; margin-top:4px;">https://redzero213.github.io/createmoremoney/?new_tx=true</code></div>
             <div class="help-step">2. 在捷徑 App -> 自動化 -> 交易 -> 選擇信用卡。</div>
-            <div class="help-step">3. 動作選<strong>「開啟 URL」</strong>，填入上面那條網址。</div>
-            <div class="help-step">✨ 以後嘟卡，電話通知一撳就即刻彈出記賬畫面！</div>
+            <div class="help-step">3. 動作選<strong>「開啟 URL」</strong>，填入上面網址。</div>
         </div>
         
         <button class="btn" onclick="closeModals()">明白哂！</button>
@@ -529,7 +531,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.10';
+    const APP_VERSION = '1.12';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -596,6 +598,7 @@
         
         updateBackupTimeDisplay();
         checkVersion();
+        checkEnvironment();
         setTxType('expense');
         render();
 
@@ -610,6 +613,19 @@
         if (lastVersion !== APP_VERSION) {
             showToast(`🎉 已更新至 v${APP_VERSION}`);
             localStorage.setItem(VERSION_KEY, APP_VERSION);
+        }
+    }
+    
+    function checkEnvironment() {
+        const isStandalone = window.navigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
+        const indicator = document.getElementById('env-indicator');
+        indicator.style.display = 'block';
+        
+        if (isStandalone) {
+            indicator.innerHTML = '📱 <strong>App 模式</strong> <br><span class="mode-warning">⚠️ 建議改用 Safari 開啟，以確保資料與捷徑同步。</span>';
+        } else {
+            indicator.innerHTML = '🌐 <strong>瀏覽器模式 (推薦)</strong> <br>資料可與 iOS 捷徑互通。';
+            indicator.style.color = 'var(--primary)';
         }
     }
     
@@ -1259,13 +1275,39 @@
             try {
                 const imported = JSON.parse(e.target.result);
                 if (imported.transactions && imported.cards) {
-                    if(confirm(`準備還原資料：\n\n發現 ${imported.transactions.length} 筆交易\n發現 ${imported.cards.length} 張卡片\n\n確定覆蓋現有資料嗎？`)) {
-                        state = imported;
-                        saveData();
-                        render();
-                        closeModals();
-                        alert('還原成功！');
+                    
+                    if (confirm("檢測到備份檔。請問你想如何處理？\n\n[確定] = 🔗 合併 (保留現有資料 + 加入新資料)\n[取消] = 🗑️ 覆蓋 (刪除現有，完全使用備份檔)")) {
+                        // MERGE LOGIC
+                        const currentTx = state.transactions;
+                        const newTx = imported.transactions;
+                        
+                        // Combine and remove duplicates based on ID
+                        const mergedTx = [...currentTx, ...newTx];
+                        const uniqueTx = Array.from(new Map(mergedTx.map(item => [item.id, item])).values());
+                        state.transactions = uniqueTx.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        
+                        // Merge cards (simple append for now to avoid losing custom settings, user can delete dups)
+                        // Better: check by ID
+                        const currentCards = state.cards;
+                        const newCards = imported.cards;
+                        const mergedCards = [...currentCards, ...newCards];
+                        const uniqueCards = Array.from(new Map(mergedCards.map(item => [item.id, item])).values());
+                        state.cards = uniqueCards;
+                        
+                        alert(`成功合併！\n總共 ${uniqueTx.length} 筆交易紀錄。`);
+                    } else {
+                        // OVERWRITE LOGIC
+                        if(confirm("警告：這將會刪除你目前的所有資料並用備份檔取代。確定嗎？")) {
+                            state = imported;
+                            alert('還原成功！');
+                        } else {
+                            return; // Cancelled everything
+                        }
                     }
+                    
+                    saveData();
+                    render();
+                    closeModals();
                 } else {
                     alert('檔案格式錯誤！請確保是正確的備份檔。');
                 }
@@ -1290,7 +1332,6 @@
                 setTxType('expense');
                 setDefaultTime();
             } else {
-                // Was already Add Mode, just reset time
                 setDefaultTime();
             }
         }
