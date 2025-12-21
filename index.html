@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- PWA Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1e1e1e">
+    
     <title>回贈哥 - 智能簽賬管理</title>
-    <!-- 引入 Chart.js 畫圖表 -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            /* 預設 (深色模式) Dark Theme Variables */
-            --primary: #00d26a; /* 回贈哥綠 */
+            --primary: #00d26a; 
             --primary-dark: #00a855;
             --bg: #121212;
             --surface: #1e1e1e;
@@ -17,16 +23,17 @@
             --text: #e0e0e0;
             --text-muted: #a0a0a0;
             --danger: #ff4d4d;
-            --income: #4facfe; /* 收入藍 */
-            --repay: #ff9f43; /* 還款橙 */
-            --miles: #a29bfe; /* 里數紫 */
+            --income: #4facfe; 
+            --repay: #ff9f43; 
+            --miles: #a29bfe; 
+            --mission: #f39c12;
+            --sub: #e17055; /* 訂閱紅 */
             --border: #333;
             --card-gradient: linear-gradient(135deg, #2c3e50, #000000);
             --shadow: 0 4px 6px rgba(0,0,0,0.3);
             --chart-text: #e0e0e0;
         }
 
-        /* 淺色模式 Light Theme Variables */
         [data-theme="light"] {
             --primary: #00b85c;
             --primary-dark: #008f45;
@@ -39,6 +46,8 @@
             --income: #1a73e8;
             --repay: #e37400;
             --miles: #6c5ce7;
+            --mission: #d35400;
+            --sub: #d63031;
             --border: #e0e0e0;
             --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af);
             --shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -48,66 +57,38 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; transition: background-color 0.3s, color 0.3s; }
 
-        /* Header */
         header {
-            background: var(--surface);
-            padding: 12px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow);
-            transition: background 0.3s;
+            background: var(--surface); padding: 12px 20px; position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow); transition: background 0.3s;
         }
         h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
         .logo-icon { font-size: 1.4rem; }
 
-        /* Header Actions Toolbar */
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
         .icon-btn {
-            background: transparent;
-            border: 1px solid transparent;
-            color: var(--text);
-            font-size: 1.1rem;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
+            background: transparent; border: 1px solid transparent; color: var(--text); font-size: 1.1rem;
+            width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
         }
-        .icon-btn:hover {
-            background: var(--surface-hover);
-            border-color: var(--border);
-        }
-        .icon-btn:active {
-            transform: scale(0.95);
-        }
+        .icon-btn:hover { background: var(--surface-hover); border-color: var(--border); }
+        .icon-btn:active { transform: scale(0.95); }
 
-        /* Layout */
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: background 0.3s; }
 
-        /* Dashboard Stats */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; display: flex; flex-direction: column; justify-content: center; }
         .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
 
-        /* Lists */
-        .list-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 0; border-bottom: 1px solid var(--border);
-        }
+        /* Mission & Subs */
+        .mission-item, .sub-item { margin-top: 10px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-hover); }
+        .mission-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px; }
+        .mission-title { font-weight: bold; color: var(--mission); }
+        .mission-progress-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+        .mission-progress-fill { height: 100%; background: var(--mission); width: 0%; transition: width 0.5s; }
+
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
         .list-item:last-child { border-bottom: none; }
         .item-main { flex: 1; }
         .item-title { font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
@@ -116,158 +97,118 @@
         .item-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
         
         .cat-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: var(--surface-hover); border: 1px solid var(--border); color: var(--text-muted); }
-        .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
-        .miles-tag { font-size: 0.75rem; color: var(--miles); background: rgba(162, 155, 254, 0.15); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
-        .repay-tag { font-size: 0.75rem; color: var(--repay); border: 1px solid var(--repay); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+        .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; }
+        .miles-tag { font-size: 0.75rem; color: var(--miles); background: rgba(162, 155, 254, 0.15); padding: 2px 6px; border-radius: 4px; display: inline-block; }
+        .due-tag { font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 2px; }
 
-        /* Forms */
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
-        input, select {
-            width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border);
-            border-radius: 8px; color: var(--text); font-size: 1rem; outline: none; transition: background 0.3s;
-        }
+        input, select { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1rem; outline: none; transition: background 0.3s; }
         input:focus, select:focus { border-color: var(--primary); }
+        
+        .row-group { display: flex; gap: 10px; }
+        .row-group > div { flex: 1; }
 
-        /* Toggle Switch */
         .type-toggle { display: flex; background: var(--bg); border-radius: 8px; padding: 4px; border: 1px solid var(--border); margin-bottom: 15px; transition: background 0.3s; }
         .type-option { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; color: var(--text-muted); transition: all 0.2s; font-size: 0.9rem; font-weight: 500; }
         .type-option.active.expense { background: rgba(255, 77, 77, 0.15); color: var(--danger); border: 1px solid var(--danger); }
         .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); border: 1px solid var(--income); }
         .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); border: 1px solid var(--repay); }
 
-        /* Buttons */
-        .btn {
-            background: var(--primary); color: #fff; border: none; padding: 12px; width: 100%;
-            border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
+        .btn { background: var(--primary); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn:active { transform: scale(0.98); }
         .btn-small { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); cursor: pointer; transition: background 0.3s; }
         .btn-text { background: none; border: none; color: var(--text-muted); padding: 5px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 0.8rem; }
         .btn-text:hover { color: var(--text); }
         
-        /* Credit Card Visual */
-        .credit-card {
-            background: var(--card-gradient);
-            padding: 15px; border-radius: 10px; margin-bottom: 10px; position: relative; overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #fff;
-        }
+        .credit-card { background: var(--card-gradient); padding: 15px; border-radius: 10px; margin-bottom: 10px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
         .card-name { font-weight: bold; font-size: 1.1rem; color: #fff; }
         .card-info { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-top: 5px; display: flex; justify-content: space-between; }
         .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
 
-        /* Floating Action Button */
-        .fab {
-            position: fixed; bottom: 20px; right: 20px;
-            background: var(--primary); color: #fff;
-            width: 56px; height: 56px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4);
-            cursor: pointer; border: none; z-index: 90;
-        }
+        .fab { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: #fff; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4); cursor: pointer; border: none; z-index: 90; }
 
-        /* Modal */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7); display: none;
-            align-items: center; justify-content: center; z-index: 200;
-            opacity: 0; transition: opacity 0.2s;
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 200; opacity: 0; transition: opacity 0.2s; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-content {
-            background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto;
-            padding: 25px; border-radius: 16px; position: relative;
-            transform: translateY(20px); transition: transform 0.2s; color: var(--text);
-            /* Input fix for mobile keyboard */
-            padding-bottom: 50px;
-        }
+        .modal-content { background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; padding: 25px; border-radius: 16px; position: relative; transform: translateY(20px); transition: transform 0.2s; color: var(--text); padding-bottom: 50px; }
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
 
-        /* Help & Data Content */
+        .checkbox-group { display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 8px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
         .help-section { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
         .help-section:last-child { border-bottom: none; }
         .help-title { color: var(--primary); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
         .help-step { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4; color: var(--text); opacity: 0.9; }
-        .ios-icon { display: inline-block; width: 20px; height: 20px; background: #eee; color: #333; border-radius: 4px; vertical-align: middle; text-align: center; line-height: 20px; font-size: 12px; font-weight: bold; }
         .data-btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-
-        /* Changelog */
         .log-entry { margin-bottom: 15px; padding-left: 10px; border-left: 3px solid var(--primary); }
         .log-ver { font-weight: bold; color: var(--primary); font-size: 1rem; }
         .log-date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
         .log-desc { font-size: 0.9rem; color: var(--text); line-height: 1.4; }
 
-        /* Tabs */
         .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 15px; }
         .tab { flex: 1; padding: 10px; text-align: center; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        /* Toast Notification */
-        #toast {
-            visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 80px; transform: translateX(-50%); font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid var(--primary);
-        }
+        .chart-container { position: relative; height: 250px; width: 100%; margin-bottom: 20px; }
+        .footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 30px; padding-bottom: 20px; opacity: 0.7; line-height: 1.5; }
+        .mode-indicator { text-align: center; padding: 10px; font-size: 0.8rem; background: rgba(255, 77, 77, 0.1); color: var(--danger); margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--danger); }
+        .mode-good { background: rgba(0, 210, 106, 0.1); color: var(--primary); border: 1px solid var(--primary); }
+
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 80px; transform: translateX(-50%); font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid var(--primary); }
         #toast.show { visibility: visible; -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
         @-webkit-keyframes fadein { from {bottom: 60px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
         @keyframes fadein { from {bottom: 60px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
         @-webkit-keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 60px; opacity: 0;} }
         @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 60px; opacity: 0;} }
-        
-        /* Chart Containers */
-        .chart-container { position: relative; height: 250px; width: 100%; margin-bottom: 20px; }
-        
-        /* Footer */
-        .footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 30px; padding-bottom: 20px; opacity: 0.7; line-height: 1.5; }
-        
-        /* Mode Indicator */
-        .mode-indicator {
-            text-align: center; padding: 8px; font-size: 0.75rem; background: var(--surface-hover); color: var(--text-muted); margin-bottom: 10px; border-radius: 4px;
-        }
-        .mode-warning { color: var(--repay); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <header>
     <h1><span class="logo-icon">💰</span> 回贈哥</h1>
-    <!-- New Action Bar with Icons -->
     <div class="header-actions">
+        <button class="icon-btn" onclick="openModal('subs')" title="固定開支">🔄</button>
         <button class="icon-btn" onclick="openModal('data')" title="備份與同步">☁️</button>
-        <button class="icon-btn" onclick="openModal('log')" title="更新日誌">📋</button>
         <button class="icon-btn" onclick="openModal('help')" title="使用教學">💡</button>
         <button class="icon-btn" id="btn-theme" onclick="toggleTheme()" title="切換模式">☀️</button>
     </div>
 </header>
 
 <div class="container">
-    
-    <!-- Environment Indicator -->
     <div id="env-indicator" class="mode-indicator" style="display:none;"></div>
 
     <!-- Overview Stats -->
     <div class="panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-size:0.9rem; color:var(--text-muted);">本月概覽 <span id="billing-cycle-text" style="font-size:0.75rem;">(1-31號)</span></div>
+            <button class="btn-text" onclick="openModal('settings')" style="font-size:0.8rem;">⚙️ 設定</button>
+        </div>
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">本月支出</div>
+                <div class="stat-label">總支出</div>
                 <div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">本月收入</div>
+                <div class="stat-label">總收入</div>
                 <div class="stat-value" id="total-income" style="color:var(--income)">$0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">預計回贈 (現金+里數)</div>
-                <div class="stat-value" id="total-cashback" style="color:var(--primary); font-size: 1rem;">$0</div>
+                <div class="stat-label">回贈估算</div>
+                <div class="stat-value" id="total-cashback" style="color:var(--primary); font-size: 0.9rem;">$0</div>
             </div>
+        </div>
+        <!-- Missions -->
+        <div id="missions-container"></div>
+        <div style="text-align:right; margin-top:10px;">
+             <button class="btn-text" onclick="openModal('mission')" style="font-size:0.8rem; display:inline-flex; color:var(--mission);">+ 新增任務</button>
         </div>
     </div>
 
-    <!-- Tabs Navigation -->
+    <!-- Tabs -->
     <div class="tabs">
         <div class="tab active" onclick="switchTab('transactions')">賬目紀錄</div>
         <div class="tab" onclick="switchTab('cards')">卡包 / 帳戶</div>
@@ -282,7 +223,6 @@
                 <span class="stat-label" id="tx-count">0 筆</span>
             </div>
             <div id="transaction-list">
-                <!-- Transactions will be injected here -->
                 <div style="text-align:center; padding:20px; color:var(--text-muted);">暫無紀錄</div>
             </div>
         </div>
@@ -298,9 +238,7 @@
                     <button class="btn-small" onclick="openModal('card')">+ 新增</button>
                 </div>
             </div>
-            <div id="card-list">
-                <!-- Cards will be injected here -->
-            </div>
+            <div id="card-list"></div>
         </div>
     </div>
 
@@ -308,22 +246,16 @@
     <div id="tab-analysis" class="tab-content">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; font-size:1.1rem;">月度支出分析</h2>
+                <h2 style="margin:0; font-size:1.1rem;">月度分析</h2>
                 <input type="month" id="analysis-month" style="width:auto; padding:5px;" onchange="renderCharts()">
             </div>
-            
             <div style="margin-bottom:30px;">
                 <h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">卡片/帳戶 簽賬分佈</h3>
-                <div class="chart-container">
-                    <canvas id="chart-cards"></canvas>
-                </div>
+                <div class="chart-container"><canvas id="chart-cards"></canvas></div>
             </div>
-
             <div>
                 <h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">每日支出趨勢</h3>
-                <div class="chart-container">
-                    <canvas id="chart-daily"></canvas>
-                </div>
+                <div class="chart-container"><canvas id="chart-daily"></canvas></div>
             </div>
         </div>
     </div>
@@ -338,7 +270,7 @@
 <!-- Floating Add Button -->
 <button class="fab" onclick="openModal('transaction')">+</button>
 
-<!-- Add Transaction Modal -->
+<!-- Add/Edit Transaction Modal -->
 <div id="modal-transaction" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
@@ -352,33 +284,47 @@
 
         <form id="tx-form" onsubmit="handleTransactionSubmit(event)">
             <input type="hidden" id="tx-type" value="expense">
-            <input type="hidden" id="tx-id"> <!-- Hidden ID for Editing -->
+            <input type="hidden" id="tx-id">
             
+            <!-- Foreign Currency Toggle -->
+            <div id="fx-toggle-container" style="margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                <label style="margin:0; font-size:0.9rem; color:var(--text);">🌍 外幣簽賬?</label>
+                <input type="checkbox" id="tx-is-foreign" onchange="toggleFxInputs()" style="width:auto;">
+            </div>
+
+            <!-- FX Inputs -->
+            <div id="fx-inputs" style="display:none; background:var(--surface-hover); padding:10px; border-radius:8px; margin-bottom:15px;">
+                <div class="row-group">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>外幣金額</label>
+                        <input type="number" id="tx-fx-amount" step="0.01" placeholder="e.g. 1000" oninput="calcHkdAmount()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>匯率 (大約)</label>
+                        <input type="number" id="tx-fx-rate" step="0.0001" placeholder="e.g. 0.053" oninput="calcHkdAmount()">
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group">
-                <label>金額 (HKD)</label>
+                <label id="lbl-amount">金額 (HKD)</label>
                 <input type="number" id="tx-amount" step="0.1" placeholder="0.00" required>
             </div>
             
             <div class="form-group" id="group-category">
                 <label>類別</label>
-                <select id="tx-category" required>
-                    <!-- Populated by JS -->
-                </select>
+                <select id="tx-category" required></select>
             </div>
 
             <div class="form-group" id="group-card">
                 <label>付款方式 / 信用卡</label>
-                <select id="tx-card">
-                    <!-- Options populated by JS -->
-                </select>
-                <div id="card-hint" style="font-size:0.8rem; color:var(--primary); margin-top:5px; display:none;">
-                    預計回贈: <span id="hint-rate"></span>
-                </div>
+                <select id="tx-card" onchange="updateCardHint()"></select>
+                <div id="card-hint" style="font-size:0.8rem; color:var(--primary); margin-top:5px; display:none;"></div>
             </div>
 
             <div class="form-group">
                 <label>描述</label>
-                <input type="text" id="tx-desc" placeholder="例如: 午餐、出糧" required>
+                <input type="text" id="tx-desc" placeholder="例如: 午餐、Netflix" required>
             </div>
             
             <div class="form-group">
@@ -397,7 +343,7 @@
         <h2>新增 卡片 / 帳戶</h2>
         <form id="card-form" onsubmit="addCard(event)">
             <div class="form-group">
-                <label>名稱 (例如: 八達通, SC Cathay)</label>
+                <label>名稱 (例如: SC Cathay)</label>
                 <input type="text" id="card-name" required>
             </div>
             <div class="form-group">
@@ -407,10 +353,29 @@
                     <option value="miles">里數 (HKD/里)</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label id="lbl-rate">回贈比率 (%)</label>
-                <input type="number" id="card-rate" step="0.1" placeholder="例如 4 或 6" required>
+            
+            <div class="row-group">
+                <div class="form-group">
+                    <label id="lbl-rate">本地回贈</label>
+                    <input type="number" id="card-rate" step="0.1" placeholder="%" required>
+                </div>
+                <div class="form-group">
+                    <label id="lbl-rate-fx">外幣回贈 (選填)</label>
+                    <input type="number" id="card-rate-fx" step="0.1" placeholder="同上">
+                </div>
             </div>
+
+            <div class="row-group">
+                <div class="form-group">
+                    <label>截數日 (每月幾號)</label>
+                    <input type="number" id="card-stmt-day" min="1" max="31" placeholder="e.g. 25">
+                </div>
+                <div class="form-group">
+                    <label>還款期 (日數)</label>
+                    <input type="number" id="card-pay-gap" placeholder="預設 25">
+                </div>
+            </div>
+
             <div class="form-group">
                 <label>簽賬上限 (留空為無限)</label>
                 <input type="number" id="card-cap" placeholder="例如: 12500">
@@ -424,6 +389,82 @@
     </div>
 </div>
 
+<!-- Subscriptions Modal -->
+<div id="modal-subs" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2>🔄 固定開支管理</h2>
+        <div style="margin-bottom:15px; font-size:0.85rem; color:var(--text-muted);">
+            設定每月的固定支出（如 Netflix、寬頻）。<br>每月首次開啟 App 時，系統會提示你一鍵入數。
+        </div>
+        
+        <div id="subs-list" style="margin-bottom:15px;"></div>
+        
+        <form id="sub-form" onsubmit="addSubscription(event)" style="background:var(--surface-hover); padding:10px; border-radius:8px;">
+            <h3 style="margin-top:0; font-size:0.9rem;">新增固定項目</h3>
+            <div class="form-group">
+                <input type="text" id="sub-name" placeholder="項目名稱 (e.g. Netflix)" required>
+            </div>
+            <div class="row-group">
+                <div class="form-group"><input type="number" id="sub-amount" placeholder="金額" required></div>
+                <div class="form-group">
+                    <select id="sub-card" required></select>
+                </div>
+            </div>
+            <button type="submit" class="btn-small" style="width:100%;">+ 加入</button>
+        </form>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="modal-settings" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2>⚙️ 設定</h2>
+        <div class="form-group">
+            <label>每月結算日 (出糧日/信用卡截數日)</label>
+            <select id="setting-start-day" onchange="saveSettings()"></select>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">
+                例如選「25號」，則本月統計範圍為：<br>上月25日 至 本月24日。
+            </div>
+        </div>
+        <div class="help-section" style="margin-top:20px;">
+             <button class="icon-btn" onclick="openModal('log')" style="width:100%; justify-content: flex-start; padding: 10px; font-size:0.9rem;">📋 查看更新日誌</button>
+        </div>
+    </div>
+</div>
+
+<!-- Mission Modal -->
+<div id="modal-mission" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2>新增簽賬任務</h2>
+        <form id="mission-form" onsubmit="addMission(event)">
+            <div class="form-group">
+                <label>任務名稱</label>
+                <input type="text" id="mission-name" placeholder="例如: 匯豐冬日賞" required>
+            </div>
+            <div class="form-group">
+                <label>目標金額 ($)</label>
+                <input type="number" id="mission-target" placeholder="8000" required>
+            </div>
+            <div class="form-group">
+                <label>開始日期</label>
+                <input type="date" id="mission-start" required>
+            </div>
+            <div class="form-group">
+                <label>結束日期</label>
+                <input type="date" id="mission-end" required>
+            </div>
+            <div class="form-group">
+                <label>計算哪些卡的簽賬？(可多選)</label>
+                <div id="mission-cards" class="checkbox-group"></div>
+            </div>
+            <button type="submit" class="btn">建立任務</button>
+        </form>
+    </div>
+</div>
+
 <!-- Data Management Modal -->
 <div id="modal-data" class="modal-overlay">
     <div class="modal-content">
@@ -432,72 +473,26 @@
         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">
             上次備份：<span id="last-backup-time">從未備份</span>
         </p>
-        
         <div class="help-section">
-            <div class="help-title">📤 備份資料 (舊機/電腦)</div>
-            <div class="help-step">將所有資料下載成一個檔案，方便轉移到新裝置。</div>
+            <div class="help-title">📤 備份資料</div>
             <div class="data-btn-group">
                 <button class="btn" style="background:#ff9f43;" onclick="exportData('json')">💾 下載備份檔 (JSON)</button>
                 <button class="btn" style="background:#4facfe;" onclick="exportData('csv')">📊 匯出 Excel (CSV)</button>
             </div>
         </div>
-
         <div class="help-section">
-            <div class="help-title">📥 還原/合併資料</div>
-            <div class="help-step">選擇備份檔以還原或合併現有資料。</div>
+            <div class="help-title">📥 還原資料</div>
             <div class="data-btn-group">
                 <button class="btn" style="background:#333; border:1px solid #666;" onclick="triggerImport()">📂 選擇並還原/合併</button>
                 <input type="file" id="file-input" style="display:none;" accept=".json" onchange="importData(this)">
             </div>
         </div>
-
         <div class="help-section">
-            <div class="help-title">🔄 強制更新</div>
             <button class="btn-small" onclick="forceUpdate()" style="width:100%; margin-top:5px; background:var(--surface-hover); color:var(--text); border-color:var(--primary);">🔄 強制獲取最新版本</button>
-            <div class="help-step" style="margin-top:5px;"><small>如果 GitHub 更新了但你看不到新功能，請按此。</small></div>
-        </div>
-
-        <div class="help-section">
-            <div class="help-title">🗑️ 危險區域</div>
-            <button class="btn-small" onclick="resetData()" style="color:var(--danger); border-color:var(--danger); width:100%;">🔥 清除所有資料 (重置)</button>
-        </div>
-    </div>
-</div>
-
-<!-- Log Modal -->
-<div id="modal-log" class="modal-overlay">
-    <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">&times;</button>
-        <h2 style="margin-top:0;">📋 更新日誌</h2>
-        
-        <div class="log-entry">
-            <div class="log-ver">v1.12 (最新)</div>
-            <div class="log-date">2025-12-21</div>
-            <div class="log-desc">
-                - 新增「智能合併」：可選擇保留現有資料並合併舊備份。<br>
-                - 優化同步指引。
+            <div style="margin-top:10px;">
+                <button class="btn-small" onclick="resetData()" style="color:var(--danger); border-color:var(--danger); width:100%;">🔥 清除所有資料</button>
             </div>
         </div>
-
-        <div class="log-entry">
-            <div class="log-ver">v1.11</div>
-            <div class="log-date">2025-12-21</div>
-            <div class="log-desc">
-                - 新增「環境偵測」：提示 Safari vs App 模式。<br>
-                - 優化：修正手機鍵盤遮擋輸入框問題。
-            </div>
-        </div>
-
-        <div class="log-entry">
-            <div class="log-ver">v1.10</div>
-            <div class="log-date">2025-12-20</div>
-            <div class="log-desc">
-                - 新增「✏️ 編輯交易」功能。<br>
-                - 新增「版本偵測」及「強制更新」按鈕。
-            </div>
-        </div>
-        
-        <button class="btn" onclick="closeModals()">關閉</button>
     </div>
 </div>
 
@@ -508,83 +503,103 @@
         <h2 style="margin-top:0;">💡 使用說明 & 教學</h2>
         
         <div class="help-section">
-            <div class="help-title">⚠️ 資料合併救星</div>
-            <div class="help-step">如果你在「主畫面App」和「Safari」都有資料：</div>
-            <div class="help-step">1. 去 App 版 -> 匯出 JSON。</div>
-            <div class="help-step">2. 去 Safari 版 -> 選擇剛才的檔案 -> 揀 <strong>「🔗 合併」</strong>。</div>
-            <div class="help-step">3. 之後就可以統一用 Safari 版啦！</div>
+            <div class="help-title">🌏 外幣簽賬</div>
+            <div class="help-step">記賬時剔選「外幣簽賬」，輸入外幣金額。系統會自動根據該卡的「外幣回贈率」計算回贈。</div>
+        </div>
+        
+        <div class="help-section">
+            <div class="help-title">📅 智能還款日</div>
+            <div class="help-step">設定卡片時輸入「截數日」。系統會自動推算你呢筆數幾時要還，顯示在列表上。</div>
         </div>
 
         <div class="help-section">
-            <div class="help-title">📱 iOS 捷徑 (一開即記)</div>
-            <div class="help-step">1. 複製此網址：<br><code style="background:#444; padding:4px; border-radius:4px; color:#fff; word-break: break-all; font-size: 0.8rem; display:block; margin-top:4px;">https://redzero213.github.io/createmoremoney/?new_tx=true</code></div>
-            <div class="help-step">2. 在捷徑 App -> 自動化 -> 交易 -> 選擇信用卡。</div>
-            <div class="help-step">3. 動作選<strong>「開啟 URL」</strong>，填入上面網址。</div>
+            <div class="help-title">🔄 固定開支</div>
+            <div class="help-step">在頂部按「🔄」圖示設定。每月一開 App，系統會問你係咪要入數。</div>
         </div>
         
         <button class="btn" onclick="closeModals()">明白哂！</button>
     </div>
 </div>
 
-<!-- Toast -->
+<!-- Log Modal -->
+<div id="modal-log" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2 style="margin-top:0;">📋 更新日誌</h2>
+        <div class="log-entry">
+            <div class="log-ver">v1.15 (最新)</div>
+            <div class="log-date">2025-12-21</div>
+            <div class="log-desc">
+                - 新增：外幣簽賬模式 (雙重回贈率)。<br>
+                - 新增：智能還款日計算 (需設定截數日)。<br>
+                - 新增：每月固定開支 (Subscriptions) 管理。<br>
+                - 優化：卡片資料結構升級。
+            </div>
+        </div>
+        <button class="btn" onclick="closeModals()">關閉</button>
+    </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.12';
+    const APP_VERSION = '1.15';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
     const VERSION_KEY = 'rebate_bro_version';
     
-    // Categories Config
     const CATEGORIES = {
-        expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他'],
+        expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他', '固定開支'],
         income: ['薪金', '賣野', '投資', '其他'],
         repayment: ['信用卡還款']
     };
 
-    // 預設推薦卡片
+    // Preset Cards (Updated for v1.15 with dual rates)
+    // rate: Local %, rateFx: Foreign % (or $/mile)
     const PRESET_CARDS = [
-        { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, cap: 5200, note: '🔥12月食飯10% (實體卡/單筆$100+)' },
-        { name: '渣打國泰 (食/網/外)', type: 'miles', rate: 4, cap: 0, note: '✈️ 食肆/網購/外幣 $4/里 (其他$6)' },
-        { name: 'HSBC EveryMile', type: 'miles', rate: 5, cap: 0, note: '✈️ 指定商戶 $2/里 (其他$5)' },
-        { name: 'DBS Black World', type: 'miles', rate: 6, cap: 0, note: '✈️ 本地 $6/里 (外幣$4)' },
-        { name: '八達通', type: 'cashback', rate: 0, cap: 0, note: '一般交通/便利店' },
-        { name: 'PayMe', type: 'cashback', rate: 0, cap: 0, note: 'P2P / 商戶付款' },
-        { name: 'AlipayHK', type: 'cashback', rate: 0, cap: 0, note: '淘寶/商戶 (連結信用卡請自行改%)' },
-        { name: 'WeChat Pay HK', type: 'cashback', rate: 0, cap: 0, note: '國內消費/商戶' },
-        { name: '富邦 iN Visa', type: 'cashback', rate: 8, cap: 3947, note: '👑8% (上限$3,947/CBF手續費)' },
-        { name: 'sim Credit', type: 'cashback', rate: 8, cap: 2500, note: '網購8% (單筆$500+/實體$1000+)' },
-        { name: 'AEON WAKUWAKU', type: 'cashback', rate: 6, cap: 3571, note: '👑6% (上限$3,571)' },
-        { name: '信銀 Motion', type: 'cashback', rate: 6, cap: 3571, note: '👑6% (上限$3,571/月簽$3,800)' },
-        { name: '恒生 MMPOWER', type: 'cashback', rate: 5, cap: 10870, note: '👑5% (上限$10,870/月簽$5,000)' },
-        { name: '中銀 Chill World', type: 'cashback', rate: 5, cap: 3260, note: '👑5% (上限$3,260)' },
-        { name: '滙豐 Red 卡', type: 'cashback', rate: 4, cap: 10000, note: '4% (上限$10,000/無下限)' },
-        { name: 'Citi Cash Back', type: 'cashback', rate: 2, cap: 0, note: '食肆/酒店 2% (自動回贈)' },
-        { name: '安信 EarnMORE', type: 'cashback', rate: 2, cap: 150000, note: '2% 每年首15萬' }
+        { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, rateFx: 0.4, cap: 5200, note: '🔥12月食飯10%' },
+        { name: '渣打國泰 (食/網/外)', type: 'miles', rate: 4, rateFx: 4, cap: 0, note: '✈️ $4/里' },
+        { name: 'HSBC EveryMile', type: 'miles', rate: 5, rateFx: 2, cap: 0, note: '✈️ 指定$2/里' },
+        { name: 'DBS Black World', type: 'miles', rate: 6, rateFx: 4, cap: 0, note: '✈️ 外幣$4/里' },
+        { name: '八達通', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: '交通/便利店' },
+        { name: 'PayMe', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: 'P2P' },
+        { name: 'AlipayHK', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: '淘寶/商戶' },
+        { name: '富邦 iN Visa', type: 'cashback', rate: 8, rateFx: 8, cap: 3947, note: '👑8%' },
+        { name: 'sim Credit', type: 'cashback', rate: 8, rateFx: 0.4, cap: 2500, note: '網購8%' },
+        { name: 'AEON WAKUWAKU', type: 'cashback', rate: 6, rateFx: 0.4, cap: 3571, note: '👑6%' },
+        { name: '信銀 Motion', type: 'cashback', rate: 6, rateFx: 0.55, cap: 3571, note: '👑6%' },
+        { name: '恒生 MMPOWER', type: 'cashback', rate: 5, rateFx: 6, cap: 10870, note: '👑5%' },
+        { name: '滙豐 Red 卡', type: 'cashback', rate: 4, rateFx: 0.4, cap: 10000, note: '網購4%' },
+        { name: 'Citi Cash Back', type: 'cashback', rate: 2, rateFx: 2, cap: 0, note: '食/酒店/外幣2%' },
+        { name: '安信 EarnMORE', type: 'cashback', rate: 2, rateFx: 2, cap: 150000, note: '2%' }
     ];
 
     let state = {
         transactions: [],
-        cards: []
+        cards: [],
+        missions: [],
+        subscriptions: [],
+        settings: { startDay: 1 }
     };
     
     let pieChart = null;
     let barChart = null;
 
-    // --- Core Logic ---
-
     function init() {
         const stored = localStorage.getItem(DB_KEY);
         if (stored) {
             state = JSON.parse(stored);
+            // v1.15 Migration
             state.cards.forEach(c => {
-                if (!c.type) {
-                    c.type = 'cashback';
-                    c.rate = c.percent || 0; 
-                }
+                if (!c.type) { c.type = 'cashback'; c.rate = c.percent || 0; }
+                if (c.rateFx === undefined) c.rateFx = c.type === 'miles' ? c.rate : 0; // Default FX rate
+                if (c.stmtDay === undefined) c.stmtDay = '';
+                if (c.payGap === undefined) c.payGap = 25;
             });
+            if (!state.subscriptions) state.subscriptions = [];
+            if (!state.settings) state.settings = { startDay: 1 };
         } else {
             state.cards = generatePresetCards();
             saveData();
@@ -596,9 +611,21 @@
         setDefaultTime();
         document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
         
+        // Populate Settings Dropdown
+        const daySelect = document.getElementById('setting-start-day');
+        daySelect.innerHTML = '';
+        for (let i = 1; i <= 31; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.text = `${i} 號`;
+            daySelect.appendChild(opt);
+        }
+        daySelect.value = state.settings.startDay;
+
         updateBackupTimeDisplay();
         checkVersion();
         checkEnvironment();
+        checkSubscriptionsDue();
         setTxType('expense');
         render();
 
@@ -608,6 +635,7 @@
         }
     }
     
+    // ... (Theme, Version, Env, Update functions same as v1.14) ...
     function checkVersion() {
         const lastVersion = localStorage.getItem(VERSION_KEY);
         if (lastVersion !== APP_VERSION) {
@@ -620,20 +648,20 @@
         const isStandalone = window.navigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
         const indicator = document.getElementById('env-indicator');
         indicator.style.display = 'block';
-        
         if (isStandalone) {
-            indicator.innerHTML = '📱 <strong>App 模式</strong> <br><span class="mode-warning">⚠️ 建議改用 Safari 開啟，以確保資料與捷徑同步。</span>';
+            indicator.className = 'mode-indicator';
+            indicator.innerHTML = '📱 <strong>App 模式</strong> (資料隔離)<br>⚠️ 建議改用 Safari 開啟。';
         } else {
-            indicator.innerHTML = '🌐 <strong>瀏覽器模式 (推薦)</strong> <br>資料可與 iOS 捷徑互通。';
-            indicator.style.color = 'var(--primary)';
+            indicator.className = 'mode-indicator mode-good';
+            indicator.innerHTML = '🌐 <strong>瀏覽器模式</strong> (資料可同步)';
         }
     }
-    
+
     function forceUpdate() {
-        if(confirm('這將會重新整理頁面以獲取最新版本，確定嗎？')) {
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('v', new Date().getTime());
-            window.location.href = currentUrl.toString();
+        if(confirm('重新整理以獲取最新版本？')) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('v', Date.now());
+            window.location.href = url.toString();
         }
     }
     
@@ -641,25 +669,21 @@
         const t = document.getElementById("toast");
         t.innerText = msg;
         t.className = "show";
-        setTimeout(function(){ t.className = t.className.replace("show", ""); }, 3000);
+        setTimeout(() => t.className = "", 3000);
     }
     
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
-        const btn = document.getElementById('btn-theme');
-        btn.innerText = theme === 'dark' ? '☀️' : '🌙';
-        if (document.getElementById('tab-analysis').classList.contains('active')) {
-            renderCharts();
-        }
+        document.getElementById('btn-theme').innerText = theme === 'dark' ? '☀️' : '🌙';
+        if (document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
     }
     
     function toggleTheme() {
-        const current = document.documentElement.getAttribute('data-theme');
-        const target = current === 'dark' ? 'light' : 'dark';
+        const target = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         localStorage.setItem(THEME_KEY, target);
         applyTheme(target);
     }
-    
+
     function setDefaultTime() {
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -667,48 +691,154 @@
     }
 
     function generatePresetCards() {
-        return PRESET_CARDS.map((c, idx) => ({
-            ...c,
-            id: Date.now() + idx,
-            spent: 0
-        }));
+        return PRESET_CARDS.map((c, idx) => ({ ...c, id: Date.now() + idx, stmtDay: '', payGap: 25 }));
     }
 
-    function saveData() {
-        localStorage.setItem(DB_KEY, JSON.stringify(state));
+    function saveData() { localStorage.setItem(DB_KEY, JSON.stringify(state)); }
+
+    // --- Subscription Logic ---
+    function checkSubscriptionsDue() {
+        const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+        const dueSubs = state.subscriptions.filter(sub => sub.lastGenerated !== currentMonth);
+        
+        if (dueSubs.length > 0) {
+            if (confirm(`📅 發現 ${dueSubs.length} 項本月固定開支尚未記錄。\n是否現在一鍵加入？`)) {
+                dueSubs.forEach(sub => {
+                    state.transactions.unshift({
+                        id: Date.now() + Math.random(),
+                        type: 'expense',
+                        category: '固定開支',
+                        desc: sub.name,
+                        amount: sub.amount,
+                        cardId: sub.cardId,
+                        date: `${currentMonth}-01T09:00`, // Default to 1st of month
+                        isAuto: true
+                    });
+                    sub.lastGenerated = currentMonth;
+                });
+                saveData();
+                render();
+                showToast('已加入固定開支！');
+            }
+        }
+    }
+    
+    function addSubscription(e) {
+        e.preventDefault();
+        const name = document.getElementById('sub-name').value;
+        const amount = parseFloat(document.getElementById('sub-amount').value);
+        const cardId = document.getElementById('sub-card').value;
+        
+        state.subscriptions.push({
+            id: Date.now(),
+            name, amount, cardId,
+            lastGenerated: '' // Not generated yet
+        });
+        saveData();
+        renderSubsList();
+        e.target.reset();
+    }
+    
+    function deleteSub(id) {
+        if(confirm('刪除此固定項目？')) {
+            state.subscriptions = state.subscriptions.filter(s => s.id !== id);
+            saveData();
+            renderSubsList();
+        }
+    }
+    
+    function renderSubsList() {
+        const list = document.getElementById('subs-list');
+        list.innerHTML = '';
+        if (state.subscriptions.length === 0) {
+            list.innerHTML = '<div style="text-align:center; color:var(--text-muted);">暫無固定項目</div>';
+            return;
+        }
+        state.subscriptions.forEach(sub => {
+            const card = state.cards.find(c => c.id == sub.cardId);
+            const cardName = card ? card.name : 'Unknown';
+            const div = document.createElement('div');
+            div.className = 'sub-item';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>${sub.name}</strong>
+                    <span>$${sub.amount}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-top:5px;">
+                    <span>${cardName}</span>
+                    <button class="btn-text" onclick="deleteSub(${sub.id})" style="color:var(--danger)">刪除</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    // --- Helper Functions ---
+    function getFinancialMonthRange() {
+        const startDay = parseInt(state.settings.startDay);
+        const today = new Date();
+        let startDate, endDate;
+        if (today.getDate() >= startDay) {
+            startDate = new Date(today.getFullYear(), today.getMonth(), startDay);
+            endDate = new Date(today.getFullYear(), today.getMonth() + 1, startDay - 1);
+        } else {
+            startDate = new Date(today.getFullYear(), today.getMonth() - 1, startDay);
+            endDate = new Date(today.getFullYear(), today.getMonth(), startDay - 1);
+        }
+        if (endDate.getDate() !== startDay - 1) endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0); 
+        return { start: startDate, end: endDate };
+    }
+    
+    function calculateDueDate(txDateStr, cardId) {
+        const card = state.cards.find(c => c.id == cardId);
+        if (!card || !card.stmtDay) return null;
+        
+        const txDate = new Date(txDateStr);
+        const stmtDay = parseInt(card.stmtDay);
+        const gap = parseInt(card.payGap) || 25;
+        
+        let stmtDate = new Date(txDate.getFullYear(), txDate.getMonth(), stmtDay);
+        
+        // If tx is AFTER statement day, next statement is next month
+        if (txDate.getDate() > stmtDay) {
+            stmtDate.setMonth(stmtDate.getMonth() + 1);
+        }
+        
+        // Due date = Statement Date + Gap
+        const dueDate = new Date(stmtDate);
+        dueDate.setDate(stmtDate.getDate() + gap);
+        return dueDate;
     }
 
     function calculateStats() {
-        let totalSpent = 0;
-        let totalIncome = 0;
-        let totalCashback = 0;
-        let totalMiles = 0;
-        
+        let totalSpent = 0, totalIncome = 0, totalCashback = 0, totalMiles = 0;
         const cardSpending = {};
         state.cards.forEach(c => cardSpending[c.id] = 0);
-
-        const nowMonth = new Date().toISOString().slice(0, 7);
+        const { start, end } = getFinancialMonthRange();
+        
+        const format = (d) => `${d.getMonth()+1}/${d.getDate()}`;
+        document.getElementById('billing-cycle-text').innerText = `(${format(start)} - ${format(end)})`;
 
         state.transactions.forEach(tx => {
-            const txMonth = tx.date.slice(0, 7);
-            
-            if (txMonth === nowMonth) {
+            const txDate = new Date(tx.date);
+            if (txDate >= start && txDate <= end) {
                 const type = tx.type || 'expense';
-                
                 if (type === 'expense') {
                     totalSpent += tx.amount;
                     const card = state.cards.find(c => c.id == tx.cardId);
                     if (card) {
                         cardSpending[card.id] += tx.amount;
-                        if (card.type === 'miles' && card.rate > 0) {
-                            totalMiles += Math.floor(tx.amount / card.rate);
+                        // FX Logic in Stats
+                        const isFx = tx.isForeign;
+                        const rate = isFx ? (card.rateFx || 0) : card.rate;
+                        
+                        if (card.type === 'miles' && rate > 0) {
+                            totalMiles += Math.floor(tx.amount / rate);
                         } else {
-                            totalCashback += (tx.amount * card.rate / 100);
+                            totalCashback += (tx.amount * rate / 100);
                         }
                     }
-                } else if (type === 'income') {
-                    totalIncome += tx.amount;
-                }
+                } else if (type === 'income') totalIncome += tx.amount;
             }
         });
 
@@ -716,9 +846,7 @@
         document.getElementById('total-income').innerText = '$' + totalIncome.toLocaleString();
         
         let rewardText = `$${totalCashback.toFixed(1)}`;
-        if (totalMiles > 0) {
-            rewardText += ` + ${totalMiles.toLocaleString()} AM`;
-        }
+        if (totalMiles > 0) rewardText += ` + ${totalMiles.toLocaleString()} AM`;
         document.getElementById('total-cashback').innerText = rewardText;
         document.getElementById('tx-count').innerText = state.transactions.length + ' 筆(總)';
 
@@ -726,18 +854,47 @@
             const spent = cardSpending[card.id] || 0;
             const progressEl = document.getElementById(`prog-${card.id}`);
             const spentEl = document.getElementById(`spent-${card.id}`);
-            
             if (progressEl && spentEl) {
                 spentEl.innerText = `$${spent.toLocaleString()}`;
                 if (card.cap > 0) {
                     const percent = Math.min((spent / card.cap) * 100, 100);
                     progressEl.style.width = `${percent}%`;
-                    if(percent >= 100) progressEl.style.backgroundColor = 'var(--danger)';
-                    else progressEl.style.backgroundColor = 'var(--primary)';
+                    progressEl.style.backgroundColor = percent >= 100 ? 'var(--danger)' : 'var(--primary)';
                 } else {
                     progressEl.style.width = '0%';
                 }
             }
+        });
+        renderMissions();
+    }
+    
+    function renderMissions() {
+        const container = document.getElementById('missions-container');
+        container.innerHTML = '';
+        if (!state.missions || state.missions.length === 0) return;
+
+        state.missions.forEach(m => {
+            const start = new Date(m.start);
+            const end = new Date(m.end); end.setHours(23, 59, 59);
+            let current = 0;
+            state.transactions.forEach(tx => {
+                const d = new Date(tx.date);
+                if (tx.type === 'expense' && d >= start && d <= end && m.cardIds.includes(tx.cardId.toString())) {
+                    current += tx.amount;
+                }
+            });
+            const percent = Math.min((current / m.target) * 100, 100);
+            const div = document.createElement('div');
+            div.className = 'mission-item';
+            div.innerHTML = `
+                <div class="mission-header">
+                    <span class="mission-title">${m.name} <button class="btn-text" style="font-size:0.7rem;" onclick="deleteMission(${m.id})">❌</button></span>
+                    <span>$${current.toLocaleString()} / $${parseInt(m.target).toLocaleString()}</span>
+                </div>
+                <div class="mission-progress-bg"><div class="mission-progress-fill" style="width:${percent}%"></div></div>
+                <div style="font-size:0.75rem; color:var(--text-muted); text-align:right; margin-top:2px;">${m.end} 截止</div>
+            `;
+            container.appendChild(div);
         });
     }
 
@@ -746,19 +903,14 @@
         renderTransactions();
         updateFormOptions();
         calculateStats();
-        if (document.getElementById('tab-analysis').classList.contains('active')) {
-            renderCharts();
-        }
+        if (document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
     }
 
     function renderCharts() {
         const month = document.getElementById('analysis-month').value;
         if(!month) return;
-
-        const monthlyTx = state.transactions.filter(tx => 
-            tx.date.startsWith(month) && (tx.type === 'expense' || !tx.type)
-        );
-
+        const monthlyTx = state.transactions.filter(tx => tx.date.startsWith(month) && (tx.type === 'expense' || !tx.type));
+        
         const cardTotals = {};
         state.cards.forEach(c => cardTotals[c.name] = 0); 
         monthlyTx.forEach(tx => {
@@ -768,72 +920,35 @@
             cardTotals[name] += tx.amount;
         });
 
+        const pieData = Object.keys(cardTotals).filter(k => cardTotals[k] > 0).map(k => cardTotals[k]);
         const pieLabels = Object.keys(cardTotals).filter(k => cardTotals[k] > 0);
-        const pieData = pieLabels.map(k => cardTotals[k]);
-
+        
         const daysInMonth = new Date(parseInt(month.slice(0,4)), parseInt(month.slice(5,7)), 0).getDate();
         const dailyTotals = new Array(daysInMonth).fill(0);
-        
         monthlyTx.forEach(tx => {
             const day = parseInt(tx.date.slice(8, 10)) - 1; 
-            if(day >= 0 && day < daysInMonth) {
-                dailyTotals[day] += tx.amount;
-            }
+            if(day >= 0 && day < daysInMonth) dailyTotals[day] += tx.amount;
         });
-        
-        const barLabels = Array.from({length: daysInMonth}, (_, i) => (i + 1).toString());
 
         if(pieChart) pieChart.destroy();
         if(barChart) barChart.destroy();
-
-        const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7', '#a29bfe', '#fab1a0', '#81ecec'];
         
         const style = getComputedStyle(document.body);
         const textColor = style.getPropertyValue('--chart-text').trim();
+        const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7', '#a29bfe'];
 
         const ctxPie = document.getElementById('chart-cards').getContext('2d');
         pieChart = new Chart(ctxPie, {
             type: 'doughnut',
-            data: {
-                labels: pieLabels,
-                datasets: [{
-                    data: pieData,
-                    backgroundColor: colors,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'right', labels: { color: textColor } }
-                }
-            }
+            data: { labels: pieLabels, datasets: [{ data: pieData, backgroundColor: colors, borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor } } } }
         });
 
         const ctxBar = document.getElementById('chart-daily').getContext('2d');
         barChart = new Chart(ctxBar, {
             type: 'bar',
-            data: {
-                labels: barLabels,
-                datasets: [{
-                    label: '每日支出 ($)',
-                    data: dailyTotals,
-                    backgroundColor: '#ff4d4d',
-                    borderRadius: 3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: { ticks: { color: textColor }, grid: { display: false } },
-                    y: { ticks: { color: textColor }, grid: { color: textColor === '#e0e0e0' ? '#333' : '#e0e0e0' } }
-                },
-                plugins: {
-                    legend: { display: false }
-                }
-            }
+            data: { labels: Array.from({length: daysInMonth}, (_, i) => (i + 1).toString()), datasets: [{ label: '每日支出 ($)', data: dailyTotals, backgroundColor: '#ff4d4d', borderRadius: 3 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: textColor === '#e0e0e0' ? '#333' : '#e0e0e0' } } }, plugins: { legend: { display: false } } }
         });
     }
 
@@ -842,12 +957,10 @@
         list.innerHTML = '';
         state.cards.forEach(card => {
             const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
-            
-            let rateText = '';
-            if (card.type === 'miles') {
-                rateText = `$${card.rate}/里`;
-            } else {
-                rateText = `${card.rate}% 回贈`;
+            let rateText = card.type === 'miles' ? `$${card.rate}/里` : `${card.rate}% 回贈`;
+            // Add FX rate info if exists
+            if (card.rateFx > 0) {
+                rateText += card.type === 'miles' ? ` (外$${card.rateFx})` : ` (外${card.rateFx}%)`;
             }
 
             const el = document.createElement('div');
@@ -861,18 +974,12 @@
                     </div>
                     <button class="btn-text" onclick="deleteCard(${card.id})" style="color:rgba(255,255,255,0.7);">&times;</button>
                 </div>
-                <div class="progress-bar">
-                    <div id="prog-${card.id}" class="progress-fill"></div>
-                </div>
-                <div class="card-info">
-                    <span>本月已簽: <span id="spent-${card.id}" style="color:#fff;">$0</span>${capText}</span>
-                </div>
+                <div class="progress-bar"><div id="prog-${card.id}" class="progress-fill"></div></div>
+                <div class="card-info"><span>本月: <span id="spent-${card.id}" style="color:#fff;">$0</span>${capText}</span></div>
             `;
             list.appendChild(el);
         });
-        if (state.cards.length === 0) {
-            list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有卡片或帳戶，請按匯入或新增</div>';
-        }
+        if (state.cards.length === 0) list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有卡片</div>';
     }
 
     function renderTransactions() {
@@ -885,36 +992,48 @@
             const category = tx.category || (type === 'income' ? '收入' : '其他');
             const dateStr = tx.date.replace('T', ' ');
 
-            let amountDisplay, colorClass, cashbackTag, cardName;
+            let amountDisplay, colorClass, cashbackTag = '', cardName = '', dueTag = '';
             
             if (type === 'income') {
                 amountDisplay = `+ $${tx.amount.toLocaleString()}`;
                 colorClass = 'color:var(--income);';
-                cashbackTag = ''; 
                 cardName = '收入'; 
             } else if (type === 'repayment') {
                 amountDisplay = `- $${tx.amount.toLocaleString()}`;
                 colorClass = 'color:var(--repay);';
                 cashbackTag = '<div class="repay-tag">還款紀錄</div>';
                 const card = state.cards.find(c => c.id == tx.cardId);
-                cardName = card ? card.name : '未知卡片';
+                cardName = card ? card.name : '未知';
             } else {
                 amountDisplay = `$${tx.amount.toLocaleString()}`;
                 colorClass = 'color:var(--text);';
-                
                 const card = state.cards.find(c => c.id == tx.cardId);
-                cardName = card ? card.name : '未知卡片';
+                cardName = card ? card.name : '未知';
                 
                 if (card) {
-                    if (card.type === 'miles' && card.rate > 0) {
-                        const miles = Math.floor(tx.amount / card.rate);
+                    // FX Tag
+                    if (tx.isForeign) {
+                        cardName = '🌍 ' + cardName;
+                    }
+
+                    // Reward Calc
+                    const isFx = tx.isForeign;
+                    const rate = isFx ? (card.rateFx || 0) : card.rate;
+                    
+                    if (card.type === 'miles' && rate > 0) {
+                        const miles = Math.floor(tx.amount / rate);
                         cashbackTag = `<div class="miles-tag">賺 ${miles} AM</div>`;
-                    } else {
-                        const cashback = (tx.amount * card.rate / 100).toFixed(1);
+                    } else if (rate > 0) {
+                        const cashback = (tx.amount * rate / 100).toFixed(1);
                         cashbackTag = `<div class="cashback-tag">賺 $${cashback}</div>`;
                     }
-                } else {
-                    cashbackTag = '';
+                    
+                    // Due Date
+                    const dueDate = calculateDueDate(tx.date, tx.cardId);
+                    if (dueDate) {
+                        const dueStr = `${dueDate.getMonth()+1}/${dueDate.getDate()}`;
+                        dueTag = `<span class="due-tag">📅 還款: ${dueStr}</span>`;
+                    }
                 }
             }
 
@@ -928,11 +1047,12 @@
                     </div>
                     <div class="item-sub">${dateStr} • ${cardName}</div>
                     ${cashbackTag}
+                    ${dueTag}
                 </div>
                 <div class="item-actions">
                     <div class="item-amount" style="${colorClass}">${amountDisplay}</div>
                     <div>
-                        <button class="btn-text" onclick="editTransaction(${tx.id})">✏️ 編輯</button>
+                        <button class="btn-text" onclick="editTransaction(${tx.id})">✏️</button>
                         <button class="btn-text" style="color:var(--danger)" onclick="deleteTransaction(${tx.id})">🗑️</button>
                     </div>
                 </div>
@@ -940,50 +1060,83 @@
             list.appendChild(el);
         });
     }
-
+    
+    // --- Logic ---
     function setTxType(type) {
         document.getElementById('tx-type').value = type;
-        document.getElementById('type-expense').className = `type-option ${type === 'expense' ? 'active expense' : ''}`;
-        document.getElementById('type-income').className = `type-option ${type === 'income' ? 'active income' : ''}`;
-        document.getElementById('type-repayment').className = `type-option ${type === 'repayment' ? 'active repayment' : ''}`;
+        document.getElementById('type-expense').className = `type-option ${type==='expense'?'active expense':''}`;
+        document.getElementById('type-income').className = `type-option ${type==='income'?'active income':''}`;
+        document.getElementById('type-repayment').className = `type-option ${type==='repayment'?'active repayment':''}`;
         
         const catSelect = document.getElementById('tx-category');
         catSelect.innerHTML = '';
-        
         CATEGORIES[type].forEach(cat => {
             const opt = document.createElement('option');
-            opt.value = cat;
-            opt.innerText = cat;
-            catSelect.appendChild(opt);
+            opt.value = cat; opt.innerText = cat; catSelect.appendChild(opt);
         });
         
-        const cardGroup = document.getElementById('group-card');
-        const catGroup = document.getElementById('group-category');
+        const showCard = type !== 'income';
+        document.getElementById('group-card').style.display = showCard ? 'block' : 'none';
+        document.getElementById('group-category').style.display = type === 'repayment' ? 'none' : 'block';
         
-        if (type === 'income') {
-            cardGroup.style.display = 'none';
-            catGroup.style.display = 'block';
-        } else if (type === 'repayment') {
-            cardGroup.style.display = 'block';
-            catGroup.style.display = 'none'; 
-        } else {
-            cardGroup.style.display = 'block';
-            catGroup.style.display = 'block';
+        // FX only for expense
+        document.getElementById('fx-toggle-container').style.display = type === 'expense' ? 'flex' : 'none';
+        document.getElementById('fx-inputs').style.display = 'none'; // reset
+        document.getElementById('tx-is-foreign').checked = false;
+    }
+
+    function toggleFxInputs() {
+        const isFx = document.getElementById('tx-is-foreign').checked;
+        document.getElementById('fx-inputs').style.display = isFx ? 'block' : 'none';
+        document.getElementById('lbl-amount').innerText = isFx ? '折算金額 (HKD)' : '金額 (HKD)';
+        // Clear rate hint if toggled
+        updateCardHint();
+    }
+    
+    function calcHkdAmount() {
+        const fxAmt = parseFloat(document.getElementById('tx-fx-amount').value) || 0;
+        const rate = parseFloat(document.getElementById('tx-fx-rate').value) || 0;
+        if (fxAmt && rate) {
+            document.getElementById('tx-amount').value = (fxAmt * rate).toFixed(2);
+            updateCardHint();
         }
     }
 
     function updateFormOptions() {
         const select = document.getElementById('tx-card');
-        const currentVal = select.value; // Keep current value if possible
+        const currentVal = select.value;
         select.innerHTML = '';
+        
+        // Mission list
+        const missionDiv = document.getElementById('mission-cards');
+        if(missionDiv) missionDiv.innerHTML = '';
+        
+        // Subs card select
+        const subSelect = document.getElementById('sub-card');
+        if(subSelect) subSelect.innerHTML = '';
+
         state.cards.forEach(card => {
             const opt = document.createElement('option');
             opt.value = card.id;
-            let label = card.name;
-            if(card.type === 'miles') label += ` ($${card.rate}/里)`;
-            else label += ` (${card.rate}%)`;
-            opt.text = label;
+            // Simplified label
+            opt.text = card.name;
             select.appendChild(opt);
+            
+            // Subs
+            if(subSelect) {
+                const subOpt = document.createElement('option');
+                subOpt.value = card.id;
+                subOpt.text = card.name;
+                subSelect.appendChild(subOpt);
+            }
+
+            // Mission
+            if(missionDiv) {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.innerHTML = `<input type="checkbox" name="m-card" value="${card.id}" checked> ${card.name}`;
+                missionDiv.appendChild(div);
+            }
         });
         if (currentVal) select.value = currentVal;
         if(state.cards.length > 0) updateCardHint();
@@ -992,26 +1145,27 @@
     function updateCardHint() {
         const select = document.getElementById('tx-card');
         const hintBox = document.getElementById('card-hint');
-        const hintRate = document.getElementById('hint-rate');
         const type = document.getElementById('tx-type').value;
-        
-        if (type === 'repayment') {
-            hintBox.style.display = 'none';
-            return;
-        }
+        const isFx = document.getElementById('tx-is-foreign').checked;
+
+        if (type !== 'expense') { hintBox.style.display = 'none'; return; }
 
         const cardId = select.value;
         const card = state.cards.find(c => c.id == cardId);
         
-        if (card && type === 'expense') {
+        if (card) {
             hintBox.style.display = 'block';
+            const rate = isFx ? (card.rateFx || 0) : card.rate;
+            
+            let rateText = '';
             if (card.type === 'miles') {
-                hintRate.innerText = `$${card.rate}/里`;
-                hintRate.style.color = 'var(--miles)';
+                rateText = rate > 0 ? `$${rate}/里 (里數)` : '無回贈';
+                hintBox.style.color = 'var(--miles)';
             } else {
-                hintRate.innerText = `${card.rate}%`;
-                hintRate.style.color = 'var(--primary)';
+                rateText = `${rate}% (現金)`;
+                hintBox.style.color = 'var(--primary)';
             }
+            hintBox.innerText = `預計回贈: ${rateText}`;
         } else {
             hintBox.style.display = 'none';
         }
@@ -1023,13 +1177,19 @@
         const type = document.getElementById('card-type').value;
         const lbl = document.getElementById('lbl-rate');
         const input = document.getElementById('card-rate');
+        const lblFx = document.getElementById('lbl-rate-fx');
+        const inputFx = document.getElementById('card-rate-fx');
         
         if (type === 'miles') {
-            lbl.innerText = '里數兌換率 ($/里)';
-            input.placeholder = '例如: 4 (代表 $4 換 1 里)';
+            lbl.innerText = '本地兌換 ($/里)';
+            input.placeholder = 'e.g. 6';
+            lblFx.innerText = '外幣兌換 ($/里)';
+            inputFx.placeholder = 'e.g. 4';
         } else {
-            lbl.innerText = '回贈比率 (%)';
-            input.placeholder = '例如: 4 (代表 4%)';
+            lbl.innerText = '本地回贈 (%)';
+            input.placeholder = 'e.g. 1.5';
+            lblFx.innerText = '外幣回贈 (%)';
+            inputFx.placeholder = 'e.g. 2';
         }
     }
 
@@ -1056,17 +1216,22 @@
 
         openModal('transaction');
         
-        // Fill Data
         document.getElementById('tx-id').value = tx.id;
         setTxType(tx.type || 'expense');
         document.getElementById('tx-amount').value = tx.amount;
         document.getElementById('tx-desc').value = tx.desc;
         document.getElementById('tx-date').value = tx.date;
         
+        // FX handling
+        if (tx.isForeign) {
+             document.getElementById('tx-is-foreign').checked = true;
+             toggleFxInputs();
+             // We don't store original rate/amount yet, so just leave fields blank or 0
+        }
+        
         if (tx.category) document.getElementById('tx-category').value = tx.category;
         if (tx.cardId) document.getElementById('tx-card').value = tx.cardId;
 
-        // UI Change
         document.getElementById('tx-modal-title').innerText = "編輯紀錄";
         document.getElementById('btn-submit').innerText = "更新";
     }
@@ -1079,46 +1244,32 @@
         const amount = parseFloat(document.getElementById('tx-amount').value);
         let category = document.getElementById('tx-category').value;
         const date = document.getElementById('tx-date').value;
+        const isForeign = document.getElementById('tx-is-foreign').checked;
+        
         let cardId = null;
-
-        if (type === 'expense' || type === 'repayment') {
+        if (type !== 'income') {
             cardId = document.getElementById('tx-card').value;
-            if (!cardId) {
-                alert('請先新增信用卡/帳戶！');
-                return;
-            }
+            if (!cardId) { alert('請選擇卡片/帳戶！'); return; }
         }
-        if (type === 'repayment') {
-            category = '信用卡還款';
-        }
+        if (type === 'repayment') category = '信用卡還款';
+
+        const txObj = {
+            type, category, desc, amount, cardId, date, isForeign
+        };
 
         if (idStr) {
-            // Edit Mode
-            const id = parseInt(idStr);
+            const id = parseFloat(idStr);
             const index = state.transactions.findIndex(t => t.id === id);
             if (index !== -1) {
-                state.transactions[index] = { id, type, category, desc, amount, cardId, date };
+                state.transactions[index] = { ...txObj, id };
             }
         } else {
-            // Add Mode
-            const newTx = {
-                id: Date.now(),
-                type,
-                category,
-                desc,
-                amount,
-                cardId,
-                date
-            };
-            state.transactions.unshift(newTx);
+            state.transactions.unshift({ ...txObj, id: Date.now() });
         }
 
         saveData();
         render();
         closeModals();
-        e.target.reset();
-        setDefaultTime();
-        setTxType('expense');
     }
 
     function addCard(e) {
@@ -1126,229 +1277,148 @@
         const name = document.getElementById('card-name').value;
         const type = document.getElementById('card-type').value;
         const rate = parseFloat(document.getElementById('card-rate').value);
+        const rateFx = parseFloat(document.getElementById('card-rate-fx').value) || (type==='miles'?rate:0);
         const capVal = document.getElementById('card-cap').value;
         const cap = capVal ? parseFloat(capVal) : 0;
         const note = document.getElementById('card-note').value;
+        const stmtDay = document.getElementById('card-stmt-day').value;
+        const payGap = document.getElementById('card-pay-gap').value || 25;
 
-        const newCard = {
+        state.cards.push({
             id: Date.now(),
-            name,
-            type,
-            rate,
-            cap,
-            note
-        };
-
-        state.cards.push(newCard);
-        saveData();
-        render();
-        closeModals();
-        e.target.reset();
-        toggleCardRateInput(); // reset label
-        if(state.cards.length === 1) updateFormOptions();
-    }
-
-    function importPresetCards() {
-        if (!confirm('確定要匯入「回贈哥」推薦的列表 (包括里數卡、八達通等) 嗎？')) return;
-        
-        let addedCount = 0;
-        let updatedCount = 0;
-        
-        PRESET_CARDS.forEach(p => {
-            const existingCard = state.cards.find(c => c.name === p.name);
-            
-            if (existingCard) {
-                existingCard.rate = p.rate;
-                existingCard.type = p.type;
-                existingCard.cap = p.cap;
-                existingCard.note = p.note;
-                updatedCount++;
-            } else {
-                state.cards.push({
-                    ...p,
-                    id: Date.now() + Math.floor(Math.random() * 100000), 
-                    spent: 0
-                });
-                addedCount++;
-            }
+            name, type, rate, rateFx, cap, note, stmtDay, payGap
         });
 
         saveData();
         render();
-        alert(`成功新增 ${addedCount} 張新卡，更新 ${updatedCount} 張現有卡片！`);
-    }
-
-    function deleteTransaction(id) {
-        if(confirm('確定刪除此紀錄?')) {
-            state.transactions = state.transactions.filter(t => t.id !== id);
-            saveData();
-            render();
-        }
-    }
-
-    function deleteCard(id) {
-        if(confirm('確定刪除此卡片? (相關消費紀錄將保留，但會顯示為未知卡片)')) {
-            state.cards = state.cards.filter(c => c.id !== id);
-            saveData();
-            render();
-        }
+        closeModals();
+        if(state.cards.length === 1) updateFormOptions();
     }
     
-    function resetData() {
-        if(confirm('警告：這將會清除所有資料！確定嗎？')) {
-            localStorage.removeItem(DB_KEY);
-            location.reload();
-        }
+    // ... [Import/Export/Delete/Modal functions same as before] ...
+    function addMission(e) {
+        e.preventDefault();
+        const name = document.getElementById('mission-name').value;
+        const target = parseFloat(document.getElementById('mission-target').value);
+        const start = document.getElementById('mission-start').value;
+        const end = document.getElementById('mission-end').value;
+        const checkboxes = document.querySelectorAll('input[name="m-card"]:checked');
+        const cardIds = Array.from(checkboxes).map(cb => cb.value);
+        
+        if (cardIds.length === 0) { alert('請至少選擇一張信用卡！'); return; }
+        state.missions.push({ id: Date.now(), name, target, start, end, cardIds });
+        saveData();
+        render();
+        closeModals();
     }
     
-    function updateBackupTimeDisplay() {
-        const lastBackup = localStorage.getItem(BACKUP_TIME_KEY);
+    function deleteMission(id) {
+        if(confirm('確定刪除此任務?')) { state.missions = state.missions.filter(m => m.id !== id); saveData(); render(); }
+    }
+    
+    function saveSettings() {
+        state.settings.startDay = parseInt(document.getElementById('setting-start-day').value);
+        saveData(); render(); closeModals(); showToast('設定已更新');
+    }
+
+    function importPresetCards() {
+        if (!confirm('匯入推薦列表?')) return;
+        PRESET_CARDS.forEach(p => {
+            if (!state.cards.find(c => c.name === p.name)) {
+                state.cards.push({ ...p, id: Date.now() + Math.floor(Math.random()*10000), stmtDay:'', payGap:25 });
+            }
+        });
+        saveData(); render(); alert('成功匯入！');
+    }
+
+    function deleteTransaction(id) { if(confirm('刪除?')) { state.transactions = state.transactions.filter(t => t.id !== id); saveData(); render(); } }
+    function deleteCard(id) { if(confirm('刪除卡片?')) { state.cards = state.cards.filter(c => c.id !== id); saveData(); render(); } }
+    
+    function resetData() { if(confirm('警告：清除所有資料？')) { localStorage.removeItem(DB_KEY); location.reload(); } }
+    function updateBackupTimeDisplay() { 
+        const t = localStorage.getItem(BACKUP_TIME_KEY); 
         const el = document.getElementById('last-backup-time');
-        if (el) {
-            el.innerText = lastBackup ? lastBackup : '從未備份';
-        }
+        if(el) el.innerText = t || '從未備份'; 
     }
     
     function exportData(format) {
-        const now = new Date().toLocaleString();
-        localStorage.setItem(BACKUP_TIME_KEY, now);
+        localStorage.setItem(BACKUP_TIME_KEY, new Date().toLocaleString());
         updateBackupTimeDisplay();
-
         if (format === 'json') {
-            const dataStr = JSON.stringify(state, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = `finance_backup_${new Date().toISOString().slice(0,10)}.json`;
-            link.click();
+            const a = document.createElement("a"); a.href = url; a.download = `finance_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
         } else {
-            let csvContent = "\uFEFF";
-            csvContent += "日期,時間,類型,類別,描述,金額,帳戶/信用卡,預計回贈\n";
-            
+            let csv = "\uFEFF日期,類型,類別,描述,金額,信用卡,回贈\n";
             state.transactions.forEach(tx => {
-                const date = tx.date.split('T')[0];
-                const time = tx.date.split('T')[1] || '';
-                const typeMap = { 'expense': '支出', 'income': '收入', 'repayment': '還款' };
-                const type = typeMap[tx.type] || '支出';
-                const desc = `"${tx.desc.replace(/"/g, '""')}"`;
-                
-                let cardName = '';
-                let reward = '';
-                
-                if (tx.type !== 'income') {
-                    const card = state.cards.find(c => c.id == tx.cardId);
-                    cardName = card ? card.name : '';
-                    if(card && tx.type === 'expense') {
-                        if (card.type === 'miles' && card.rate > 0) {
-                            reward = Math.floor(tx.amount / card.rate) + ' AM';
-                        } else {
-                            reward = '$' + (tx.amount * card.rate / 100).toFixed(2);
-                        }
-                    }
+                const card = state.cards.find(c => c.id == tx.cardId);
+                const cName = card ? card.name : '';
+                let reward = 0;
+                if(card && tx.type==='expense') {
+                     const r = tx.isForeign ? (card.rateFx||0) : card.rate;
+                     reward = card.type==='miles' ? Math.floor(tx.amount/r) + ' AM' : (tx.amount*r/100).toFixed(1);
                 }
-                
-                csvContent += `${date},${time},${type},${tx.category},${desc},${tx.amount},${cardName},${reward}\n`;
+                csv += `${tx.date},${tx.type},${tx.category},"${tx.desc}",${tx.amount},${cName},${reward}\n`;
             });
-            
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `finance_data_${new Date().toISOString().slice(0,10)}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const a = document.createElement("a"); a.href = url; a.download = `finance_data.csv`; a.click();
         }
     }
-
-    function triggerImport() {
-        document.getElementById('file-input').click();
-    }
-
+    
+    function triggerImport() { document.getElementById('file-input').click(); }
     function importData(input) {
-        const file = input.files[0];
-        if (!file) return;
-
+        const file = input.files[0]; if(!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const imported = JSON.parse(e.target.result);
-                if (imported.transactions && imported.cards) {
-                    
-                    if (confirm("檢測到備份檔。請問你想如何處理？\n\n[確定] = 🔗 合併 (保留現有資料 + 加入新資料)\n[取消] = 🗑️ 覆蓋 (刪除現有，完全使用備份檔)")) {
-                        // MERGE LOGIC
-                        const currentTx = state.transactions;
-                        const newTx = imported.transactions;
-                        
-                        // Combine and remove duplicates based on ID
-                        const mergedTx = [...currentTx, ...newTx];
+                if (imported.transactions) {
+                    if (confirm("檢測到備份。\n[確定] = 合併 (保留現有)\n[取消] = 覆蓋 (刪除現有)")) {
+                        // Merge
+                        const mergedTx = [...state.transactions, ...imported.transactions];
                         const uniqueTx = Array.from(new Map(mergedTx.map(item => [item.id, item])).values());
                         state.transactions = uniqueTx.sort((a, b) => new Date(b.date) - new Date(a.date));
                         
-                        // Merge cards (simple append for now to avoid losing custom settings, user can delete dups)
-                        // Better: check by ID
-                        const currentCards = state.cards;
-                        const newCards = imported.cards;
-                        const mergedCards = [...currentCards, ...newCards];
-                        const uniqueCards = Array.from(new Map(mergedCards.map(item => [item.id, item])).values());
-                        state.cards = uniqueCards;
-                        
-                        alert(`成功合併！\n總共 ${uniqueTx.length} 筆交易紀錄。`);
-                    } else {
-                        // OVERWRITE LOGIC
-                        if(confirm("警告：這將會刪除你目前的所有資料並用備份檔取代。確定嗎？")) {
-                            state = imported;
-                            alert('還原成功！');
-                        } else {
-                            return; // Cancelled everything
+                        // Merge cards
+                        if(imported.cards) {
+                             const mergedCards = [...state.cards, ...imported.cards];
+                             state.cards = Array.from(new Map(mergedCards.map(item => [item.id, item])).values());
                         }
+                        alert('合併成功！');
+                    } else {
+                        if(confirm("確定覆蓋所有資料？")) { state = imported; alert('還原成功！'); } else return;
                     }
-                    
-                    saveData();
-                    render();
-                    closeModals();
-                } else {
-                    alert('檔案格式錯誤！請確保是正確的備份檔。');
+                    saveData(); render(); closeModals();
                 }
-            } catch (err) {
-                alert('讀取失敗：檔案可能已損壞。');
-            }
+            } catch(e) { alert('檔案錯誤'); }
         };
-        reader.readAsText(file);
-        input.value = ''; 
+        reader.readAsText(file); input.value = '';
     }
 
     function openModal(type) {
         document.getElementById(`modal-${type}`).classList.add('active');
         if (type === 'transaction') {
-            // Reset for Add Mode if title implies edit
-            const title = document.getElementById('tx-modal-title');
-            if (title.innerText !== "新增紀錄") {
-                document.getElementById('tx-form').reset();
-                document.getElementById('tx-id').value = ''; // Clear ID
-                document.getElementById('btn-submit').innerText = "記賬";
-                title.innerText = "新增紀錄";
-                setTxType('expense');
-                setDefaultTime();
-            } else {
-                setDefaultTime();
-            }
+             const title = document.getElementById('tx-modal-title');
+             if (title.innerText !== "新增紀錄") {
+                 document.getElementById('tx-form').reset();
+                 document.getElementById('tx-id').value = '';
+                 document.getElementById('btn-submit').innerText = "記賬";
+                 title.innerText = "新增紀錄";
+                 setTxType('expense');
+                 document.getElementById('fx-inputs').style.display='none';
+                 setDefaultTime();
+             } else {
+                 setDefaultTime();
+             }
         }
+        if (type === 'mission') updateFormOptions();
+        if (type === 'subs') renderSubsList();
     }
-
-    function closeModals() {
-        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
-    }
-
-    window.onclick = function(event) {
-        if (event.target.classList.contains('modal-overlay')) {
-            closeModals();
-        }
-    }
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
+    window.onclick = function(e) { if (e.target.classList.contains('modal-overlay')) closeModals(); }
 
     init();
 </script>
-
 </body>
 </html>
