@@ -27,7 +27,8 @@
             --repay: #ff9f43; 
             --miles: #a29bfe; 
             --mission: #f39c12;
-            --sub: #e17055; /* 訂閱紅 */
+            --sub: #e17055;
+            --info: #0984e3; /* 資訊藍 */
             --border: #333;
             --card-gradient: linear-gradient(135deg, #2c3e50, #000000);
             --shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -48,6 +49,7 @@
             --miles: #6c5ce7;
             --mission: #d35400;
             --sub: #d63031;
+            --info: #0984e3;
             --border: #e0e0e0;
             --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af);
             --shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -100,6 +102,16 @@
         .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; }
         .miles-tag { font-size: 0.75rem; color: var(--miles); background: rgba(162, 155, 254, 0.15); padding: 2px 6px; border-radius: 4px; display: inline-block; }
         .due-tag { font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 2px; }
+
+        /* Bank Info Card */
+        .bank-card { background: var(--surface-hover); border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .bank-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .bank-name { font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        .bank-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .bank-btn { padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; text-decoration: none; border: 1px solid var(--border); background: var(--bg); color: var(--text); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s; }
+        .bank-btn:hover { background: var(--surface); border-color: var(--primary); color: var(--primary); }
+        .cs-info { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+        .cs-highlight { color: var(--income); font-weight: bold; }
 
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
@@ -172,8 +184,8 @@
     <h1><span class="logo-icon">💰</span> 回贈哥</h1>
     <div class="header-actions">
         <button class="icon-btn" onclick="openModal('subs')" title="固定開支">🔄</button>
+        <button class="icon-btn" onclick="openModal('bank-info')" title="銀行資訊">ℹ️</button>
         <button class="icon-btn" onclick="openModal('data')" title="備份與同步">☁️</button>
-        <button class="icon-btn" onclick="openModal('help')" title="使用教學">💡</button>
         <button class="icon-btn" id="btn-theme" onclick="toggleTheme()" title="切換模式">☀️</button>
     </div>
 </header>
@@ -286,13 +298,11 @@
             <input type="hidden" id="tx-type" value="expense">
             <input type="hidden" id="tx-id">
             
-            <!-- Foreign Currency Toggle -->
             <div id="fx-toggle-container" style="margin-bottom:10px; display:flex; align-items:center; gap:8px;">
                 <label style="margin:0; font-size:0.9rem; color:var(--text);">🌍 外幣簽賬?</label>
                 <input type="checkbox" id="tx-is-foreign" onchange="toggleFxInputs()" style="width:auto;">
             </div>
 
-            <!-- FX Inputs -->
             <div id="fx-inputs" style="display:none; background:var(--surface-hover); padding:10px; border-radius:8px; margin-bottom:15px;">
                 <div class="row-group">
                     <div class="form-group" style="margin-bottom:0;">
@@ -389,6 +399,18 @@
     </div>
 </div>
 
+<!-- Bank Info Modal -->
+<div id="modal-bank-info" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2 style="margin-top:0;">ℹ️ 銀行實用資訊</h2>
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px;">
+            ⚠️ CS 真人秘技按鍵次序或會隨時變更，僅供參考。
+        </div>
+        <div id="bank-list"></div>
+    </div>
+</div>
+
 <!-- Subscriptions Modal -->
 <div id="modal-subs" class="modal-overlay">
     <div class="modal-content">
@@ -397,9 +419,7 @@
         <div style="margin-bottom:15px; font-size:0.85rem; color:var(--text-muted);">
             設定每月的固定支出（如 Netflix、寬頻）。<br>每月首次開啟 App 時，系統會提示你一鍵入數。
         </div>
-        
         <div id="subs-list" style="margin-bottom:15px;"></div>
-        
         <form id="sub-form" onsubmit="addSubscription(event)" style="background:var(--surface-hover); padding:10px; border-radius:8px;">
             <h3 style="margin-top:0; font-size:0.9rem;">新增固定項目</h3>
             <div class="form-group">
@@ -503,6 +523,11 @@
         <h2 style="margin-top:0;">💡 使用說明 & 教學</h2>
         
         <div class="help-section">
+            <div class="help-title">ℹ️ 銀行/信用卡資訊</div>
+            <div class="help-step">點擊頂部 ℹ️ 圖示，可查看各大銀行推廣頁面連結及 CS 熱線 (含真人接聽按鍵次序)。</div>
+        </div>
+        
+        <div class="help-section">
             <div class="help-title">🌏 外幣簽賬</div>
             <div class="help-step">記賬時剔選「外幣簽賬」，輸入外幣金額。系統會自動根據該卡的「外幣回贈率」計算回贈。</div>
         </div>
@@ -527,13 +552,13 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.15 (最新)</div>
-            <div class="log-date">2025-12-21</div>
+            <div class="log-ver">v1.16 (最新)</div>
+            <div class="log-date">2026-01-08</div>
             <div class="log-desc">
+                - 新增：ℹ️ 銀行實用資訊中心 (推廣Link/CS熱線/秘技)。<br>
                 - 新增：外幣簽賬模式 (雙重回贈率)。<br>
-                - 新增：智能還款日計算 (需設定截數日)。<br>
-                - 新增：每月固定開支 (Subscriptions) 管理。<br>
-                - 優化：卡片資料結構升級。
+                - 新增：智能還款日計算。<br>
+                - 新增：每月固定開支 (Subscriptions) 管理。
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -544,7 +569,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.15';
+    const APP_VERSION = '1.16';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -556,8 +581,67 @@
         repayment: ['信用卡還款']
     };
 
-    // Preset Cards (Updated for v1.15 with dual rates)
-    // rate: Local %, rateFx: Foreign % (or $/mile)
+    // Bank Info Data
+    const BANK_INFO = [
+        { 
+            name: 'HSBC 匯豐', 
+            promoUrl: 'https://www.redhotoffers.hsbc.com.hk/', 
+            rewardUrl: 'https://www.hsbc.com.hk/zh-hk/credit-cards/rewards/reward-cash/',
+            csPhone: '2233 3000',
+            csTrick: '選語言 > 1 > 0'
+        },
+        { 
+            name: 'Standard Chartered 渣打', 
+            promoUrl: 'https://www.sc.com/hk/zh/credit-cards/promotion/', 
+            rewardUrl: 'https://www.sc.com/hk/zh/credit-cards/360-rewards/',
+            csPhone: '2886 4111',
+            csTrick: '選語言 > 2 > 0'
+        },
+        { 
+            name: 'Hang Seng 恒生', 
+            promoUrl: 'https://www.hangseng.com/zh-hk/personal/cards/', 
+            rewardUrl: 'https://www.hangseng.com/zh-hk/personal/cards/cash-dollars/',
+            csPhone: '2998 9188',
+            csTrick: '選語言 > 1 > 0'
+        },
+        { 
+            name: 'BOC 中銀香港', 
+            promoUrl: 'https://www.bochk.com/tc/creditcard/promotions.html', 
+            rewardUrl: 'https://www.bochk.com/tc/creditcard/reward.html',
+            csPhone: '2853 8828',
+            csTrick: '選語言 > 1 > 0'
+        },
+        { 
+            name: 'DBS 星展', 
+            promoUrl: 'https://www.dbs.com.hk/personal-zh/credit-cards/promotions/default.page', 
+            rewardUrl: 'https://www.dbs.com.hk/personal-zh/credit-cards/rewards.page',
+            csPhone: '2290 8888',
+            csTrick: '選語言 > 1 > 0'
+        },
+        { 
+            name: 'Citi 花旗', 
+            promoUrl: 'https://www1.citibank.com.hk/chinese/credit-cards/promotions', 
+            rewardUrl: 'https://www1.citibank.com.hk/chinese/credit-cards/rewards',
+            csPhone: '2860 0333',
+            csTrick: '選語言 > *0'
+        },
+        { 
+            name: 'BEA 東亞', 
+            promoUrl: 'https://www.hkbea.com/html/tc/bea-credit-card-spending-offer.html', 
+            rewardUrl: '',
+            csPhone: '3608 6628',
+            csTrick: '選語言 > 1 > 9'
+        },
+        { 
+            name: 'EarnMORE / WeWa', 
+            promoUrl: 'https://www.primecredit.com/credit-card/latest-offer/', 
+            rewardUrl: 'https://www.primecredit.com/credit-card/wewa-club/',
+            csPhone: '2269 8888',
+            csTrick: '選語言 > 0'
+        }
+    ];
+
+    // Preset Cards (v1.15)
     const PRESET_CARDS = [
         { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, rateFx: 0.4, cap: 5200, note: '🔥12月食飯10%' },
         { name: '渣打國泰 (食/網/外)', type: 'miles', rate: 4, rateFx: 4, cap: 0, note: '✈️ $4/里' },
@@ -566,6 +650,7 @@
         { name: '八達通', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: '交通/便利店' },
         { name: 'PayMe', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: 'P2P' },
         { name: 'AlipayHK', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: '淘寶/商戶' },
+        { name: 'WeChat Pay HK', type: 'cashback', rate: 0, cap: 0, note: '國內消費/商戶' },
         { name: '富邦 iN Visa', type: 'cashback', rate: 8, rateFx: 8, cap: 3947, note: '👑8%' },
         { name: 'sim Credit', type: 'cashback', rate: 8, rateFx: 0.4, cap: 2500, note: '網購8%' },
         { name: 'AEON WAKUWAKU', type: 'cashback', rate: 6, rateFx: 0.4, cap: 3571, note: '👑6%' },
@@ -627,6 +712,7 @@
         checkEnvironment();
         checkSubscriptionsDue();
         setTxType('expense');
+        renderBankInfo(); // Render Bank Info
         render();
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -767,6 +853,30 @@
                 <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-top:5px;">
                     <span>${cardName}</span>
                     <button class="btn-text" onclick="deleteSub(${sub.id})" style="color:var(--danger)">刪除</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+    
+    // --- Bank Info Logic ---
+    function renderBankInfo() {
+        const list = document.getElementById('bank-list');
+        list.innerHTML = '';
+        BANK_INFO.forEach(bank => {
+            const div = document.createElement('div');
+            div.className = 'bank-card';
+            div.innerHTML = `
+                <div class="bank-header">
+                    <div class="bank-name">${bank.name}</div>
+                </div>
+                <div class="bank-actions">
+                    <a href="${bank.promoUrl}" target="_blank" class="bank-btn">🎁 推廣優惠</a>
+                    ${bank.rewardUrl ? `<a href="${bank.rewardUrl}" target="_blank" class="bank-btn">💎 獎賞兌換</a>` : ''}
+                    <a href="tel:${bank.csPhone.replace(/ /g,'')}" class="bank-btn">📞 ${bank.csPhone}</a>
+                </div>
+                <div class="cs-info">
+                    <span>🔥 真人秘技：<span class="cs-highlight">${bank.csTrick}</span></span>
                 </div>
             `;
             list.appendChild(div);
@@ -1414,6 +1524,7 @@
         }
         if (type === 'mission') updateFormOptions();
         if (type === 'subs') renderSubsList();
+        if (type === 'bank-info') renderBankInfo();
     }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
     window.onclick = function(e) { if (e.target.classList.contains('modal-overlay')) closeModals(); }
