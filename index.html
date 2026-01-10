@@ -15,7 +15,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #00d26a; 
+            /* 預設 (深色模式) Dark Theme Variables */
+            --primary: #00d26a; /* 回贈哥綠 */
             --primary-dark: #00a855;
             --bg: #121212;
             --surface: #1e1e1e;
@@ -23,11 +24,11 @@
             --text: #e0e0e0;
             --text-muted: #a0a0a0;
             --danger: #ff4d4d;
-            --income: #4facfe; 
-            --repay: #ff9f43; 
-            --miles: #a29bfe; 
-            --mission: #f39c12;
-            --sub: #e17055;
+            --income: #4facfe; /* 收入藍 */
+            --repay: #ff9f43; /* 還款橙 */
+            --miles: #a29bfe; /* 里數紫 */
+            --mission: #f39c12; /* 任務黃 */
+            --sub: #e17055; /* 訂閱紅 */
             --info: #0984e3; /* 資訊藍 */
             --border: #333;
             --card-gradient: linear-gradient(135deg, #2c3e50, #000000);
@@ -35,6 +36,7 @@
             --chart-text: #e0e0e0;
         }
 
+        /* 淺色模式 Light Theme Variables */
         [data-theme="light"] {
             --primary: #00b85c;
             --primary-dark: #008f45;
@@ -59,25 +61,56 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; transition: background-color 0.3s, color 0.3s; }
 
+        /* Header */
         header {
-            background: var(--surface); padding: 12px 20px; position: sticky; top: 0; z-index: 100;
-            border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
-            box-shadow: var(--shadow); transition: background 0.3s;
+            background: var(--surface);
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            transition: background 0.3s;
         }
         h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
         .logo-icon { font-size: 1.4rem; }
 
-        .header-actions { display: flex; align-items: center; gap: 8px; }
-        .icon-btn {
-            background: transparent; border: 1px solid transparent; color: var(--text); font-size: 1.1rem;
-            width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        /* Header Actions Toolbar */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .icon-btn:hover { background: var(--surface-hover); border-color: var(--border); }
-        .icon-btn:active { transform: scale(0.95); }
+        .icon-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text);
+            font-size: 1.1rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--border);
+        }
+        .icon-btn:active {
+            transform: scale(0.95);
+        }
 
+        /* Layout */
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: background 0.3s; }
 
+        /* Dashboard Stats */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; display: flex; flex-direction: column; justify-content: center; }
         .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
@@ -90,7 +123,11 @@
         .mission-progress-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
         .mission-progress-fill { height: 100%; background: var(--mission); width: 0%; transition: width 0.5s; }
 
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        /* Lists */
+        .list-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px solid var(--border);
+        }
         .list-item:last-child { border-bottom: none; }
         .item-main { flex: 1; }
         .item-title { font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
@@ -113,69 +150,124 @@
         .cs-info { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
         .cs-highlight { color: var(--income); font-weight: bold; }
 
+        /* Forms */
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
-        input, select { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1rem; outline: none; transition: background 0.3s; }
+        input, select {
+            width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 1rem; outline: none; transition: background 0.3s;
+        }
         input:focus, select:focus { border-color: var(--primary); }
         
         .row-group { display: flex; gap: 10px; }
         .row-group > div { flex: 1; }
 
+        /* Toggle Switch */
         .type-toggle { display: flex; background: var(--bg); border-radius: 8px; padding: 4px; border: 1px solid var(--border); margin-bottom: 15px; transition: background 0.3s; }
         .type-option { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; color: var(--text-muted); transition: all 0.2s; font-size: 0.9rem; font-weight: 500; }
         .type-option.active.expense { background: rgba(255, 77, 77, 0.15); color: var(--danger); border: 1px solid var(--danger); }
         .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); border: 1px solid var(--income); }
         .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); border: 1px solid var(--repay); }
 
-        .btn { background: var(--primary); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        /* Buttons */
+        .btn {
+            background: var(--primary); color: #fff; border: none; padding: 12px; width: 100%;
+            border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
         .btn:active { transform: scale(0.98); }
         .btn-small { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); cursor: pointer; transition: background 0.3s; }
         .btn-text { background: none; border: none; color: var(--text-muted); padding: 5px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 0.8rem; }
         .btn-text:hover { color: var(--text); }
         
-        .credit-card { background: var(--card-gradient); padding: 15px; border-radius: 10px; margin-bottom: 10px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+        /* Credit Card Visual */
+        .credit-card {
+            background: var(--card-gradient);
+            padding: 15px; border-radius: 10px; margin-bottom: 10px; position: relative; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+        }
         .card-name { font-weight: bold; font-size: 1.1rem; color: #fff; }
         .card-info { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-top: 5px; display: flex; justify-content: space-between; }
         .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
 
-        .fab { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: #fff; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4); cursor: pointer; border: none; z-index: 90; }
+        /* Floating Action Button */
+        .fab {
+            position: fixed; bottom: 20px; right: 20px;
+            background: var(--primary); color: #fff;
+            width: 56px; height: 56px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4);
+            cursor: pointer; border: none; z-index: 90;
+        }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 200; opacity: 0; transition: opacity 0.2s; }
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); display: none;
+            align-items: center; justify-content: center; z-index: 200;
+            opacity: 0; transition: opacity 0.2s;
+        }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-content { background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; padding: 25px; border-radius: 16px; position: relative; transform: translateY(20px); transition: transform 0.2s; color: var(--text); padding-bottom: 50px; }
+        .modal-content {
+            background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto;
+            padding: 25px; border-radius: 16px; position: relative;
+            transform: translateY(20px); transition: transform 0.2s; color: var(--text);
+            /* Input fix for mobile keyboard */
+            padding-bottom: 50px;
+        }
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
 
-        .checkbox-group { display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 8px; }
-        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        /* Help & Data Content */
         .help-section { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
         .help-section:last-child { border-bottom: none; }
         .help-title { color: var(--primary); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
         .help-step { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4; color: var(--text); opacity: 0.9; }
+        .ios-icon { display: inline-block; width: 20px; height: 20px; background: #eee; color: #333; border-radius: 4px; vertical-align: middle; text-align: center; line-height: 20px; font-size: 12px; font-weight: bold; }
         .data-btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+
+        /* Checkbox Group */
+        .checkbox-group { display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 8px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+
+        /* Changelog */
         .log-entry { margin-bottom: 15px; padding-left: 10px; border-left: 3px solid var(--primary); }
         .log-ver { font-weight: bold; color: var(--primary); font-size: 1rem; }
         .log-date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
         .log-desc { font-size: 0.9rem; color: var(--text); line-height: 1.4; }
 
+        /* Tabs */
         .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 15px; }
         .tab { flex: 1; padding: 10px; text-align: center; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        .chart-container { position: relative; height: 250px; width: 100%; margin-bottom: 20px; }
-        .footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 30px; padding-bottom: 20px; opacity: 0.7; line-height: 1.5; }
-        .mode-indicator { text-align: center; padding: 10px; font-size: 0.8rem; background: rgba(255, 77, 77, 0.1); color: var(--danger); margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--danger); }
-        .mode-good { background: rgba(0, 210, 106, 0.1); color: var(--primary); border: 1px solid var(--primary); }
-
-        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 80px; transform: translateX(-50%); font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid var(--primary); }
+        /* Toast Notification */
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 80px; transform: translateX(-50%); font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid var(--primary);
+        }
         #toast.show { visibility: visible; -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
         @-webkit-keyframes fadein { from {bottom: 60px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
         @keyframes fadein { from {bottom: 60px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
         @-webkit-keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 60px; opacity: 0;} }
         @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 60px; opacity: 0;} }
+        
+        /* Chart Containers */
+        .chart-container { position: relative; height: 250px; width: 100%; margin-bottom: 20px; }
+        
+        /* Footer */
+        .footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 30px; padding-bottom: 20px; opacity: 0.7; line-height: 1.5; }
+        
+        /* Mode Indicator */
+        .mode-indicator {
+            text-align: center; padding: 10px; font-size: 0.8rem; background: rgba(255, 77, 77, 0.1); color: var(--danger); margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--danger);
+        }
+        .mode-good {
+            background: rgba(0, 210, 106, 0.1); color: var(--primary); border: 1px solid var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -191,6 +283,8 @@
 </header>
 
 <div class="container">
+    
+    <!-- Environment Indicator -->
     <div id="env-indicator" class="mode-indicator" style="display:none;"></div>
 
     <!-- Overview Stats -->
@@ -392,7 +486,11 @@
             </div>
             <div class="form-group">
                 <label>備註 (選填)</label>
-                <input type="text" id="card-note" placeholder="例如: 網購專用">
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="card-note" placeholder="例如: 網購專用" style="flex:1;">
+                    <button type="button" class="btn-small" onclick="verifyCardTerm()" title="Google 搜尋條款">🔍 核實</button>
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">*按核實以搜尋最新條款</div>
             </div>
             <button type="submit" class="btn">新增</button>
         </form>
@@ -528,13 +626,8 @@
         </div>
         
         <div class="help-section">
-            <div class="help-title">🌏 外幣簽賬</div>
-            <div class="help-step">記賬時剔選「外幣簽賬」，輸入外幣金額。系統會自動根據該卡的「外幣回贈率」計算回贈。</div>
-        </div>
-        
-        <div class="help-section">
-            <div class="help-title">📅 智能還款日</div>
-            <div class="help-step">設定卡片時輸入「截數日」。系統會自動推算你呢筆數幾時要還，顯示在列表上。</div>
+            <div class="help-title">⚠️ 免責聲明</div>
+            <div class="help-step">應用程式內的預設回贈資料 (如 WeWa 10%) 僅為<strong>「預估範本」</strong>，未必已反映銀行最新更改的條款。請善用「🔍 核實」功能自行確認。</div>
         </div>
 
         <div class="help-section">
@@ -552,13 +645,19 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.16 (最新)</div>
-            <div class="log-date">2026-01-08</div>
+            <div class="log-ver">v1.18 (Safety Update)</div>
+            <div class="log-date">2026-01-11</div>
             <div class="log-desc">
-                - 新增：ℹ️ 銀行實用資訊中心 (推廣Link/CS熱線/秘技)。<br>
-                - 新增：外幣簽賬模式 (雙重回贈率)。<br>
-                - 新增：智能還款日計算。<br>
-                - 新增：每月固定開支 (Subscriptions) 管理。
+                - 新增：⚠️ 安全免責提示，確保用家知悉預設資料僅供參考。<br>
+                - 新增：🔍 「一鍵核實條款」按鈕，直接 Google 搜尋卡片最新 T&C。<br>
+                - 優化：2026 預設卡片備註修正 (加入「需核實」字眼)。
+            </div>
+        </div>
+        <div class="log-entry">
+            <div class="log-ver">v1.17</div>
+            <div class="log-date">2026-01-11</div>
+            <div class="log-desc">
+                - 更新信用卡資料庫至 2026 版本。
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -569,11 +668,12 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.16';
+    const APP_VERSION = '1.18';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
     const VERSION_KEY = 'rebate_bro_version';
+    const DISCLAIMER_KEY = 'rebate_bro_disclaimer_v1';
     
     const CATEGORIES = {
         expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他', '固定開支'],
@@ -641,24 +741,25 @@
         }
     ];
 
-    // Preset Cards (v1.15)
+    // Preset Cards (2026 Updated with Disclaimer Notes)
     const PRESET_CARDS = [
-        { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, rateFx: 0.4, cap: 5200, note: '🔥12月食飯10%' },
+        { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, rateFx: 0.4, cap: 5200, note: '🔥2026食飯10% (需核實)' },
         { name: '渣打國泰 (食/網/外)', type: 'miles', rate: 4, rateFx: 4, cap: 0, note: '✈️ $4/里' },
-        { name: 'HSBC EveryMile', type: 'miles', rate: 5, rateFx: 2, cap: 0, note: '✈️ 指定$2/里' },
+        { name: 'HSBC EveryMile', type: 'miles', rate: 5, rateFx: 2, cap: 0, note: '✈️ 指定商戶 $2/里 (需核實)' },
         { name: 'DBS Black World', type: 'miles', rate: 6, rateFx: 4, cap: 0, note: '✈️ 外幣$4/里' },
         { name: '八達通', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: '交通/便利店' },
         { name: 'PayMe', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: 'P2P' },
         { name: 'AlipayHK', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: '淘寶/商戶' },
-        { name: 'WeChat Pay HK', type: 'cashback', rate: 0, cap: 0, note: '國內消費/商戶' },
-        { name: '富邦 iN Visa', type: 'cashback', rate: 8, rateFx: 8, cap: 3947, note: '👑8%' },
-        { name: 'sim Credit', type: 'cashback', rate: 8, rateFx: 0.4, cap: 2500, note: '網購8%' },
-        { name: 'AEON WAKUWAKU', type: 'cashback', rate: 6, rateFx: 0.4, cap: 3571, note: '👑6%' },
-        { name: '信銀 Motion', type: 'cashback', rate: 6, rateFx: 0.55, cap: 3571, note: '👑6%' },
-        { name: '恒生 MMPOWER', type: 'cashback', rate: 5, rateFx: 6, cap: 10870, note: '👑5%' },
-        { name: '滙豐 Red 卡', type: 'cashback', rate: 4, rateFx: 0.4, cap: 10000, note: '網購4%' },
-        { name: 'Citi Cash Back', type: 'cashback', rate: 2, rateFx: 2, cap: 0, note: '食/酒店/外幣2%' },
-        { name: '安信 EarnMORE', type: 'cashback', rate: 2, rateFx: 2, cap: 150000, note: '2%' }
+        { name: 'WeChat Pay HK', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: '國內消費/商戶' },
+        { name: '富邦 iN Visa', type: 'cashback', rate: 8, rateFx: 8, cap: 3947, note: '👑2026續期8% (上限$3947)' },
+        { name: 'sim Credit', type: 'cashback', rate: 8, rateFx: 0.4, cap: 2500, note: '網購8% (需簽賬要求)' },
+        { name: 'AEON WAKUWAKU', type: 'cashback', rate: 6, rateFx: 0.4, cap: 3571, note: '👑6% (上限$3571)' },
+        { name: '信銀 Motion', type: 'cashback', rate: 6, rateFx: 0.55, cap: 3571, note: '👑6% (上限$3571)' },
+        { name: '恒生 MMPOWER', type: 'cashback', rate: 5, rateFx: 6, cap: 10870, note: '👑5% (上限$10870)' },
+        { name: '中銀 Chill World', type: 'cashback', rate: 5, cap: 3260, note: '👑5% (上限$3260)' },
+        { name: '滙豐 Red 卡', type: 'cashback', rate: 4, rateFx: 0.4, cap: 10000, note: '網購4% (上限$10000)' },
+        { name: 'Citi Cash Back', type: 'cashback', rate: 2, rateFx: 2, cap: 0, note: '食肆/酒店 2%' },
+        { name: '安信 EarnMORE', type: 'cashback', rate: 2, rateFx: 2, cap: 150000, note: '2026年全方位2%' }
     ];
 
     let state = {
@@ -679,7 +780,7 @@
             // v1.15 Migration
             state.cards.forEach(c => {
                 if (!c.type) { c.type = 'cashback'; c.rate = c.percent || 0; }
-                if (c.rateFx === undefined) c.rateFx = c.type === 'miles' ? c.rate : 0; // Default FX rate
+                if (c.rateFx === undefined) c.rateFx = c.type === 'miles' ? c.rate : 0; 
                 if (c.stmtDay === undefined) c.stmtDay = '';
                 if (c.payGap === undefined) c.payGap = 25;
             });
@@ -696,7 +797,6 @@
         setDefaultTime();
         document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
         
-        // Populate Settings Dropdown
         const daySelect = document.getElementById('setting-start-day');
         daySelect.innerHTML = '';
         for (let i = 1; i <= 31; i++) {
@@ -709,10 +809,11 @@
 
         updateBackupTimeDisplay();
         checkVersion();
+        checkDisclaimer(); // New check
         checkEnvironment();
         checkSubscriptionsDue();
         setTxType('expense');
-        renderBankInfo(); // Render Bank Info
+        renderBankInfo(); 
         render();
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -721,7 +822,15 @@
         }
     }
     
-    // ... (Theme, Version, Env, Update functions same as v1.14) ...
+    // --- Disclaimer Logic ---
+    function checkDisclaimer() {
+        const agreed = localStorage.getItem(DISCLAIMER_KEY);
+        if (!agreed) {
+            alert('⚠️ 重要免責聲明 ⚠️\n\n本應用程式提供的「2026年預設信用卡回贈資料」僅供參考，乃基於過往市場慣例作出的預估。\n\n銀行條款隨時變更（特別是回贈上限及推廣期），請務必使用新增的「🔍 核實」按鈕自行確認，以免損失回贈。\n\n(此提示只會出現一次)');
+            localStorage.setItem(DISCLAIMER_KEY, 'true');
+        }
+    }
+
     function checkVersion() {
         const lastVersion = localStorage.getItem(VERSION_KEY);
         if (lastVersion !== APP_VERSION) {
@@ -784,7 +893,7 @@
 
     // --- Subscription Logic ---
     function checkSubscriptionsDue() {
-        const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+        const currentMonth = new Date().toISOString().slice(0, 7); 
         const dueSubs = state.subscriptions.filter(sub => sub.lastGenerated !== currentMonth);
         
         if (dueSubs.length > 0) {
@@ -797,7 +906,7 @@
                         desc: sub.name,
                         amount: sub.amount,
                         cardId: sub.cardId,
-                        date: `${currentMonth}-01T09:00`, // Default to 1st of month
+                        date: `${currentMonth}-01T09:00`,
                         isAuto: true
                     });
                     sub.lastGenerated = currentMonth;
@@ -818,7 +927,7 @@
         state.subscriptions.push({
             id: Date.now(),
             name, amount, cardId,
-            lastGenerated: '' // Not generated yet
+            lastGenerated: '' 
         });
         saveData();
         renderSubsList();
@@ -882,6 +991,14 @@
             list.appendChild(div);
         });
     }
+    
+    // --- Fact Check Logic ---
+    function verifyCardTerm() {
+        const name = document.getElementById('card-name').value;
+        if (!name) { alert('請先輸入卡片名稱'); return; }
+        const query = encodeURIComponent(`${name} credit card terms 2026`);
+        window.open(`https://www.google.com/search?q=${query}`, '_blank');
+    }
 
     // --- Helper Functions ---
     function getFinancialMonthRange() {
@@ -909,12 +1026,10 @@
         
         let stmtDate = new Date(txDate.getFullYear(), txDate.getMonth(), stmtDay);
         
-        // If tx is AFTER statement day, next statement is next month
         if (txDate.getDate() > stmtDay) {
             stmtDate.setMonth(stmtDate.getMonth() + 1);
         }
         
-        // Due date = Statement Date + Gap
         const dueDate = new Date(stmtDate);
         dueDate.setDate(stmtDate.getDate() + gap);
         return dueDate;
@@ -938,7 +1053,6 @@
                     const card = state.cards.find(c => c.id == tx.cardId);
                     if (card) {
                         cardSpending[card.id] += tx.amount;
-                        // FX Logic in Stats
                         const isFx = tx.isForeign;
                         const rate = isFx ? (card.rateFx || 0) : card.rate;
                         
@@ -1068,7 +1182,6 @@
         state.cards.forEach(card => {
             const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
             let rateText = card.type === 'miles' ? `$${card.rate}/里` : `${card.rate}% 回贈`;
-            // Add FX rate info if exists
             if (card.rateFx > 0) {
                 rateText += card.type === 'miles' ? ` (外$${card.rateFx})` : ` (外${card.rateFx}%)`;
             }
@@ -1121,12 +1234,7 @@
                 cardName = card ? card.name : '未知';
                 
                 if (card) {
-                    // FX Tag
-                    if (tx.isForeign) {
-                        cardName = '🌍 ' + cardName;
-                    }
-
-                    // Reward Calc
+                    if (tx.isForeign) { cardName = '🌍 ' + cardName; }
                     const isFx = tx.isForeign;
                     const rate = isFx ? (card.rateFx || 0) : card.rate;
                     
@@ -1138,7 +1246,6 @@
                         cashbackTag = `<div class="cashback-tag">賺 $${cashback}</div>`;
                     }
                     
-                    // Due Date
                     const dueDate = calculateDueDate(tx.date, tx.cardId);
                     if (dueDate) {
                         const dueStr = `${dueDate.getMonth()+1}/${dueDate.getDate()}`;
@@ -1189,7 +1296,6 @@
         document.getElementById('group-card').style.display = showCard ? 'block' : 'none';
         document.getElementById('group-category').style.display = type === 'repayment' ? 'none' : 'block';
         
-        // FX only for expense
         document.getElementById('fx-toggle-container').style.display = type === 'expense' ? 'flex' : 'none';
         document.getElementById('fx-inputs').style.display = 'none'; // reset
         document.getElementById('tx-is-foreign').checked = false;
@@ -1199,7 +1305,6 @@
         const isFx = document.getElementById('tx-is-foreign').checked;
         document.getElementById('fx-inputs').style.display = isFx ? 'block' : 'none';
         document.getElementById('lbl-amount').innerText = isFx ? '折算金額 (HKD)' : '金額 (HKD)';
-        // Clear rate hint if toggled
         updateCardHint();
     }
     
@@ -1217,30 +1322,22 @@
         const currentVal = select.value;
         select.innerHTML = '';
         
-        // Mission list
         const missionDiv = document.getElementById('mission-cards');
         if(missionDiv) missionDiv.innerHTML = '';
         
-        // Subs card select
         const subSelect = document.getElementById('sub-card');
         if(subSelect) subSelect.innerHTML = '';
 
         state.cards.forEach(card => {
             const opt = document.createElement('option');
             opt.value = card.id;
-            // Simplified label
             opt.text = card.name;
             select.appendChild(opt);
-            
-            // Subs
             if(subSelect) {
                 const subOpt = document.createElement('option');
-                subOpt.value = card.id;
-                subOpt.text = card.name;
+                subOpt.value = card.id; subOpt.text = card.name;
                 subSelect.appendChild(subOpt);
             }
-
-            // Mission
             if(missionDiv) {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
@@ -1291,15 +1388,11 @@
         const inputFx = document.getElementById('card-rate-fx');
         
         if (type === 'miles') {
-            lbl.innerText = '本地兌換 ($/里)';
-            input.placeholder = 'e.g. 6';
-            lblFx.innerText = '外幣兌換 ($/里)';
-            inputFx.placeholder = 'e.g. 4';
+            lbl.innerText = '本地兌換 ($/里)'; input.placeholder = 'e.g. 6';
+            lblFx.innerText = '外幣兌換 ($/里)'; inputFx.placeholder = 'e.g. 4';
         } else {
-            lbl.innerText = '本地回贈 (%)';
-            input.placeholder = 'e.g. 1.5';
-            lblFx.innerText = '外幣回贈 (%)';
-            inputFx.placeholder = 'e.g. 2';
+            lbl.innerText = '本地回贈 (%)'; input.placeholder = 'e.g. 1.5';
+            lblFx.innerText = '外幣回贈 (%)'; inputFx.placeholder = 'e.g. 2';
         }
     }
 
@@ -1325,18 +1418,15 @@
         if (!tx) return;
 
         openModal('transaction');
-        
         document.getElementById('tx-id').value = tx.id;
         setTxType(tx.type || 'expense');
         document.getElementById('tx-amount').value = tx.amount;
         document.getElementById('tx-desc').value = tx.desc;
         document.getElementById('tx-date').value = tx.date;
         
-        // FX handling
         if (tx.isForeign) {
              document.getElementById('tx-is-foreign').checked = true;
              toggleFxInputs();
-             // We don't store original rate/amount yet, so just leave fields blank or 0
         }
         
         if (tx.category) document.getElementById('tx-category').value = tx.category;
@@ -1363,23 +1453,17 @@
         }
         if (type === 'repayment') category = '信用卡還款';
 
-        const txObj = {
-            type, category, desc, amount, cardId, date, isForeign
-        };
+        const txObj = { type, category, desc, amount, cardId, date, isForeign };
 
         if (idStr) {
             const id = parseFloat(idStr);
             const index = state.transactions.findIndex(t => t.id === id);
-            if (index !== -1) {
-                state.transactions[index] = { ...txObj, id };
-            }
+            if (index !== -1) state.transactions[index] = { ...txObj, id };
         } else {
             state.transactions.unshift({ ...txObj, id: Date.now() });
         }
 
-        saveData();
-        render();
-        closeModals();
+        saveData(); render(); closeModals();
     }
 
     function addCard(e) {
@@ -1394,41 +1478,10 @@
         const stmtDay = document.getElementById('card-stmt-day').value;
         const payGap = document.getElementById('card-pay-gap').value || 25;
 
-        state.cards.push({
-            id: Date.now(),
-            name, type, rate, rateFx, cap, note, stmtDay, payGap
-        });
+        state.cards.push({ id: Date.now(), name, type, rate, rateFx, cap, note, stmtDay, payGap });
 
-        saveData();
-        render();
-        closeModals();
+        saveData(); render(); closeModals();
         if(state.cards.length === 1) updateFormOptions();
-    }
-    
-    // ... [Import/Export/Delete/Modal functions same as before] ...
-    function addMission(e) {
-        e.preventDefault();
-        const name = document.getElementById('mission-name').value;
-        const target = parseFloat(document.getElementById('mission-target').value);
-        const start = document.getElementById('mission-start').value;
-        const end = document.getElementById('mission-end').value;
-        const checkboxes = document.querySelectorAll('input[name="m-card"]:checked');
-        const cardIds = Array.from(checkboxes).map(cb => cb.value);
-        
-        if (cardIds.length === 0) { alert('請至少選擇一張信用卡！'); return; }
-        state.missions.push({ id: Date.now(), name, target, start, end, cardIds });
-        saveData();
-        render();
-        closeModals();
-    }
-    
-    function deleteMission(id) {
-        if(confirm('確定刪除此任務?')) { state.missions = state.missions.filter(m => m.id !== id); saveData(); render(); }
-    }
-    
-    function saveSettings() {
-        state.settings.startDay = parseInt(document.getElementById('setting-start-day').value);
-        saveData(); render(); closeModals(); showToast('設定已更新');
     }
 
     function importPresetCards() {
@@ -1459,7 +1512,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a"); a.href = url; a.download = `finance_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
         } else {
-            let csv = "\uFEFF日期,類型,類別,描述,金額,信用卡,回贈\n";
+            let csv = "\uFEFF日期,類型,類別,描述,金額,帳戶/信用卡,預計回贈\n";
             state.transactions.forEach(tx => {
                 const card = state.cards.find(c => c.id == tx.cardId);
                 const cName = card ? card.name : '';
@@ -1485,12 +1538,10 @@
                 const imported = JSON.parse(e.target.result);
                 if (imported.transactions) {
                     if (confirm("檢測到備份。\n[確定] = 合併 (保留現有)\n[取消] = 覆蓋 (刪除現有)")) {
-                        // Merge
                         const mergedTx = [...state.transactions, ...imported.transactions];
                         const uniqueTx = Array.from(new Map(mergedTx.map(item => [item.id, item])).values());
                         state.transactions = uniqueTx.sort((a, b) => new Date(b.date) - new Date(a.date));
                         
-                        // Merge cards
                         if(imported.cards) {
                              const mergedCards = [...state.cards, ...imported.cards];
                              state.cards = Array.from(new Map(mergedCards.map(item => [item.id, item])).values());
