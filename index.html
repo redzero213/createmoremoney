@@ -119,10 +119,22 @@
         /* Mission & Subs */
         .mission-item, .sub-item { margin-top: 10px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-hover); }
         .mission-header { display: flex; justify-content: space-between; align-items: flex-start; font-size: 0.85rem; margin-bottom: 5px; gap: 10px; }
-        .mission-title { font-weight: bold; color: var(--mission); flex: 1; word-break: break-word; /* Fix: Allow long text to wrap */ }
+        .mission-title { font-weight: bold; color: var(--mission); flex: 1; word-break: break-word; }
         .mission-values { white-space: nowrap; font-size: 0.8rem; }
         .mission-progress-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 5px; }
         .mission-progress-fill { height: 100%; background: var(--mission); width: 0%; transition: width 0.5s; }
+        
+        /* Recurring Mission Item */
+        .recur-item { display: flex; align-items: center; background: var(--surface-hover); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); transition: all 0.2s; }
+        .recur-item.completed { border-color: var(--primary); background: rgba(0, 210, 106, 0.05); }
+        .recur-icon { font-size: 1.5rem; margin-right: 12px; width: 30px; text-align: center; }
+        .recur-content { flex: 1; }
+        .recur-name { font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; gap: 5px; }
+        .recur-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+        .recur-progress { font-size: 0.9rem; font-weight: bold; text-align: right; }
+        .recur-tick { color: var(--primary); font-weight: bold; font-size: 1.2rem; display: none; }
+        .recur-item.completed .recur-tick { display: block; }
+        .recur-item.completed .recur-progress { color: var(--primary); }
 
         /* Lists */
         .list-item {
@@ -277,6 +289,7 @@
 <header>
     <h1><span class="logo-icon">💰</span> 回贈哥</h1>
     <div class="header-actions">
+        <button class="icon-btn" onclick="openModal('recur-mission')" title="每月任務">🎯</button>
         <button class="icon-btn" onclick="openModal('subs')" title="固定開支">🔄</button>
         <button class="icon-btn" onclick="openModal('bank-info')" title="銀行資訊">ℹ️</button>
         <button class="icon-btn" onclick="openModal('data')" title="備份與同步">☁️</button>
@@ -312,7 +325,7 @@
         <!-- Missions -->
         <div id="missions-container"></div>
         <div style="text-align:right; margin-top:10px;">
-             <button class="btn-text" onclick="openModal('mission')" style="font-size:0.8rem; display:inline-flex; color:var(--mission);">+ 新增任務</button>
+             <button class="btn-text" onclick="openModal('mission')" style="font-size:0.8rem; display:inline-flex; color:var(--mission);">+ 新增限時任務</button>
         </div>
     </div>
 
@@ -414,7 +427,10 @@
 
             <div class="form-group">
                 <label id="lbl-amount">金額 (HKD)</label>
-                <input type="number" id="tx-amount" step="0.1" placeholder="0.00" required>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="tx-amount" step="0.1" placeholder="0.00" required style="flex:1;">
+                    <button type="button" class="btn-small" onclick="openModal('split')" style="background:var(--surface-hover); border-color:var(--border); color:var(--text); white-space:nowrap;">✂️ 分單</button>
+                </div>
             </div>
             
             <div class="form-group" id="group-category">
@@ -439,6 +455,44 @@
             </div>
             <button type="submit" class="btn" id="btn-submit">記賬</button>
         </form>
+    </div>
+</div>
+
+<!-- Split Bill Modal -->
+<div id="modal-split" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2>✂️ 食飯分單計算機</h2>
+        
+        <div class="form-group">
+            <label>總金額</label>
+            <input type="number" id="split-total" placeholder="0.00" oninput="calcSplit()">
+        </div>
+
+        <div class="row-group">
+             <div style="display:flex; align-items:center;">
+                 <label style="margin:0; cursor:pointer;"><input type="checkbox" id="split-service" onchange="calcSplit()" style="width:auto; margin-right:5px;"> +10% 服務費</label>
+             </div>
+             <div class="form-group" style="margin-bottom:0;">
+                <input type="number" id="split-discount" placeholder="折扣 % (e.g. 15)" oninput="calcSplit()">
+             </div>
+        </div>
+        
+        <div class="form-group" style="margin-top:15px;">
+            <label>人數</label>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button type="button" class="btn-small" onclick="adjustPeople(-1)" style="font-size:1.2rem; width:40px;">-</button>
+                <input type="number" id="split-people" value="2" style="text-align:center; font-weight:bold;" oninput="calcSplit()">
+                <button type="button" class="btn-small" onclick="adjustPeople(1)" style="font-size:1.2rem; width:40px;">+</button>
+            </div>
+        </div>
+
+        <div style="text-align:center; margin:20px 0; background:var(--surface-hover); padding:15px; border-radius:8px;">
+            <div style="font-size:0.9rem; color:var(--text-muted);">每人需付</div>
+            <div id="split-result" style="font-size:2rem; font-weight:bold; color:var(--primary);">$0.00</div>
+        </div>
+        
+        <button type="button" class="btn" onclick="applySplit()">填入金額</button>
     </div>
 </div>
 
@@ -499,6 +553,45 @@
     </div>
 </div>
 
+<!-- Recurring Mission Modal -->
+<div id="modal-recur-mission" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2 style="margin-top:0;">🎯 每月任務清單</h2>
+        <div style="margin-bottom:15px; font-size:0.85rem; color:var(--text-muted);">
+            自動追蹤每月的簽賬目標 (如 MMPOWER 低消、Wakuwaku 上限)。<br>每月自動重置。
+        </div>
+        <div id="recur-list" style="margin-bottom:20px;">
+            <!-- Populated by JS -->
+            <div style="text-align:center; color:var(--text-muted);">暫無每月任務</div>
+        </div>
+        
+        <form id="recur-form" onsubmit="addRecurMission(event)" style="background:var(--surface-hover); padding:10px; border-radius:8px;">
+            <h3 style="margin-top:0; font-size:0.9rem;">新增每月任務</h3>
+            <div class="form-group">
+                <input type="text" id="recur-name" placeholder="任務名稱 (e.g. MMPOWER 低消)" required>
+            </div>
+            <div class="row-group">
+                <div class="form-group">
+                    <input type="number" id="recur-target" placeholder="目標金額" required>
+                </div>
+                <div class="form-group">
+                    <select id="recur-card" required></select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>重置日 (每月幾號重新計算)</label>
+                <select id="recur-reset-day">
+                    <option value="1">1 號 (大多數卡)</option>
+                    <option value="12">12 號 (AEON Wakuwaku)</option>
+                    <!-- Can add more if needed -->
+                </select>
+            </div>
+            <button type="submit" class="btn-small" style="width:100%;">+ 加入清單</button>
+        </form>
+    </div>
+</div>
+
 <!-- Bank Info Modal -->
 <div id="modal-bank-info" class="modal-overlay">
     <div class="modal-content">
@@ -554,11 +647,11 @@
     </div>
 </div>
 
-<!-- Mission Modal -->
+<!-- Mission Modal (Ad-hoc) -->
 <div id="modal-mission" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
-        <h2>新增簽賬任務</h2>
+        <h2>新增限時任務</h2>
         <form id="mission-form" onsubmit="addMission(event)">
             <div class="form-group">
                 <label>任務名稱</label>
@@ -606,6 +699,10 @@
                 <button class="btn" style="background:#333; border:1px solid #666;" onclick="triggerImport()">📂 選擇並還原/合併</button>
                 <input type="file" id="file-input" style="display:none;" accept=".json" onchange="importData(this)">
             </div>
+            <div style="margin-top:10px;">
+                <button class="btn-small" onclick="cleanDuplicateCards()" style="color:var(--primary); border-color:var(--primary); width:100%;">🧹 智能合併重複卡片</button>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">*若發現多張同名卡片，按此合併。</div>
+            </div>
         </div>
         <div class="help-section">
             <button class="btn-small" onclick="forceUpdate()" style="width:100%; margin-top:5px; background:var(--surface-hover); color:var(--text); border-color:var(--primary);">🔄 強制獲取最新版本</button>
@@ -623,18 +720,23 @@
         <h2 style="margin-top:0;">💡 使用說明 & 教學</h2>
         
         <div class="help-section">
+            <div class="help-title">✂️ 分單計算</div>
+            <div class="help-step">在記賬頁面，按金額旁邊的「✂️」按鈕，可以計算折扣、加一服務費及人頭攤分。</div>
+        </div>
+        
+        <div class="help-section">
+            <div class="help-title">🎯 每月任務</div>
+            <div class="help-step">點擊頂部 🎯 圖示，設定每月要跑數的卡 (如 MMPOWER)。系統會按你設定的「重置日」(如 1號或12號) 自動計算當月進度。</div>
+        </div>
+
+        <div class="help-section">
             <div class="help-title">ℹ️ 銀行/信用卡資訊</div>
-            <div class="help-step">點擊頂部 ℹ️ 圖示，可查看各大銀行推廣頁面連結及 CS 熱線 (含真人接聽按鍵次序)。</div>
+            <div class="help-step">點擊頂部 ℹ️ 圖示，可查看各大銀行推廣頁面連結及 CS 熱線。</div>
         </div>
         
         <div class="help-section">
             <div class="help-title">⚠️ 免責聲明</div>
-            <div class="help-step">應用程式內的預設回贈資料 (如 WeWa 10%) 僅為<strong>「預估範本」</strong>，未必已反映銀行最新更改的條款。請善用「🔍 核實」功能自行確認。</div>
-        </div>
-
-        <div class="help-section">
-            <div class="help-title">🔄 固定開支</div>
-            <div class="help-step">在頂部按「🔄」圖示設定。每月一開 App，系統會問你係咪要入數。</div>
+            <div class="help-step">預設回贈資料僅供參考。請善用「🔍 核實」功能確認最新條款。</div>
         </div>
         
         <button class="btn" onclick="closeModals()">明白哂！</button>
@@ -647,20 +749,18 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.19 (最新)</div>
-            <div class="log-date">2026-01-12</div>
+            <div class="log-ver">v1.22 (最新)</div>
+            <div class="log-date">2026-01-16</div>
             <div class="log-desc">
-                - 修正：任務名稱顯示問題。<br>
-                - 新增：卡片列表「💵 還款」按鈕，快速記錄已找卡數。<br>
-                - 新增：卡片上顯示「本月已還」金額。
+                - 新增：✂️ 分單計算機 (+10% / 折扣 / 人頭)。<br>
+                - 新增：🧹 智能合併重複卡片 (在備份頁面)。
             </div>
         </div>
         <div class="log-entry">
-            <div class="log-ver">v1.18</div>
-            <div class="log-date">2026-01-11</div>
+            <div class="log-ver">v1.21</div>
+            <div class="log-date">2026-01-16</div>
             <div class="log-desc">
-                - 新增：⚠️ 安全免責提示。<br>
-                - 新增：🔍 核實條款按鈕。
+                - 修復：重複卡片問題。
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -671,7 +771,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.19';
+    const APP_VERSION = '1.22';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -744,7 +844,7 @@
         }
     ];
 
-    // Preset Cards (2026 Updated with Disclaimer Notes)
+    // Preset Cards
     const PRESET_CARDS = [
         { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, rateFx: 0.4, cap: 5200, note: '🔥2026食飯10% (需核實)' },
         { name: '渣打國泰 (食/網/外)', type: 'miles', rate: 4, rateFx: 4, cap: 0, note: '✈️ $4/里' },
@@ -768,7 +868,8 @@
     let state = {
         transactions: [],
         cards: [],
-        missions: [],
+        missions: [], // This is for ad-hoc missions
+        recurringMissions: [], // New for v1.20
         subscriptions: [],
         settings: { startDay: 1 }
     };
@@ -789,8 +890,24 @@
             });
             if (!state.subscriptions) state.subscriptions = [];
             if (!state.settings) state.settings = { startDay: 1 };
+            if (!state.recurringMissions) state.recurringMissions = []; // v1.20
         } else {
             state.cards = generatePresetCards();
+            saveData();
+        }
+        
+        // Setup default missions if empty (on first load of this version)
+        if (state.recurringMissions.length === 0 && state.cards.length > 0) {
+            // Find specific cards and add default missions
+            const mm = state.cards.find(c => c.name.includes('MMPOWER'));
+            if (mm) state.recurringMissions.push({ id: Date.now()+1, name: 'MMPOWER 低消', cardId: mm.id, target: 5000, resetDay: 1 });
+            
+            const waku = state.cards.find(c => c.name.includes('WAKUWAKU'));
+            if (waku) state.recurringMissions.push({ id: Date.now()+2, name: 'Wakuwaku 網購', cardId: waku.id, target: 3571, resetDay: 12 });
+            
+            const red = state.cards.find(c => c.name.includes('Red'));
+            if (red) state.recurringMissions.push({ id: Date.now()+3, name: 'Red 卡上限', cardId: red.id, target: 10000, resetDay: 1 });
+            
             saveData();
         }
         
@@ -800,6 +917,7 @@
         setDefaultTime();
         document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
         
+        // Populate Settings Dropdown
         const daySelect = document.getElementById('setting-start-day');
         daySelect.innerHTML = '';
         for (let i = 1; i <= 31; i++) {
@@ -825,7 +943,7 @@
         }
     }
     
-    // --- Disclaimer Logic ---
+    // ... [Previous Helper Functions] ...
     function checkDisclaimer() {
         const agreed = localStorage.getItem(DISCLAIMER_KEY);
         if (!agreed) {
@@ -1001,6 +1119,39 @@
         if (!name) { alert('請先輸入卡片名稱'); return; }
         const query = encodeURIComponent(`${name} credit card terms 2026`);
         window.open(`https://www.google.com/search?q=${query}`, '_blank');
+    }
+    
+    // --- Split Bill Logic (v1.22) ---
+    function calcSplit() {
+        const total = parseFloat(document.getElementById('split-total').value) || 0;
+        const hasService = document.getElementById('split-service').checked;
+        const discount = parseFloat(document.getElementById('split-discount').value) || 0;
+        const people = parseInt(document.getElementById('split-people').value) || 1;
+        
+        let final = total;
+        if (hasService) final *= 1.1;
+        if (discount > 0) final *= (1 - discount/100);
+        
+        const perPerson = final / people;
+        document.getElementById('split-result').innerText = '$' + perPerson.toFixed(2);
+    }
+    
+    function adjustPeople(delta) {
+        const input = document.getElementById('split-people');
+        let val = parseInt(input.value) || 1;
+        val += delta;
+        if (val < 1) val = 1;
+        input.value = val;
+        calcSplit();
+    }
+    
+    function applySplit() {
+        const resultText = document.getElementById('split-result').innerText;
+        const amount = parseFloat(resultText.replace('$', ''));
+        document.getElementById('tx-amount').value = amount;
+        closeModals();
+        // Recalculate hint
+        updateCardHint();
     }
 
     // --- Helper Functions ---
@@ -1358,6 +1509,9 @@
         
         const subSelect = document.getElementById('sub-card');
         if(subSelect) subSelect.innerHTML = '';
+        
+        const recurSelect = document.getElementById('recur-card'); // New
+        if(recurSelect) recurSelect.innerHTML = '';
 
         state.cards.forEach(card => {
             const opt = document.createElement('option');
@@ -1373,8 +1527,15 @@
                 subOpt.text = card.name;
                 subSelect.appendChild(subOpt);
             }
+            
+            // Recur Missions
+            if(recurSelect) {
+                const rOpt = document.createElement('option');
+                rOpt.value = card.id; rOpt.text = card.name;
+                recurSelect.appendChild(rOpt);
+            }
 
-            // Mission
+            // Mission Checklist
             if(missionDiv) {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
@@ -1389,6 +1550,7 @@
     function updateCardHint() {
         const select = document.getElementById('tx-card');
         const hintBox = document.getElementById('card-hint');
+        const hintRate = document.getElementById('hint-rate');
         const type = document.getElementById('tx-type').value;
         const isFx = document.getElementById('tx-is-foreign').checked;
 
@@ -1599,6 +1761,116 @@
         reader.readAsText(file); input.value = '';
     }
 
+    // --- Clean Duplicates Logic (v1.21) ---
+    function cleanDuplicateCards() {
+        const nameMap = new Map();
+        let duplicatesCount = 0;
+
+        // 1. Identify duplicates
+        state.cards.forEach(card => {
+            const normalizedName = card.name.trim(); // simple normalization
+            if (!nameMap.has(normalizedName)) {
+                nameMap.set(normalizedName, [card]);
+            } else {
+                nameMap.get(normalizedName).push(card);
+            }
+        });
+
+        // 2. Process
+        const newCards = [];
+        let remappedTransactions = 0;
+
+        nameMap.forEach((cardsGroup) => {
+            if (cardsGroup.length > 1) {
+                // Found duplicates!
+                // Keep the first one (usually the oldest or user-created first? Or the one with ID 0-16 for presets?)
+                // Actually, let's keep the one with the smallest ID (usually created earlier) 
+                // OR Keep the most detailed one? Let's just keep the first one found.
+                const masterCard = cardsGroup[0];
+                newCards.push(masterCard);
+                duplicatesCount += (cardsGroup.length - 1);
+
+                // Remap transactions from other duplicates to masterCard
+                for (let i = 1; i < cardsGroup.length; i++) {
+                    const duplicateCard = cardsGroup[i];
+                    state.transactions.forEach(tx => {
+                        if (tx.cardId == duplicateCard.id) {
+                            tx.cardId = masterCard.id;
+                            remappedTransactions++;
+                        }
+                    });
+                    // Also remap subscriptions / missions
+                    if (state.subscriptions) {
+                        state.subscriptions.forEach(sub => {
+                            if (sub.cardId == duplicateCard.id) sub.cardId = masterCard.id;
+                        });
+                    }
+                    if (state.recurringMissions) {
+                        state.recurringMissions.forEach(m => {
+                             if (m.cardId == duplicateCard.id) m.cardId = masterCard.id;
+                        });
+                    }
+                    // Ad-hoc missions (array of IDs)
+                    if (state.missions) {
+                        state.missions.forEach(m => {
+                            const idx = m.cardIds.indexOf(duplicateCard.id.toString());
+                            if (idx > -1) {
+                                m.cardIds[idx] = masterCard.id.toString(); // Swap ID
+                            }
+                            // Remove duplicates in cardIds if any
+                             m.cardIds = [...new Set(m.cardIds)];
+                        });
+                    }
+                }
+            } else {
+                newCards.push(cardsGroup[0]);
+            }
+        });
+
+        if (duplicatesCount > 0) {
+            state.cards = newCards;
+            saveData();
+            render();
+            closeModals();
+            alert(`成功合併 ${duplicatesCount} 張重複卡片！\n已轉移 ${remappedTransactions} 筆交易紀錄。`);
+        } else {
+            alert('未發現名稱完全相同的重複卡片。');
+        }
+    }
+
+    // --- Split Bill Logic (v1.22) ---
+    function calcSplit() {
+        const total = parseFloat(document.getElementById('split-total').value) || 0;
+        const hasService = document.getElementById('split-service').checked;
+        const discount = parseFloat(document.getElementById('split-discount').value) || 0;
+        const people = parseInt(document.getElementById('split-people').value) || 1;
+        
+        let final = total;
+        if (hasService) final *= 1.1;
+        if (discount > 0) final *= (1 - discount/100);
+        
+        const perPerson = final / people;
+        document.getElementById('split-result').innerText = '$' + perPerson.toFixed(2);
+    }
+    
+    function adjustPeople(delta) {
+        const input = document.getElementById('split-people');
+        let val = parseInt(input.value) || 1;
+        val += delta;
+        if (val < 1) val = 1;
+        input.value = val;
+        calcSplit();
+    }
+    
+    function applySplit() {
+        const resultText = document.getElementById('split-result').innerText;
+        const amount = parseFloat(resultText.replace('$', ''));
+        document.getElementById('tx-amount').value = amount;
+        closeModals();
+        // Recalculate hint
+        updateCardHint();
+    }
+
     function openModal(type) {
         document.getElementById(`modal-${type}`).classList.add('active');
         if (type === 'transaction') {
@@ -1617,6 +1889,10 @@
         }
         if (type === 'mission') updateFormOptions();
         if (type === 'subs') renderSubsList();
+        if (type === 'recur-mission') {
+            updateFormOptions();
+            renderRecurList();
+        }
         if (type === 'bank-info') renderBankInfo();
     }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
