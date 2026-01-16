@@ -111,7 +111,8 @@
         .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: background 0.3s; }
 
         /* Dashboard Stats */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        /* Changed to 2 columns to fit 4 items comfortably on mobile */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; display: flex; flex-direction: column; justify-content: center; }
         .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
@@ -316,6 +317,10 @@
             <div class="stat-card">
                 <div class="stat-label">總收入</div>
                 <div class="stat-value" id="total-income" style="color:var(--income)">$0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">本月已還</div>
+                <div class="stat-value" id="total-repaid" style="color:var(--repay)">$0</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">回贈估算</div>
@@ -749,18 +754,21 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.22 (最新)</div>
+            <div class="log-ver">v1.24 (Bug Fixes)</div>
             <div class="log-date">2026-01-16</div>
             <div class="log-desc">
-                - 新增：✂️ 分單計算機 (+10% / 折扣 / 人頭)。<br>
-                - 新增：🧹 智能合併重複卡片 (在備份頁面)。
+                - 修復：還款時回贈提示異常問題。<br>
+                - 修復：Dashboard 缺少總收入顯示問題。<br>
+                - 優化：統計介面改為 2x2 排列，清晰易讀。
             </div>
         </div>
         <div class="log-entry">
-            <div class="log-ver">v1.21</div>
+            <div class="log-ver">v1.23</div>
             <div class="log-date">2026-01-16</div>
             <div class="log-desc">
-                - 修復：重複卡片問題。
+                - 修正：還款紀錄不再顯示回贈提示。<br>
+                - 修正：任務卡片選擇顯示問題。<br>
+                - 新增：Dashboard 顯示「本月已還」。
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -771,7 +779,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.22';
+    const APP_VERSION = '1.24';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -1190,7 +1198,7 @@
     }
 
     function calculateStats() {
-        let totalSpent = 0, totalIncome = 0, totalCashback = 0, totalMiles = 0;
+        let totalSpent = 0, totalIncome = 0, totalCashback = 0, totalMiles = 0, totalRepaid = 0;
         const cardSpending = {};
         const cardPaid = {};
         state.cards.forEach(c => {
@@ -1223,6 +1231,7 @@
                 } else if (type === 'income') {
                     totalIncome += tx.amount;
                 } else if (type === 'repayment') {
+                    totalRepaid += tx.amount; // Global Total Repaid
                     if (state.cards.some(c => c.id == tx.cardId)) {
                         cardPaid[tx.cardId] = (cardPaid[tx.cardId] || 0) + tx.amount;
                     }
@@ -1232,6 +1241,7 @@
 
         document.getElementById('total-spent').innerText = '$' + totalSpent.toLocaleString();
         document.getElementById('total-income').innerText = '$' + totalIncome.toLocaleString();
+        document.getElementById('total-repaid').innerText = '$' + totalRepaid.toLocaleString();
         
         let rewardText = `$${totalCashback.toFixed(1)}`;
         if (totalMiles > 0) rewardText += ` + ${totalMiles.toLocaleString()} AM`;
@@ -1481,6 +1491,13 @@
         document.getElementById('fx-toggle-container').style.display = type === 'expense' ? 'flex' : 'none';
         document.getElementById('fx-inputs').style.display = 'none'; // reset
         document.getElementById('tx-is-foreign').checked = false;
+        
+        // Force hide hint for repayment immediately
+        if (type === 'repayment') {
+            document.getElementById('card-hint').style.display = 'none';
+        } else {
+            updateCardHint(); // Re-evaluate for expense
+        }
     }
 
     function toggleFxInputs() {
@@ -1539,7 +1556,7 @@
             if(missionDiv) {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
-                div.innerHTML = `<input type="checkbox" name="m-card" value="${card.id}" checked> ${card.name}`;
+                div.innerHTML = `<input type="checkbox" name="m-card" value="${card.id}" checked> <span style="color:var(--text);">${card.name}</span>`;
                 missionDiv.appendChild(div);
             }
         });
@@ -1550,7 +1567,6 @@
     function updateCardHint() {
         const select = document.getElementById('tx-card');
         const hintBox = document.getElementById('card-hint');
-        const hintRate = document.getElementById('hint-rate');
         const type = document.getElementById('tx-type').value;
         const isFx = document.getElementById('tx-is-foreign').checked;
 
@@ -1660,12 +1676,16 @@
         if (idStr) {
             const id = parseFloat(idStr);
             const index = state.transactions.findIndex(t => t.id === id);
-            if (index !== -1) state.transactions[index] = { ...txObj, id };
+            if (index !== -1) {
+                state.transactions[index] = { ...txObj, id };
+            }
         } else {
             state.transactions.unshift({ ...txObj, id: Date.now() });
         }
 
-        saveData(); render(); closeModals();
+        saveData();
+        render();
+        closeModals();
     }
 
     function addCard(e) {
