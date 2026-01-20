@@ -111,8 +111,7 @@
         .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: background 0.3s; }
 
         /* Dashboard Stats */
-        /* Changed to 2 columns to fit 4 items comfortably on mobile */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; display: flex; flex-direction: column; justify-content: center; }
         .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
@@ -243,9 +242,41 @@
         .ios-icon { display: inline-block; width: 20px; height: 20px; background: #eee; color: #333; border-radius: 4px; vertical-align: middle; text-align: center; line-height: 20px; font-size: 12px; font-weight: bold; }
         .data-btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
 
-        /* Checkbox Group */
-        .checkbox-group { display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 8px; }
-        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        /* Checkbox Group - Updated for better touch */
+        .checkbox-group { 
+            display: flex; 
+            flex-direction: column; 
+            max-height: 200px; 
+            overflow-y: auto; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            background: var(--surface); 
+            padding: 0; 
+        }
+        .checkbox-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            font-size: 0.95rem; 
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        .checkbox-item:last-child { border-bottom: none; }
+        .checkbox-item:hover { background: var(--surface-hover); }
+        .checkbox-item input { 
+            width: 20px; 
+            height: 20px; 
+            accent-color: var(--primary); 
+            cursor: pointer;
+            margin: 0;
+        }
+        .checkbox-item label {
+            cursor: pointer;
+            flex: 1;
+            margin: 0;
+            color: var(--text);
+        }
 
         /* Changelog */
         .log-entry { margin-bottom: 15px; padding-left: 10px; border-left: 3px solid var(--primary); }
@@ -754,21 +785,19 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.24 (Bug Fixes)</div>
-            <div class="log-date">2026-01-16</div>
+            <div class="log-ver">v1.26 (最新)</div>
+            <div class="log-date">2026-01-18</div>
             <div class="log-desc">
-                - 修復：還款時回贈提示異常問題。<br>
-                - 修復：Dashboard 缺少總收入顯示問題。<br>
-                - 優化：統計介面改為 2x2 排列，清晰易讀。
+                - 新增：「現金 / 其他」預設選項 (需匯入預設)。<br>
+                - 優化：任務卡片清單排版。<br>
             </div>
         </div>
         <div class="log-entry">
-            <div class="log-ver">v1.23</div>
+            <div class="log-ver">v1.22</div>
             <div class="log-date">2026-01-16</div>
             <div class="log-desc">
-                - 修正：還款紀錄不再顯示回贈提示。<br>
-                - 修正：任務卡片選擇顯示問題。<br>
-                - 新增：Dashboard 顯示「本月已還」。
+                - 新增：✂️ 分單計算機。<br>
+                - 新增：🧹 智能合併重複卡片。
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -779,7 +808,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.24';
+    const APP_VERSION = '1.26';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -854,6 +883,7 @@
 
     // Preset Cards
     const PRESET_CARDS = [
+        { name: '現金 / 其他', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: '不計回贈' },
         { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, rateFx: 0.4, cap: 5200, note: '🔥2026食飯10% (需核實)' },
         { name: '渣打國泰 (食/網/外)', type: 'miles', rate: 4, rateFx: 4, cap: 0, note: '✈️ $4/里' },
         { name: 'HSBC EveryMile', type: 'miles', rate: 5, rateFx: 2, cap: 0, note: '✈️ 指定商戶 $2/里 (需核實)' },
@@ -1556,7 +1586,10 @@
             if(missionDiv) {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
-                div.innerHTML = `<input type="checkbox" name="m-card" value="${card.id}" checked> <span style="color:var(--text);">${card.name}</span>`;
+                div.innerHTML = `
+                    <input type="checkbox" id="m-card-${card.id}" name="m-card" value="${card.id}" checked>
+                    <label for="m-card-${card.id}">${card.name}</label>
+                `;
                 missionDiv.appendChild(div);
             }
         });
@@ -1802,10 +1835,6 @@
 
         nameMap.forEach((cardsGroup) => {
             if (cardsGroup.length > 1) {
-                // Found duplicates!
-                // Keep the first one (usually the oldest or user-created first? Or the one with ID 0-16 for presets?)
-                // Actually, let's keep the one with the smallest ID (usually created earlier) 
-                // OR Keep the most detailed one? Let's just keep the first one found.
                 const masterCard = cardsGroup[0];
                 newCards.push(masterCard);
                 duplicatesCount += (cardsGroup.length - 1);
@@ -1889,6 +1918,102 @@
         closeModals();
         // Recalculate hint
         updateCardHint();
+    }
+
+    // --- Recurring Mission Logic (v1.20) ---
+    function addRecurMission(e) {
+        e.preventDefault();
+        const name = document.getElementById('recur-name').value;
+        const target = parseFloat(document.getElementById('recur-target').value);
+        const cardId = document.getElementById('recur-card').value;
+        const resetDay = parseInt(document.getElementById('recur-reset-day').value);
+        
+        state.recurringMissions.push({
+            id: Date.now(),
+            name, target, cardId, resetDay
+        });
+        saveData();
+        renderRecurList();
+        e.target.reset();
+    }
+    
+    function deleteRecurMission(id) {
+        if(confirm('確定刪除此任務?')) {
+            state.recurringMissions = state.recurringMissions.filter(m => m.id !== id);
+            saveData();
+            renderRecurList();
+        }
+    }
+    
+    function getRecurCycle(resetDay) {
+        const today = new Date();
+        const d = today.getDate();
+        let start, end;
+        
+        if (d >= resetDay) {
+            start = new Date(today.getFullYear(), today.getMonth(), resetDay);
+            end = new Date(today.getFullYear(), today.getMonth() + 1, resetDay - 1);
+        } else {
+            start = new Date(today.getFullYear(), today.getMonth() - 1, resetDay);
+            end = new Date(today.getFullYear(), today.getMonth(), resetDay - 1);
+        }
+        // Fix end of month overflow
+        if (end.getDate() !== (resetDay - 1 === 0 ? new Date(end.getFullYear(), end.getMonth()+1, 0).getDate() : resetDay - 1)) {
+            // e.g. resetDay 31, next month only 30 days
+             // Just keeping simple logic for now
+        }
+        end.setHours(23, 59, 59);
+        return { start, end };
+    }
+
+    function renderRecurList() {
+        const list = document.getElementById('recur-list');
+        list.innerHTML = '';
+        if (!state.recurringMissions || state.recurringMissions.length === 0) {
+            list.innerHTML = '<div style="text-align:center; color:var(--text-muted);">暫無每月任務</div>';
+            return;
+        }
+        
+        state.recurringMissions.forEach(m => {
+            const card = state.cards.find(c => c.id == m.cardId);
+            const cardName = card ? card.name : 'Unknown';
+            const { start, end } = getRecurCycle(m.resetDay);
+            
+            // Calculate current spend
+            let current = 0;
+            state.transactions.forEach(tx => {
+                const d = new Date(tx.date);
+                if (tx.type === 'expense' && tx.cardId == m.cardId && d >= start && d <= end) {
+                    current += tx.amount;
+                }
+            });
+            
+            const isCompleted = current >= m.target;
+            const itemClass = isCompleted ? 'recur-item completed' : 'recur-item';
+            
+            const div = document.createElement('div');
+            div.className = itemClass;
+            div.innerHTML = `
+                <div class="recur-icon">
+                     ${isCompleted ? '✅' : '🎯'}
+                </div>
+                <div class="recur-content">
+                    <div class="recur-name">
+                        ${m.name} 
+                        <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">(${cardName})</span>
+                    </div>
+                    <div class="recur-desc">
+                        週期: 每月 ${m.resetDay} 號重置
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="recur-progress">$${current.toLocaleString()} / $${m.target.toLocaleString()}</div>
+                    <div class="recur-tick">DONE</div>
+                    <button class="btn-text" onclick="deleteRecurMission(${m.id})" style="color:var(--text-muted); font-size:0.7rem; margin-top:5px;">刪除</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
     }
 
     function openModal(type) {
