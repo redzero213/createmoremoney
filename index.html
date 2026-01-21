@@ -29,6 +29,7 @@
             --miles: #a29bfe; /* 里數紫 */
             --mission: #f39c12; /* 任務黃 */
             --sub: #e17055; /* 訂閱紅 */
+            --trade: #00cec9; /* 炒賣青 */
             --info: #0984e3; /* 資訊藍 */
             --border: #333;
             --card-gradient: linear-gradient(135deg, #2c3e50, #000000);
@@ -51,6 +52,7 @@
             --miles: #6c5ce7;
             --mission: #d35400;
             --sub: #d63031;
+            --trade: #00b894;
             --info: #0984e3;
             --border: #e0e0e0;
             --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af);
@@ -115,26 +117,8 @@
         .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; display: flex; flex-direction: column; justify-content: center; }
         .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
-
-        /* Mission & Subs */
-        .mission-item, .sub-item { margin-top: 10px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-hover); }
-        .mission-header { display: flex; justify-content: space-between; align-items: flex-start; font-size: 0.85rem; margin-bottom: 5px; gap: 10px; }
-        .mission-title { font-weight: bold; color: var(--mission); flex: 1; word-break: break-word; }
-        .mission-values { white-space: nowrap; font-size: 0.8rem; }
-        .mission-progress-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 5px; }
-        .mission-progress-fill { height: 100%; background: var(--mission); width: 0%; transition: width 0.5s; }
-        
-        /* Recurring Mission Item */
-        .recur-item { display: flex; align-items: center; background: var(--surface-hover); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); transition: all 0.2s; }
-        .recur-item.completed { border-color: var(--primary); background: rgba(0, 210, 106, 0.05); }
-        .recur-icon { font-size: 1.5rem; margin-right: 12px; width: 30px; text-align: center; }
-        .recur-content { flex: 1; }
-        .recur-name { font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; gap: 5px; }
-        .recur-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
-        .recur-progress { font-size: 0.9rem; font-weight: bold; text-align: right; }
-        .recur-tick { color: var(--primary); font-weight: bold; font-size: 1.2rem; display: none; }
-        .recur-item.completed .recur-tick { display: block; }
-        .recur-item.completed .recur-progress { color: var(--primary); }
+        .profit-pos { color: var(--primary); }
+        .profit-neg { color: var(--danger); }
 
         /* Lists */
         .list-item {
@@ -152,6 +136,7 @@
         .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; }
         .miles-tag { font-size: 0.75rem; color: var(--miles); background: rgba(162, 155, 254, 0.15); padding: 2px 6px; border-radius: 4px; display: inline-block; }
         .due-tag { font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 2px; }
+        .shop-tag { font-size: 0.7rem; background: var(--trade); color: #000; padding: 2px 6px; border-radius: 4px; margin-right: 5px; font-weight: bold; }
 
         /* Bank Info Card */
         .bank-card { background: var(--surface-hover); border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
@@ -181,6 +166,16 @@
         .type-option.active.expense { background: rgba(255, 77, 77, 0.15); color: var(--danger); border: 1px solid var(--danger); }
         .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); border: 1px solid var(--income); }
         .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); border: 1px solid var(--repay); }
+
+        /* Trading Buttons Grid */
+        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .grid-btn { 
+            padding: 10px 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); 
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+            text-align: center;
+        }
+        .grid-btn.selected { background: var(--trade); color: #000; border-color: var(--trade); font-weight: bold; }
+        .grid-btn:hover { border-color: var(--trade); }
 
         /* Buttons */
         .btn {
@@ -242,7 +237,7 @@
         .ios-icon { display: inline-block; width: 20px; height: 20px; background: #eee; color: #333; border-radius: 4px; vertical-align: middle; text-align: center; line-height: 20px; font-size: 12px; font-weight: bold; }
         .data-btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
 
-        /* Checkbox Group - Updated for better touch */
+        /* Checkbox Group */
         .checkbox-group { 
             display: flex; 
             flex-direction: column; 
@@ -277,6 +272,26 @@
             margin: 0;
             color: var(--text);
         }
+        
+        /* Mission & Subs */
+        .mission-item, .sub-item { margin-top: 10px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-hover); }
+        .mission-header { display: flex; justify-content: space-between; align-items: flex-start; font-size: 0.85rem; margin-bottom: 5px; gap: 10px; }
+        .mission-title { font-weight: bold; color: var(--mission); flex: 1; word-break: break-word; }
+        .mission-values { white-space: nowrap; font-size: 0.8rem; }
+        .mission-progress-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+        .mission-progress-fill { height: 100%; background: var(--mission); width: 0%; transition: width 0.5s; }
+        
+        /* Recurring Mission Item */
+        .recur-item { display: flex; align-items: center; background: var(--surface-hover); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); transition: all 0.2s; }
+        .recur-item.completed { border-color: var(--primary); background: rgba(0, 210, 106, 0.05); }
+        .recur-icon { font-size: 1.5rem; margin-right: 12px; width: 30px; text-align: center; }
+        .recur-content { flex: 1; }
+        .recur-name { font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; gap: 5px; }
+        .recur-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+        .recur-progress { font-size: 0.9rem; font-weight: bold; text-align: right; }
+        .recur-tick { color: var(--primary); font-weight: bold; font-size: 1.2rem; display: none; }
+        .recur-item.completed .recur-tick { display: block; }
+        .recur-item.completed .recur-progress { color: var(--primary); }
 
         /* Changelog */
         .log-entry { margin-bottom: 15px; padding-left: 10px; border-left: 3px solid var(--primary); }
@@ -285,8 +300,8 @@
         .log-desc { font-size: 0.9rem; color: var(--text); line-height: 1.4; }
 
         /* Tabs */
-        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 15px; }
-        .tab { flex: 1; padding: 10px; text-align: center; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 15px; overflow-x: auto; white-space: nowrap; }
+        .tab { flex: 1; padding: 10px; text-align: center; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; min-width: 80px; }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -334,46 +349,47 @@
     <!-- Environment Indicator -->
     <div id="env-indicator" class="mode-indicator" style="display:none;"></div>
 
-    <!-- Overview Stats -->
-    <div class="panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <div style="font-size:0.9rem; color:var(--text-muted);">本月概覽 <span id="billing-cycle-text" style="font-size:0.75rem;">(1-31號)</span></div>
-            <button class="btn-text" onclick="openModal('settings')" style="font-size:0.8rem;">⚙️ 設定</button>
-        </div>
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">總支出</div>
-                <div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">總收入</div>
-                <div class="stat-value" id="total-income" style="color:var(--income)">$0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">本月已還</div>
-                <div class="stat-value" id="total-repaid" style="color:var(--repay)">$0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">回贈估算</div>
-                <div class="stat-value" id="total-cashback" style="color:var(--primary); font-size: 0.9rem;">$0</div>
-            </div>
-        </div>
-        <!-- Missions -->
-        <div id="missions-container"></div>
-        <div style="text-align:right; margin-top:10px;">
-             <button class="btn-text" onclick="openModal('mission')" style="font-size:0.8rem; display:inline-flex; color:var(--mission);">+ 新增限時任務</button>
-        </div>
-    </div>
-
     <!-- Tabs -->
     <div class="tabs">
         <div class="tab active" onclick="switchTab('transactions')">賬目紀錄</div>
         <div class="tab" onclick="switchTab('cards')">卡包 / 帳戶</div>
+        <div class="tab" onclick="switchTab('trading')">📱 炒賣</div>
         <div class="tab" onclick="switchTab('analysis')">統計分析</div>
     </div>
 
     <!-- Tab 1: Transactions -->
     <div id="tab-transactions" class="tab-content active">
+         <!-- Overview Stats (Only on Main Tab) -->
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="font-size:0.9rem; color:var(--text-muted);">本月概覽 <span id="billing-cycle-text" style="font-size:0.75rem;">(1-31號)</span></div>
+                <button class="btn-text" onclick="openModal('settings')" style="font-size:0.8rem;">⚙️ 設定</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">總支出</div>
+                    <div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">總收入</div>
+                    <div class="stat-value" id="total-income" style="color:var(--income)">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">本月已還</div>
+                    <div class="stat-value" id="total-repaid" style="color:var(--repay)">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">回贈估算</div>
+                    <div class="stat-value" id="total-cashback" style="color:var(--primary); font-size: 0.9rem;">$0</div>
+                </div>
+            </div>
+            <!-- Missions -->
+            <div id="missions-container"></div>
+            <div style="text-align:right; margin-top:10px;">
+                <button class="btn-text" onclick="openModal('mission')" style="font-size:0.8rem; display:inline-flex; color:var(--mission);">+ 新增限時任務</button>
+            </div>
+        </div>
+
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h2 style="margin:0; font-size:1.1rem;">最近賬目</h2>
@@ -399,7 +415,32 @@
         </div>
     </div>
 
-    <!-- Tab 3: Analysis -->
+    <!-- Tab 3: Trading (New) -->
+    <div id="tab-trading" class="tab-content">
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 style="margin:0; font-size:1.1rem;">📱 iPhone 17 炒賣紀錄</h2>
+                <button class="btn-small" onclick="openModal('trade')" style="background:var(--trade); border-color:var(--trade); color:#000;">+ 新增交易</button>
+            </div>
+            
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom:15px;">
+                <div class="stat-card">
+                    <div class="stat-label">今日利潤</div>
+                    <div class="stat-value" id="trade-today-profit" style="color:var(--primary)">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">今日貨量</div>
+                    <div class="stat-value" id="trade-today-vol" style="color:var(--text)">0 部</div>
+                </div>
+            </div>
+
+            <div id="trade-list">
+                 <div style="text-align:center; padding:20px; color:var(--text-muted);">暫無交易</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 4: Analysis -->
     <div id="tab-analysis" class="tab-content">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -424,8 +465,10 @@
 
 </div>
 
-<!-- Floating Add Button -->
-<button class="fab" onclick="openModal('transaction')">+</button>
+<!-- Floating Add Button (Main) -->
+<div id="main-fab">
+    <button class="fab" onclick="openModal('transaction')">+</button>
+</div>
 
 <!-- Add/Edit Transaction Modal -->
 <div id="modal-transaction" class="modal-overlay">
@@ -490,6 +533,75 @@
                 <input type="datetime-local" id="tx-date" required>
             </div>
             <button type="submit" class="btn" id="btn-submit">記賬</button>
+        </form>
+    </div>
+</div>
+
+<!-- Trade Modal (New) -->
+<div id="modal-trade" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2>📱 新增 iPhone 17 交易</h2>
+        
+        <form id="trade-form" onsubmit="addTrade(event)">
+            <div class="form-group">
+                <label>店舖</label>
+                <div class="btn-grid" id="trade-shop-grid"></div>
+                <input type="hidden" id="trade-shop" required>
+            </div>
+
+            <div class="form-group">
+                <label>型號</label>
+                <div class="btn-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="grid-btn" onclick="selectTradeOption('model', 'Pro', this)">Pro (細)</div>
+                    <div class="grid-btn" onclick="selectTradeOption('model', 'Pro Max', this)">Pro Max (大)</div>
+                </div>
+                <input type="hidden" id="trade-model" required>
+            </div>
+
+            <div class="form-group">
+                <label>容量</label>
+                <div class="btn-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="grid-btn" onclick="selectTradeOption('cap', '256GB', this)">256GB</div>
+                    <div class="grid-btn" onclick="selectTradeOption('cap', '512GB', this)">512GB</div>
+                    <div class="grid-btn" onclick="selectTradeOption('cap', '1TB', this)">1TB</div>
+                    <div class="grid-btn" onclick="selectTradeOption('cap', '2TB', this)">2TB</div>
+                    <div class="grid-btn" onclick="selectTradeOption('cap', '其他', this)">其他</div>
+                </div>
+                <input type="hidden" id="trade-cap" required>
+            </div>
+
+            <div class="form-group">
+                <label>顏色</label>
+                <div class="btn-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="grid-btn" onclick="selectTradeOption('color', '銀', this)">銀</div>
+                    <div class="grid-btn" onclick="selectTradeOption('color', '橙', this)">橙</div>
+                    <div class="grid-btn" onclick="selectTradeOption('color', '藍', this)">藍</div>
+                </div>
+                <input type="hidden" id="trade-color" required>
+            </div>
+
+            <div class="row-group">
+                <div class="form-group">
+                    <label>原價 (可修改)</label>
+                    <input type="number" id="trade-cost" required style="background:var(--surface-hover); color:var(--text);">
+                </div>
+                <div class="form-group">
+                    <label>放售價</label>
+                    <input type="number" id="trade-price" required style="border-color:var(--trade); color:var(--trade); font-weight:bold;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                 <label>數量</label>
+                 <div style="display:flex; align-items:center; gap:10px;">
+                     <button type="button" class="btn-small" onclick="adjustTradeQty(-1)">-</button>
+                     <input type="number" id="trade-qty" value="1" style="text-align:center;">
+                     <button type="button" class="btn-small" onclick="adjustTradeQty(1)">+</button>
+                 </div>
+            </div>
+
+            <button type="submit" class="btn" style="background:var(--trade); color:#000;">記錄交易</button>
         </form>
     </div>
 </div>
@@ -756,23 +868,18 @@
         <h2 style="margin-top:0;">💡 使用說明 & 教學</h2>
         
         <div class="help-section">
+            <div class="help-title">📱 炒賣紀錄</div>
+            <div class="help-step">去「📱 炒賣」分頁，可極速記錄放機資料。系統已更新 iPhone 17 原價。</div>
+        </div>
+
+        <div class="help-section">
             <div class="help-title">✂️ 分單計算</div>
             <div class="help-step">在記賬頁面，按金額旁邊的「✂️」按鈕，可以計算折扣、加一服務費及人頭攤分。</div>
         </div>
         
         <div class="help-section">
             <div class="help-title">🎯 每月任務</div>
-            <div class="help-step">點擊頂部 🎯 圖示，設定每月要跑數的卡 (如 MMPOWER)。系統會按你設定的「重置日」(如 1號或12號) 自動計算當月進度。</div>
-        </div>
-
-        <div class="help-section">
-            <div class="help-title">ℹ️ 銀行/信用卡資訊</div>
-            <div class="help-step">點擊頂部 ℹ️ 圖示，可查看各大銀行推廣頁面連結及 CS 熱線。</div>
-        </div>
-        
-        <div class="help-section">
-            <div class="help-title">⚠️ 免責聲明</div>
-            <div class="help-step">預設回贈資料僅供參考。請善用「🔍 核實」功能確認最新條款。</div>
+            <div class="help-step">點擊頂部 🎯 圖示，設定每月要跑數的卡。系統會按你設定的「重置日」自動計算當月進度。</div>
         </div>
         
         <button class="btn" onclick="closeModals()">明白哂！</button>
@@ -785,19 +892,20 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.26 (最新)</div>
-            <div class="log-date">2026-01-18</div>
+            <div class="log-ver">v1.28 (iPhone 17 Update)</div>
+            <div class="log-date">2026-01-22</div>
             <div class="log-desc">
-                - 新增：「現金 / 其他」預設選項 (需匯入預設)。<br>
-                - 優化：任務卡片清單排版。<br>
+                - 更新：iPhone 17 價目表 (細機/大機, 256GB/512GB/1TB/2TB)。<br>
+                - 更新：顏色選擇 (銀、橙、藍)。<br>
+                - 新增：店舖「鵬程」、容量「其他」(可自訂原價)。<br>
+                - 優化：原價欄位可手動修改。
             </div>
         </div>
         <div class="log-entry">
-            <div class="log-ver">v1.22</div>
-            <div class="log-date">2026-01-16</div>
+            <div class="log-ver">v1.27</div>
+            <div class="log-date">2026-01-22</div>
             <div class="log-desc">
-                - 新增：✂️ 分單計算機。<br>
-                - 新增：🧹 智能合併重複卡片。
+                - 新增：📱 炒賣專區，支援先達店舖選擇。<br>
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -808,7 +916,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.26';
+    const APP_VERSION = '1.28';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -819,6 +927,13 @@
         expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他', '固定開支'],
         income: ['薪金', '賣野', '投資', '其他'],
         repayment: ['信用卡還款']
+    };
+
+    // Trading Constants (Updated for iPhone 17)
+    const TRADE_SHOPS = ['雪球', '萬通', '日韓', '誠信', 'bobo', 'YY', 'G79', 'F9', 'DIY', '新宇宙', '溫記', '鵬程'];
+    const IPHONE_PRICES = {
+        'Pro': { '256GB': 9399, '512GB': 11099, '1TB': 12799 },
+        'Pro Max': { '256GB': 10199, '512GB': 11899, '1TB': 13599, '2TB': 16999 }
     };
 
     // Bank Info Data
@@ -906,9 +1021,10 @@
     let state = {
         transactions: [],
         cards: [],
-        missions: [], // This is for ad-hoc missions
-        recurringMissions: [], // New for v1.20
+        missions: [], 
+        recurringMissions: [],
         subscriptions: [],
+        trades: [], // New for v1.27
         settings: { startDay: 1 }
     };
     
@@ -919,7 +1035,6 @@
         const stored = localStorage.getItem(DB_KEY);
         if (stored) {
             state = JSON.parse(stored);
-            // v1.15 Migration
             state.cards.forEach(c => {
                 if (!c.type) { c.type = 'cashback'; c.rate = c.percent || 0; }
                 if (c.rateFx === undefined) c.rateFx = c.type === 'miles' ? c.rate : 0; 
@@ -928,25 +1043,17 @@
             });
             if (!state.subscriptions) state.subscriptions = [];
             if (!state.settings) state.settings = { startDay: 1 };
-            if (!state.recurringMissions) state.recurringMissions = []; // v1.20
+            if (!state.recurringMissions) state.recurringMissions = [];
+            if (!state.trades) state.trades = []; // v1.27
         } else {
             state.cards = generatePresetCards();
             saveData();
         }
         
-        // Setup default missions if empty (on first load of this version)
+        // Setup default missions if empty
         if (state.recurringMissions.length === 0 && state.cards.length > 0) {
-            // Find specific cards and add default missions
             const mm = state.cards.find(c => c.name.includes('MMPOWER'));
             if (mm) state.recurringMissions.push({ id: Date.now()+1, name: 'MMPOWER 低消', cardId: mm.id, target: 5000, resetDay: 1 });
-            
-            const waku = state.cards.find(c => c.name.includes('WAKUWAKU'));
-            if (waku) state.recurringMissions.push({ id: Date.now()+2, name: 'Wakuwaku 網購', cardId: waku.id, target: 3571, resetDay: 12 });
-            
-            const red = state.cards.find(c => c.name.includes('Red'));
-            if (red) state.recurringMissions.push({ id: Date.now()+3, name: 'Red 卡上限', cardId: red.id, target: 10000, resetDay: 1 });
-            
-            saveData();
         }
         
         const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
@@ -955,7 +1062,6 @@
         setDefaultTime();
         document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
         
-        // Populate Settings Dropdown
         const daySelect = document.getElementById('setting-start-day');
         daySelect.innerHTML = '';
         for (let i = 1; i <= 31; i++) {
@@ -966,9 +1072,19 @@
         }
         daySelect.value = state.settings.startDay;
 
+        // Populate Trade Shops Grid
+        const shopGrid = document.getElementById('trade-shop-grid');
+        TRADE_SHOPS.forEach(shop => {
+            const div = document.createElement('div');
+            div.className = 'grid-btn';
+            div.innerText = shop;
+            div.onclick = () => selectTradeOption('shop', shop, div);
+            shopGrid.appendChild(div);
+        });
+
         updateBackupTimeDisplay();
         checkVersion();
-        checkDisclaimer(); // New check
+        checkDisclaimer();
         checkEnvironment();
         checkSubscriptionsDue();
         setTxType('expense');
@@ -981,11 +1097,11 @@
         }
     }
     
-    // ... [Previous Helper Functions] ...
+    // ... [Previous Helper Functions: Check Version, Disclaimer, Env, Update, Theme, Time] ...
     function checkDisclaimer() {
         const agreed = localStorage.getItem(DISCLAIMER_KEY);
         if (!agreed) {
-            alert('⚠️ 重要免責聲明 ⚠️\n\n本應用程式提供的「2026年預設信用卡回贈資料」僅供參考，乃基於過往市場慣例作出的預估。\n\n銀行條款隨時變更（特別是回贈上限及推廣期），請務必使用新增的「🔍 核實」按鈕自行確認，以免損失回贈。\n\n(此提示只會出現一次)');
+            alert('⚠️ 重要免責聲明 ⚠️\n\n本應用程式提供的資料僅供參考。炒賣涉及風險，價格波動大，請自行承擔責任。\n\n(此提示只會出現一次)');
             localStorage.setItem(DISCLAIMER_KEY, 'true');
         }
     }
@@ -1052,7 +1168,7 @@
 
     // --- Subscription Logic ---
     function checkSubscriptionsDue() {
-        const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+        const currentMonth = new Date().toISOString().slice(0, 7); 
         const dueSubs = state.subscriptions.filter(sub => sub.lastGenerated !== currentMonth);
         
         if (dueSubs.length > 0) {
@@ -1192,6 +1308,129 @@
         updateCardHint();
     }
 
+    // --- Trading Logic (v1.27) ---
+    function selectTradeOption(type, value, el) {
+        document.getElementById(`trade-${type}`).value = value;
+        // Find container
+        let container;
+        if (type === 'shop') {
+             container = document.getElementById('trade-shop-grid');
+        } else {
+             container = el.parentElement;
+        }
+        
+        Array.from(container.children).forEach(btn => btn.classList.remove('selected'));
+        if(el) el.classList.add('selected');
+
+        // Auto Cost calc
+        if (type !== 'shop' && type !== 'color') {
+             calcTradeCost();
+        }
+    }
+
+    function calcTradeCost() {
+        const model = document.getElementById('trade-model').value;
+        const cap = document.getElementById('trade-cap').value;
+        
+        // Handle "Other" capacity
+        if (cap === '其他') {
+            document.getElementById('trade-cost').value = 0;
+            document.getElementById('trade-cost').focus(); // Prompt manual input
+            return;
+        }
+
+        if (model && cap && IPHONE_PRICES[model] && IPHONE_PRICES[model][cap]) {
+            document.getElementById('trade-cost').value = IPHONE_PRICES[model][cap];
+        }
+    }
+
+    function adjustTradeQty(delta) {
+        const input = document.getElementById('trade-qty');
+        let val = parseInt(input.value) || 0;
+        val += delta;
+        if (val < 1) val = 1;
+        input.value = val;
+    }
+
+    function addTrade(e) {
+        e.preventDefault();
+        const shop = document.getElementById('trade-shop').value;
+        const model = document.getElementById('trade-model').value;
+        const cap = document.getElementById('trade-cap').value;
+        const color = document.getElementById('trade-color').value;
+        const cost = parseFloat(document.getElementById('trade-cost').value) || 0;
+        const price = parseFloat(document.getElementById('trade-price').value) || 0;
+        const qty = parseInt(document.getElementById('trade-qty').value) || 1;
+
+        if(!shop || !model || !cap || !color) {
+            alert("請選擇所有選項"); return;
+        }
+
+        const profit = (price - cost) * qty;
+
+        state.trades.unshift({
+            id: Date.now(),
+            date: new Date().toISOString(),
+            shop, model, cap, color, cost, price, qty, profit
+        });
+
+        saveData();
+        renderTrading();
+        closeModals();
+        // Reset visual selection
+        document.querySelectorAll('.grid-btn.selected').forEach(b => b.classList.remove('selected'));
+        e.target.reset();
+        document.getElementById('trade-qty').value = 1;
+    }
+
+    function deleteTrade(id) {
+        if(confirm('刪除交易?')) {
+            state.trades = state.trades.filter(t => t.id !== id);
+            saveData();
+            renderTrading();
+        }
+    }
+
+    function renderTrading() {
+        const today = new Date().toISOString().slice(0, 10);
+        let todayProfit = 0;
+        let todayVol = 0;
+        
+        let html = '';
+        if (!state.trades) state.trades = []; // Safety check
+        
+        state.trades.forEach(t => {
+            const tDate = t.date.slice(0, 10);
+            if (tDate === today) {
+                todayProfit += t.profit;
+                todayVol += t.qty;
+            }
+
+            const pClass = t.profit >= 0 ? 'profit-pos' : 'profit-neg';
+            const pSign = t.profit >= 0 ? '+' : '';
+            
+            html += `
+                <div class="list-item">
+                    <div class="item-main">
+                        <div class="item-title"><span class="shop-tag">${t.shop}</span> ${t.model} ${t.cap} ${t.color}</div>
+                        <div class="item-sub">${t.date.slice(0, 16).replace('T', ' ')} • 收: $${t.price} (原: $${t.cost})</div>
+                    </div>
+                    <div class="item-actions">
+                         <div class="item-amount" style="font-size:0.9rem;">x${t.qty}</div>
+                         <div style="font-weight:bold; font-size:1rem;" class="${pClass}">${pSign}$${t.profit}</div>
+                         <button class="btn-text" onclick="deleteTrade(${t.id})" style="font-size:0.7rem; color:var(--text-muted)">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        document.getElementById('trade-list').innerHTML = html || '<div style="text-align:center; padding:20px; color:var(--text-muted);">暫無交易</div>';
+        
+        const pTotalClass = todayProfit >= 0 ? 'profit-pos' : 'profit-neg';
+        document.getElementById('trade-today-profit').innerHTML = `<span class="${pTotalClass}">${todayProfit >= 0 ? '+' : ''}$${todayProfit}</span>`;
+        document.getElementById('trade-today-vol').innerText = `${todayVol} 部`;
+    }
+
     // --- Helper Functions ---
     function getFinancialMonthRange() {
         const startDay = parseInt(state.settings.startDay);
@@ -1271,7 +1510,6 @@
 
         document.getElementById('total-spent').innerText = '$' + totalSpent.toLocaleString();
         document.getElementById('total-income').innerText = '$' + totalIncome.toLocaleString();
-        document.getElementById('total-repaid').innerText = '$' + totalRepaid.toLocaleString();
         
         let rewardText = `$${totalCashback.toFixed(1)}`;
         if (totalMiles > 0) rewardText += ` + ${totalMiles.toLocaleString()} AM`;
@@ -1333,6 +1571,7 @@
     function render() {
         renderCards();
         renderTransactions();
+        renderTrading(); // v1.27
         updateFormOptions();
         calculateStats();
         if (document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
@@ -1654,8 +1893,12 @@
         } else if (tabName === 'cards') {
             document.querySelectorAll('.tab')[1].classList.add('active');
             document.getElementById('tab-cards').classList.add('active');
-        } else {
+        } else if (tabName === 'trading') {
             document.querySelectorAll('.tab')[2].classList.add('active');
+            document.getElementById('tab-trading').classList.add('active');
+            renderTrading();
+        } else if (tabName === 'analysis') {
+            document.querySelectorAll('.tab')[3].classList.add('active');
             document.getElementById('tab-analysis').classList.add('active');
             renderCharts();
         }
@@ -1803,6 +2046,14 @@
                              const mergedCards = [...state.cards, ...imported.cards];
                              state.cards = Array.from(new Map(mergedCards.map(item => [item.id, item])).values());
                         }
+                        
+                        // Merge trades
+                        if (imported.trades) {
+                            const mergedTrades = [...(state.trades || []), ...imported.trades];
+                            state.trades = Array.from(new Map(mergedTrades.map(item => [item.id, item])).values())
+                                           .sort((a, b) => new Date(b.date) - new Date(a.date));
+                        }
+
                         alert('合併成功！');
                     } else {
                         if(confirm("確定覆蓋所有資料？")) { state = imported; alert('還原成功！'); } else return;
@@ -2016,6 +2267,129 @@
         });
     }
 
+    // --- Trading Logic (v1.27) ---
+    function selectTradeOption(type, value, el) {
+        document.getElementById(`trade-${type}`).value = value;
+        // Find container
+        let container;
+        if (type === 'shop') {
+             container = document.getElementById('trade-shop-grid');
+        } else {
+             container = el.parentElement;
+        }
+        
+        Array.from(container.children).forEach(btn => btn.classList.remove('selected'));
+        if(el) el.classList.add('selected');
+
+        // Auto Cost calc
+        if (type !== 'shop' && type !== 'color') {
+             calcTradeCost();
+        }
+    }
+
+    function calcTradeCost() {
+        const model = document.getElementById('trade-model').value;
+        const cap = document.getElementById('trade-cap').value;
+        
+        // Handle "Other" capacity
+        if (cap === '其他') {
+            document.getElementById('trade-cost').value = 0;
+            document.getElementById('trade-cost').focus(); // Prompt manual input
+            return;
+        }
+
+        if (model && cap && IPHONE_PRICES[model] && IPHONE_PRICES[model][cap]) {
+            document.getElementById('trade-cost').value = IPHONE_PRICES[model][cap];
+        }
+    }
+
+    function adjustTradeQty(delta) {
+        const input = document.getElementById('trade-qty');
+        let val = parseInt(input.value) || 0;
+        val += delta;
+        if (val < 1) val = 1;
+        input.value = val;
+    }
+
+    function addTrade(e) {
+        e.preventDefault();
+        const shop = document.getElementById('trade-shop').value;
+        const model = document.getElementById('trade-model').value;
+        const cap = document.getElementById('trade-cap').value;
+        const color = document.getElementById('trade-color').value;
+        const cost = parseFloat(document.getElementById('trade-cost').value) || 0;
+        const price = parseFloat(document.getElementById('trade-price').value) || 0;
+        const qty = parseInt(document.getElementById('trade-qty').value) || 1;
+
+        if(!shop || !model || !cap || !color) {
+            alert("請選擇所有選項"); return;
+        }
+
+        const profit = (price - cost) * qty;
+
+        state.trades.unshift({
+            id: Date.now(),
+            date: new Date().toISOString(),
+            shop, model, cap, color, cost, price, qty, profit
+        });
+
+        saveData();
+        renderTrading();
+        closeModals();
+        // Reset visual selection
+        document.querySelectorAll('.grid-btn.selected').forEach(b => b.classList.remove('selected'));
+        e.target.reset();
+        document.getElementById('trade-qty').value = 1;
+    }
+
+    function deleteTrade(id) {
+        if(confirm('刪除交易?')) {
+            state.trades = state.trades.filter(t => t.id !== id);
+            saveData();
+            renderTrading();
+        }
+    }
+
+    function renderTrading() {
+        const today = new Date().toISOString().slice(0, 10);
+        let todayProfit = 0;
+        let todayVol = 0;
+        
+        let html = '';
+        if (!state.trades) state.trades = []; // Safety check
+        
+        state.trades.forEach(t => {
+            const tDate = t.date.slice(0, 10);
+            if (tDate === today) {
+                todayProfit += t.profit;
+                todayVol += t.qty;
+            }
+
+            const pClass = t.profit >= 0 ? 'profit-pos' : 'profit-neg';
+            const pSign = t.profit >= 0 ? '+' : '';
+            
+            html += `
+                <div class="list-item">
+                    <div class="item-main">
+                        <div class="item-title"><span class="shop-tag">${t.shop}</span> ${t.model} ${t.cap} ${t.color}</div>
+                        <div class="item-sub">${t.date.slice(0, 16).replace('T', ' ')} • 收: $${t.price} (原: $${t.cost})</div>
+                    </div>
+                    <div class="item-actions">
+                         <div class="item-amount" style="font-size:0.9rem;">x${t.qty}</div>
+                         <div style="font-weight:bold; font-size:1rem;" class="${pClass}">${pSign}$${t.profit}</div>
+                         <button class="btn-text" onclick="deleteTrade(${t.id})" style="font-size:0.7rem; color:var(--text-muted)">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        document.getElementById('trade-list').innerHTML = html || '<div style="text-align:center; padding:20px; color:var(--text-muted);">暫無交易</div>';
+        
+        const pTotalClass = todayProfit >= 0 ? 'profit-pos' : 'profit-neg';
+        document.getElementById('trade-today-profit').innerHTML = `<span class="${pTotalClass}">${todayProfit >= 0 ? '+' : ''}$${todayProfit}</span>`;
+        document.getElementById('trade-today-vol').innerText = `${todayVol} 部`;
+    }
+
     function openModal(type) {
         document.getElementById(`modal-${type}`).classList.add('active');
         if (type === 'transaction') {
@@ -2039,6 +2413,9 @@
             renderRecurList();
         }
         if (type === 'bank-info') renderBankInfo();
+        if (type === 'trade') {
+            // No specific init needed other than clearing selection if desired, handled in close
+        }
     }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
     window.onclick = function(e) { if (e.target.classList.contains('modal-overlay')) closeModals(); }
