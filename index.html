@@ -90,27 +90,6 @@
             align-items: center;
             gap: 8px;
         }
-        .icon-btn {
-            background: transparent;
-            border: 1px solid transparent;
-            color: var(--text);
-            font-size: 1.1rem;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        .icon-btn:hover {
-            background: var(--surface-hover);
-            border-color: var(--border);
-        }
-        .icon-btn:active {
-            transform: scale(0.95);
-        }
         
         .menu-btn {
             font-size: 0.9rem;
@@ -120,6 +99,9 @@
             border-radius: 6px;
             color: var(--text);
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         /* Layout */
@@ -127,14 +109,14 @@
         .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: background 0.3s; }
 
         /* Dashboard Stats */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; display: flex; flex-direction: column; justify-content: center; }
         .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
         .profit-pos { color: var(--primary); }
         .profit-neg { color: var(--danger); }
 
-        /* Menu Grid (New v1.35) */
+        /* Menu Grid */
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 10px; }
         .menu-item { 
             background: var(--surface-hover); border: 1px solid var(--border); border-radius: 12px; 
@@ -163,6 +145,7 @@
         .miles-tag { font-size: 0.75rem; color: var(--miles); background: rgba(162, 155, 254, 0.15); padding: 2px 6px; border-radius: 4px; display: inline-block; }
         .due-tag { font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 2px; }
         .shop-tag { font-size: 0.7rem; background: var(--trade); color: #000; padding: 2px 6px; border-radius: 4px; margin-right: 5px; font-weight: bold; }
+        .currency-tag { font-size: 0.75rem; color: var(--text); background: var(--surface-hover); padding: 2px 4px; border-radius: 4px; margin-right: 4px; }
 
         /* Bank Info Card */
         .bank-card { background: var(--surface-hover); border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
@@ -202,6 +185,13 @@
         }
         .grid-btn.selected { background: var(--trade); color: #000; border-color: var(--trade); font-weight: bold; }
         .grid-btn:hover { border-color: var(--trade); }
+
+        /* Analysis Controls */
+        .analysis-controls { display: flex; gap: 5px; background: var(--bg); padding: 5px; border-radius: 8px; margin-bottom: 15px; overflow-x: auto; }
+        .analysis-btn {
+            flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 6px; font-size: 0.85rem; white-space: nowrap;
+        }
+        .analysis-btn.active { background: var(--surface-hover); color: var(--text); font-weight: bold; }
 
         /* Buttons */
         .btn {
@@ -472,19 +462,32 @@
     <div id="tab-analysis" class="tab-content">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; font-size:1.1rem;">月度分析</h2>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn-small btn-telegram" onclick="sendTelegramReport()" title="Send to TG">✈️ 推送</button>
-                    <input type="month" id="analysis-month" style="width:auto; padding:5px;" onchange="renderCharts()">
+                <h2 style="margin:0; font-size:1.1rem;">統計分析</h2>
+                 <button class="btn-small btn-telegram" onclick="sendTelegramReport()" title="Send to TG">✈️ 推送</button>
+            </div>
+            
+            <!-- Analysis Mode Switcher -->
+             <div class="analysis-controls">
+                <button class="analysis-btn active" onclick="setAnalysisMode('month')" id="btn-mode-month">📅 單月</button>
+                <button class="analysis-btn" onclick="setAnalysisMode('range')" id="btn-mode-range">📆 自訂範圍</button>
+                <button class="analysis-btn" onclick="setAnalysisMode('compare')" id="btn-mode-compare">🆚 月度比較</button>
+            </div>
+
+            <!-- Analysis Inputs (Dynamic) -->
+            <div id="analysis-inputs" style="margin-bottom:15px; display:flex; gap:10px; align-items:center;">
+                 <!-- Populated by JS -->
+            </div>
+
+            <div id="analysis-charts-container">
+                 <!-- Charts will be rendered here -->
+                <div style="margin-bottom:30px;">
+                    <h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">卡片/帳戶 簽賬分佈</h3>
+                    <div class="chart-container"><canvas id="chart-cards"></canvas></div>
                 </div>
-            </div>
-            <div style="margin-bottom:30px;">
-                <h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">卡片/帳戶 簽賬分佈</h3>
-                <div class="chart-container"><canvas id="chart-cards"></canvas></div>
-            </div>
-            <div>
-                <h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">每日支出趨勢</h3>
-                <div class="chart-container"><canvas id="chart-daily"></canvas></div>
+                <div>
+                    <h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">每日支出趨勢</h3>
+                    <div class="chart-container"><canvas id="chart-daily"></canvas></div>
+                </div>
             </div>
         </div>
     </div>
@@ -504,7 +507,7 @@
     <button class="fab" onclick="openModal('transaction')">+</button>
 </div>
 
-<!-- Main Menu Modal (New v1.35) -->
+<!-- Main Menu Modal (v1.36) -->
 <div id="modal-menu" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
@@ -573,22 +576,26 @@
             <input type="hidden" id="tx-type" value="expense">
             <input type="hidden" id="tx-id">
             
-            <div id="fx-toggle-container" style="margin-bottom:10px; display:flex; align-items:center; gap:8px;">
-                <label style="margin:0; font-size:0.9rem; color:var(--text);">🌍 外幣簽賬?</label>
-                <input type="checkbox" id="tx-is-foreign" onchange="toggleFxInputs()" style="width:auto;">
-            </div>
-
-            <div id="fx-inputs" style="display:none; background:var(--surface-hover); padding:10px; border-radius:8px; margin-bottom:15px;">
-                <div class="row-group">
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label>外幣金額</label>
-                        <input type="number" id="tx-fx-amount" step="0.01" placeholder="e.g. 1000" oninput="calcHkdAmount()">
-                    </div>
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label>匯率 (大約)</label>
-                        <input type="number" id="tx-fx-rate" step="0.0001" placeholder="e.g. 0.053" oninput="calcHkdAmount()">
-                    </div>
+            <!-- Currency Select (v1.36) -->
+            <div class="form-group" style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label>貨幣</label>
+                    <select id="tx-currency" onchange="handleCurrencyChange()">
+                        <!-- JS populated -->
+                    </select>
                 </div>
+                 <!-- FX inputs moved here for better UX -->
+                 <div style="flex:1; display:none;" id="fx-rate-container">
+                     <label>匯率</label>
+                     <input type="number" id="tx-fx-rate" step="0.0001" placeholder="e.g. 0.05" oninput="calcHkdAmount()">
+                 </div>
+            </div>
+            <!-- Hidden Checkbox for logic compatibility -->
+            <input type="checkbox" id="tx-is-foreign" style="display:none;">
+
+             <div class="form-group" id="fx-amount-container" style="display:none;">
+                <label>外幣金額</label>
+                <input type="number" id="tx-fx-amount" step="0.01" placeholder="0.00" oninput="calcHkdAmount()">
             </div>
 
             <div class="form-group">
@@ -950,6 +957,10 @@
                 <span>每次記賬自動推送到 TG</span>
             </label>
         </div>
+
+        <div class="help-section" style="margin-top:20px;">
+             <button class="icon-btn" onclick="openModal('log')" style="width:100%; justify-content: flex-start; padding: 10px; font-size:0.9rem;">📋 查看更新日誌</button>
+        </div>
     </div>
 </div>
 
@@ -1026,18 +1037,23 @@
         <h2 style="margin-top:0;">💡 使用說明 & 教學</h2>
         
         <div class="help-section">
-            <div class="help-title">⚠️ 資料合併救星</div>
-            <div class="help-step">如果你在「主畫面App」和「Safari」都有資料：</div>
-            <div class="help-step">1. 去 App 版 -> 匯出 JSON。</div>
-            <div class="help-step">2. 去 Safari 版 -> 選擇剛才的檔案 -> 揀 <strong>「🔗 合併」</strong>。</div>
-            <div class="help-step">3. 之後就可以統一用 Safari 版啦！</div>
+            <div class="help-title">💱 多幣種記賬</div>
+            <div class="help-step">在記賬時選擇貨幣 (如 JPY)，輸入外幣金額及匯率，系統會自動折算 HKD 並顯示原幣金額。</div>
         </div>
 
         <div class="help-section">
-            <div class="help-title">📱 iOS 捷徑 (一開即記)</div>
-            <div class="help-step">1. 複製此網址：<br><code style="background:#444; padding:4px; border-radius:4px; color:#fff; word-break: break-all; font-size: 0.8rem; display:block; margin-top:4px;">https://redzero213.github.io/createmoremoney/?new_tx=true</code></div>
-            <div class="help-step">2. 在捷徑 App -> 自動化 -> 交易 -> 選擇信用卡。</div>
-            <div class="help-step">3. 動作選<strong>「開啟 URL」</strong>，填入上面網址。</div>
+            <div class="help-title">🆚 統計分析</div>
+            <div class="help-step">在統計頁面切換模式：單月、自訂範圍或月度比較，輕鬆掌握消費趨勢。</div>
+        </div>
+
+        <div class="help-section">
+            <div class="help-title">📱 炒賣紀錄</div>
+            <div class="help-step">去「📱 炒賣」分頁，可極速記錄放機資料。記得選取<strong>「付款信用卡」</strong>，以便計入迎新！</div>
+        </div>
+        
+        <div class="help-section">
+            <div class="help-title">🔄 舊賬轉移</div>
+            <div class="help-step">在「賬目紀錄」點擊「✏️ 編輯」，按下方「📱 轉炒賣」，即可將舊有買賣記錄轉換至炒賣頁面。</div>
         </div>
         
         <button class="btn" onclick="closeModals()">明白哂！</button>
@@ -1050,19 +1066,20 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.35 (UI Reform)</div>
+            <div class="log-ver">v1.37 (Fix Startup)</div>
             <div class="log-date">2026-01-23</div>
             <div class="log-desc">
-                - 介面大整容：改用「☰ 選單」統一管理功能。<br>
-                - 修復：修正每月結算日的日期計算問題 (End of Day Bug)。<br>
-                - 優化：導航選單更直觀。
+                - 修復：v1.36 啟動時找不到元素導致的白畫面錯誤。<br>
+                - 優化：代碼穩定性提升。
             </div>
         </div>
         <div class="log-entry">
-            <div class="log-ver">v1.34</div>
+            <div class="log-ver">v1.36 (Multi-Currency)</div>
             <div class="log-date">2026-01-23</div>
             <div class="log-desc">
-                - 新增：📱 「轉移至炒賣」功能。
+                - 新增：💱 多幣種記賬 (JPY, TWD, USD...)。<br>
+                - 新增：📊 統計分析大改版 (自訂範圍 / 月度比較)。<br>
+                - 修復：選單在小螢幕的顯示問題。
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -1073,7 +1090,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.35';
+    const APP_VERSION = '1.37';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -1085,6 +1102,8 @@
         income: ['薪金', '賣野', '投資', '其他'],
         repayment: ['信用卡還款']
     };
+
+    const CURRENCIES = ['HKD', 'CNY', 'USD', 'JPY', 'TWD', 'GBP', 'EUR', 'KRW', 'AUD', 'SGD'];
 
     // Trading Constants
     const TRADE_SHOPS = ['雪球', '萬通', '日韓', '誠信', 'bobo', 'YY', 'G79', 'F9', 'DIY', '新宇宙', '溫記', '鵬程'];
@@ -1181,14 +1200,15 @@
         missions: [], 
         recurringMissions: [],
         subscriptions: [],
-        trades: [], 
-        welcomeOffers: [],
+        trades: [],
+        welcomeOffers: [], 
         settings: { startDay: 1, tgToken: '', tgChatId: '', tgAutoSend: false } 
     };
     
     let pieChart = null;
     let barChart = null;
     let transferringTxId = null;
+    let analysisMode = 'month'; // 'month', 'range', 'compare'
 
     function init() {
         try {
@@ -1207,7 +1227,7 @@
                 if (!state.settings) state.settings = { startDay: 1, tgToken: '', tgChatId: '', tgAutoSend: false };
                 if (!state.recurringMissions) state.recurringMissions = [];
                 if (!state.trades) state.trades = []; 
-                if (!state.welcomeOffers) state.welcomeOffers = [];
+                if (!state.welcomeOffers) state.welcomeOffers = []; 
             } else {
                 state.cards = generatePresetCards();
                 saveData();
@@ -1223,8 +1243,11 @@
             applyTheme(savedTheme);
 
             setDefaultTime();
-            document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
             
+            // v1.37 FIX: Don't set analysis-month value here, as it doesn't exist yet.
+            // Let setAnalysisMode handle the initialization.
+            setAnalysisMode('month'); 
+
             // Populate Settings Dropdown
             const daySelect = document.getElementById('setting-start-day');
             if (daySelect) {
@@ -1236,6 +1259,16 @@
                     daySelect.appendChild(opt);
                 }
                 daySelect.value = state.settings.startDay;
+            }
+            
+            // Populate Currency Dropdown
+            const currSelect = document.getElementById('tx-currency');
+            if (currSelect) {
+                CURRENCIES.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c; opt.text = c;
+                    currSelect.appendChild(opt);
+                });
             }
 
             // TG Settings
@@ -1255,7 +1288,7 @@
             // Populate Trade Shops Grid
             const shopGrid = document.getElementById('trade-shop-grid');
             if(shopGrid) {
-                shopGrid.innerHTML = '';
+                shopGrid.innerHTML = ''; // Clear first to avoid dupes on re-run
                 TRADE_SHOPS.forEach(shop => {
                     const div = document.createElement('div');
                     div.className = 'grid-btn';
@@ -1299,7 +1332,7 @@
         }
     }
     
-    // ... [Helpers] ...
+    // ... [Previous Helper Functions] ...
     function checkDisclaimer() {
         const agreed = localStorage.getItem(DISCLAIMER_KEY);
         if (!agreed) {
@@ -1571,7 +1604,7 @@
         const cost = parseFloat(document.getElementById('trade-cost').value) || 0;
         const price = parseFloat(document.getElementById('trade-price').value) || 0;
         const qty = parseInt(document.getElementById('trade-qty').value) || 1;
-        const cardId = document.getElementById('trade-card').value; 
+        const cardId = document.getElementById('trade-card').value; // New
 
         if(!shop || !model || !cap || !color) {
             alert("請選擇所有選項"); return;
@@ -1746,6 +1779,66 @@
             container.appendChild(div);
         });
     }
+    
+    // --- Analysis Logic (v1.36) ---
+    function setAnalysisMode(mode) {
+        analysisMode = mode;
+        // Update UI buttons
+        document.querySelectorAll('.analysis-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-mode-${mode}`).classList.add('active');
+        
+        // Update Inputs Area
+        const container = document.getElementById('analysis-inputs');
+        container.innerHTML = '';
+        
+        if (mode === 'month') {
+            const nowIso = new Date().toISOString().slice(0, 7);
+            container.innerHTML = `<input type="month" id="analysis-month" value="${nowIso}" onchange="renderCharts()">`;
+        } else if (mode === 'range') {
+             container.innerHTML = `
+                <input type="date" id="analysis-start" style="width:45%;" onchange="renderCharts()">
+                <span style="color:var(--text-muted);">-</span>
+                <input type="date" id="analysis-end" style="width:45%;" onchange="renderCharts()">
+             `;
+             // Set default last 30 days
+             const end = new Date();
+             const start = new Date(); start.setDate(end.getDate() - 30);
+             document.getElementById('analysis-end').value = end.toISOString().slice(0, 10);
+             document.getElementById('analysis-start').value = start.toISOString().slice(0, 10);
+        } else if (mode === 'compare') {
+             const m1 = new Date().toISOString().slice(0, 7);
+             let d2 = new Date(); d2.setMonth(d2.getMonth() - 1);
+             const m2 = d2.toISOString().slice(0, 7);
+             container.innerHTML = `
+                <input type="month" id="analysis-m1" value="${m2}" style="width:45%;" onchange="renderCharts()">
+                <span style="color:var(--text-muted);">vs</span>
+                <input type="month" id="analysis-m2" value="${m1}" style="width:45%;" onchange="renderCharts()">
+             `;
+        }
+        
+        renderCharts();
+    }
+    
+    function handleCurrencyChange() {
+        const curr = document.getElementById('tx-currency').value;
+        const fxContainer = document.getElementById('fx-rate-container');
+        const fxAmtContainer = document.getElementById('fx-amount-container');
+        const isForeignCheck = document.getElementById('tx-is-foreign');
+        const amtLabel = document.getElementById('lbl-amount');
+
+        if (curr === 'HKD') {
+            fxContainer.style.display = 'none';
+            fxAmtContainer.style.display = 'none';
+            isForeignCheck.checked = false;
+            amtLabel.innerText = '金額 (HKD)';
+        } else {
+            fxContainer.style.display = 'block';
+            fxAmtContainer.style.display = 'block';
+            isForeignCheck.checked = true; // Auto check foreign
+            amtLabel.innerText = '折算金額 (HKD)';
+        }
+        updateCardHint();
+    }
 
     // --- Helper Functions ---
     function getFinancialMonthRange() {
@@ -1759,11 +1852,10 @@
             startDate = new Date(today.getFullYear(), today.getMonth() - 1, startDay);
             endDate = new Date(today.getFullYear(), today.getMonth(), startDay - 1);
         }
-        // Fix: Set endDate to 23:59:59.999
         if (endDate.getDate() !== startDay - 1) {
             endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0); 
         }
-        endDate.setHours(23, 59, 59, 999); // Critical fix for v1.35
+        endDate.setHours(23, 59, 59, 999); 
         return { start: startDate, end: endDate };
     }
     
@@ -1906,97 +1998,143 @@
         renderTrading(); 
         updateFormOptions();
         calculateStats();
+        // Charts only render if tab active AND mode selected
         if (document.getElementById('tab-analysis') && document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
     }
 
     function renderCharts() {
-        const month = document.getElementById('analysis-month').value;
-        if(!month) return;
-        const monthlyTx = state.transactions.filter(tx => tx.date.startsWith(month) && (tx.type === 'expense' || !tx.type));
-        
-        const cardTotals = {};
-        state.cards.forEach(c => cardTotals[c.name] = 0); 
-        monthlyTx.forEach(tx => {
-            const card = state.cards.find(c => c.id == tx.cardId);
-            const name = card ? card.name : 'Unknown';
-            if(!cardTotals[name]) cardTotals[name] = 0;
-            cardTotals[name] += tx.amount;
-        });
-
-        const pieData = Object.keys(cardTotals).filter(k => cardTotals[k] > 0).map(k => cardTotals[k]);
-        const pieLabels = Object.keys(cardTotals).filter(k => cardTotals[k] > 0);
-        
-        const daysInMonth = new Date(parseInt(month.slice(0,4)), parseInt(month.slice(5,7)), 0).getDate();
-        const dailyTotals = new Array(daysInMonth).fill(0);
-        monthlyTx.forEach(tx => {
-            const day = parseInt(tx.date.slice(8, 10)) - 1; 
-            if(day >= 0 && day < daysInMonth) dailyTotals[day] += tx.amount;
-        });
-
-        if(pieChart) pieChart.destroy();
-        if(barChart) barChart.destroy();
-        
         const style = getComputedStyle(document.body);
         const textColor = style.getPropertyValue('--chart-text').trim();
         const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7', '#a29bfe'];
+        
+        let txs = [];
+        let labelX = [];
+        let dataSets = [];
 
+        if (analysisMode === 'month') {
+             const m = document.getElementById('analysis-month').value;
+             if(!m) return;
+             txs = state.transactions.filter(tx => tx.date.startsWith(m) && (tx.type === 'expense' || !tx.type));
+             
+             // Standard Pie & Bar
+             const daysInMonth = new Date(parseInt(m.slice(0,4)), parseInt(m.slice(5,7)), 0).getDate();
+             labelX = Array.from({length: daysInMonth}, (_, i) => (i + 1).toString());
+             const daily = new Array(daysInMonth).fill(0);
+             txs.forEach(tx => { daily[parseInt(tx.date.slice(8, 10)) - 1] += tx.amount; });
+             dataSets.push({ label: '每日支出', data: daily, backgroundColor: '#ff4d4d', borderRadius: 3 });
+
+        } else if (analysisMode === 'range') {
+             const sVal = document.getElementById('analysis-start').value;
+             const eVal = document.getElementById('analysis-end').value;
+             if(!sVal || !eVal) return;
+             
+             const s = new Date(sVal);
+             const e = new Date(eVal);
+             e.setHours(23,59,59);
+             
+             txs = state.transactions.filter(tx => {
+                 const d = new Date(tx.date);
+                 return (tx.type === 'expense' || !tx.type) && d >= s && d <= e;
+             });
+             
+             // Aggregate by Date for Bar
+             const map = {};
+             txs.forEach(tx => {
+                 const dStr = tx.date.slice(5,10);
+                 map[dStr] = (map[dStr] || 0) + tx.amount;
+             });
+             labelX = Object.keys(map).sort();
+             dataSets.push({ label: '支出', data: labelX.map(d => map[d]), backgroundColor: '#ff4d4d' });
+
+        } else if (analysisMode === 'compare') {
+             const m1 = document.getElementById('analysis-m1').value;
+             const m2 = document.getElementById('analysis-m2').value;
+             
+             // Hide Pie, use Bar for comparison
+             if(pieChart) pieChart.destroy(); 
+             
+             const tx1 = state.transactions.filter(tx => tx.date.startsWith(m1) && tx.type === 'expense');
+             const tx2 = state.transactions.filter(tx => tx.date.startsWith(m2) && tx.type === 'expense');
+             
+             const cats = CATEGORIES.expense;
+             const d1 = cats.map(c => tx1.filter(t => t.category === c).reduce((sum, t) => sum + t.amount, 0));
+             const d2 = cats.map(c => tx2.filter(t => t.category === c).reduce((sum, t) => sum + t.amount, 0));
+             
+             labelX = cats;
+             dataSets = [
+                 { label: m1, data: d1, backgroundColor: '#4facfe' },
+                 { label: m2, data: d2, backgroundColor: '#ff4d4d' }
+             ];
+             
+             // Special case: Render and return
+             if(barChart) barChart.destroy();
+             const ctxBar = document.getElementById('chart-daily').getContext('2d');
+             barChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: { labels: labelX, datasets: dataSets },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: '#333' } } } }
+             });
+             return;
+        }
+
+        // --- Render Pie (Cards) ---
+        const cardTotals = {};
+        state.cards.forEach(c => cardTotals[c.name] = 0); 
+        txs.forEach(tx => {
+            const card = state.cards.find(c => c.id == tx.cardId);
+            if(card) cardTotals[card.name] += tx.amount;
+        });
+        const pieD = Object.keys(cardTotals).filter(k => cardTotals[k] > 0).map(k => cardTotals[k]);
+        const pieL = Object.keys(cardTotals).filter(k => cardTotals[k] > 0);
+
+        if(pieChart) pieChart.destroy();
         const ctxPie = document.getElementById('chart-cards').getContext('2d');
         pieChart = new Chart(ctxPie, {
             type: 'doughnut',
-            data: { labels: pieLabels, datasets: [{ data: pieData, backgroundColor: colors, borderWidth: 0 }] },
+            data: { labels: pieL, datasets: [{ data: pieD, backgroundColor: colors, borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor } } } }
         });
 
+        // --- Render Bar ---
+        if(barChart) barChart.destroy();
         const ctxBar = document.getElementById('chart-daily').getContext('2d');
         barChart = new Chart(ctxBar, {
             type: 'bar',
-            data: { labels: Array.from({length: daysInMonth}, (_, i) => (i + 1).toString()), datasets: [{ label: '每日支出 ($)', data: dailyTotals, backgroundColor: '#ff4d4d', borderRadius: 3 }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: textColor === '#e0e0e0' ? '#333' : '#e0e0e0' } } }, plugins: { legend: { display: false } } }
+            data: { labels: labelX, datasets: dataSets },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: '#333' } } }, plugins: { legend: { display: false } } }
         });
     }
+
+    // --- UI Rendering ---
 
     function renderCards() {
         const list = document.getElementById('card-list');
         list.innerHTML = '';
         state.cards.forEach(card => {
             const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
-            let rateText = card.type === 'miles' ? `$${card.rate}/里` : `${card.rate}% 回贈`;
-            if (card.rateFx > 0) {
-                rateText += card.type === 'miles' ? ` (外$${card.rateFx})` : ` (外${card.rateFx}%)`;
-            }
-
             const el = document.createElement('div');
             el.className = 'credit-card';
             el.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:start;">
                     <div>
                         <div class="card-name">${card.name}</div>
-                        <div class="card-info" style="color:var(--primary); font-weight:bold;">${rateText}</div>
+                        <div class="card-info" style="color:var(--primary); font-weight:bold;">${card.percent}% 回贈</div>
                         <div class="card-info">${card.note || ''}</div>
                     </div>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn-text btn-repay" onclick="quickRepay(${card.id})" title="快速還款">💵 還款</button>
-                        <button class="btn-text" onclick="deleteCard(${card.id})" style="color:rgba(255,255,255,0.7);">&times;</button>
-                    </div>
+                    <button class="btn-text" onclick="deleteCard(${card.id})" style="color:rgba(255,255,255,0.7);">&times;</button>
                 </div>
-                <div class="progress-bar"><div id="prog-${card.id}" class="progress-fill"></div></div>
-                <div class="card-info" style="margin-top:8px;">
-                    <span>本月簽: <span id="spent-${card.id}" style="color:#fff; font-weight:bold;">$0</span>${capText}</span>
-                    <span style="font-size:0.8rem; color:var(--repay);">已還: <span id="paid-${card.id}">$0</span></span>
+                <div class="progress-bar">
+                    <div id="prog-${card.id}" class="progress-fill"></div>
+                </div>
+                <div class="card-info">
+                    <span>本月已簽: <span id="spent-${card.id}" style="color:#fff;">$0</span>${capText}</span>
                 </div>
             `;
             list.appendChild(el);
         });
-        if (state.cards.length === 0) list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有卡片</div>';
-    }
-    
-    function quickRepay(cardId) {
-        openModal('transaction');
-        setTxType('repayment');
-        const select = document.getElementById('tx-card');
-        if (select) select.value = cardId;
-        const amt = document.getElementById('tx-amount');
-        if (amt) amt.focus();
+        if (state.cards.length === 0) {
+            list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡，請按新增或匯入推薦</div>';
+        }
     }
 
     function renderTransactions() {
@@ -2007,45 +2145,39 @@
         sorted.forEach(tx => {
             const type = tx.type || 'expense';
             const category = tx.category || (type === 'income' ? '收入' : '其他');
+            
+            // Format datetime: YYYY-MM-DD HH:MM
             const dateStr = tx.date.replace('T', ' ');
 
-            let amountDisplay, colorClass, cashbackTag = '', cardName = '', dueTag = '';
+            let amountDisplay, colorClass, cashbackTag, cardName;
             
             if (type === 'income') {
                 amountDisplay = `+ $${tx.amount.toLocaleString()}`;
                 colorClass = 'color:var(--income);';
+                cashbackTag = ''; // No cashback for income
                 cardName = '收入'; 
             } else if (type === 'repayment') {
                 amountDisplay = `- $${tx.amount.toLocaleString()}`;
                 colorClass = 'color:var(--repay);';
                 cashbackTag = '<div class="repay-tag">還款紀錄</div>';
                 const card = state.cards.find(c => c.id == tx.cardId);
-                cardName = card ? card.name : '未知';
+                cardName = card ? card.name : '未知卡片';
             } else {
                 amountDisplay = `$${tx.amount.toLocaleString()}`;
                 colorClass = 'color:var(--text);';
-                const card = state.cards.find(c => c.id == tx.cardId);
-                cardName = card ? card.name : '未知';
                 
-                if (card) {
-                    if (tx.isForeign) { cardName = '🌍 ' + cardName; }
-                    const isFx = tx.isForeign;
-                    const rate = isFx ? (card.rateFx || 0) : card.rate;
-                    
-                    if (card.type === 'miles' && rate > 0) {
-                        const miles = Math.floor(tx.amount / rate);
-                        cashbackTag = `<div class="miles-tag">賺 ${miles} AM</div>`;
-                    } else if (rate > 0) {
-                        const cashback = (tx.amount * rate / 100).toFixed(1);
-                        cashbackTag = `<div class="cashback-tag">賺 $${cashback}</div>`;
-                    }
-                    
-                    const dueDate = calculateDueDate(tx.date, tx.cardId);
-                    if (dueDate) {
-                        const dueStr = `${dueDate.getMonth()+1}/${dueDate.getDate()}`;
-                        dueTag = `<span class="due-tag">📅 還款: ${dueStr}</span>`;
-                    }
+                const card = state.cards.find(c => c.id == tx.cardId);
+                cardName = card ? card.name : '未知卡片';
+                const rate = card ? card.percent : 0;
+                const cashback = (tx.amount * rate / 100).toFixed(1);
+                
+                let curDisplay = '';
+                if (tx.currency && tx.currency !== 'HKD') {
+                     curDisplay = `<br><span style="font-size:0.7rem; color:var(--text-muted);">(${tx.currency} ${tx.fxAmount})</span>`;
                 }
+
+                cashbackTag = `<div class="cashback-tag">賺 $${cashback}</div>`;
+                amountDisplay += curDisplay;
             }
 
             const el = document.createElement('div');
@@ -2058,155 +2190,83 @@
                     </div>
                     <div class="item-sub">${dateStr} • ${cardName}</div>
                     ${cashbackTag}
-                    ${dueTag}
                 </div>
-                <div class="item-actions">
+                <div style="display:flex; flex-direction:column; align-items:flex-end;">
                     <div class="item-amount" style="${colorClass}">${amountDisplay}</div>
-                    <div>
-                        <button class="btn-text" onclick="editTransaction(${tx.id})">✏️</button>
-                        <button class="btn-text" style="color:var(--danger)" onclick="deleteTransaction(${tx.id})">🗑️</button>
-                    </div>
+                    <button class="btn-text" style="font-size:0.8rem; margin-top:4px;" onclick="deleteTransaction(${tx.id})">刪除</button>
                 </div>
             `;
             list.appendChild(el);
         });
     }
+
+    // --- Form Logic ---
     
-    // --- Logic ---
     function setTxType(type) {
+        // Toggle UI
         document.getElementById('tx-type').value = type;
-        document.getElementById('type-expense').className = `type-option ${type==='expense'?'active expense':''}`;
-        document.getElementById('type-income').className = `type-option ${type==='income'?'active income':''}`;
-        document.getElementById('type-repayment').className = `type-option ${type==='repayment'?'active repayment':''}`;
+        document.getElementById('type-expense').className = `type-option ${type === 'expense' ? 'active expense' : ''}`;
+        document.getElementById('type-income').className = `type-option ${type === 'income' ? 'active income' : ''}`;
+        document.getElementById('type-repayment').className = `type-option ${type === 'repayment' ? 'active repayment' : ''}`;
         
+        // Update Categories
         const catSelect = document.getElementById('tx-category');
         catSelect.innerHTML = '';
+        
+        // Repayment doesn't really need a category list, just one default, but code structure is cleaner with lists
         CATEGORIES[type].forEach(cat => {
             const opt = document.createElement('option');
-            opt.value = cat; opt.innerText = cat; catSelect.appendChild(opt);
+            opt.value = cat;
+            opt.innerText = cat;
+            catSelect.appendChild(opt);
         });
         
-        const showCard = type !== 'income';
-        document.getElementById('group-card').style.display = showCard ? 'block' : 'none';
-        document.getElementById('group-category').style.display = type === 'repayment' ? 'none' : 'block';
+        // Toggle Fields
+        const cardGroup = document.getElementById('group-card');
+        const catGroup = document.getElementById('group-category');
         
-        document.getElementById('fx-toggle-container').style.display = type === 'expense' ? 'flex' : 'none';
-        document.getElementById('fx-inputs').style.display = 'none'; // reset
-        document.getElementById('tx-is-foreign').checked = false;
-        
-        // Force hide hint for repayment immediately
-        if (type === 'repayment') {
-            document.getElementById('card-hint').style.display = 'none';
+        if (type === 'income') {
+            cardGroup.style.display = 'none';
+            catGroup.style.display = 'block';
+        } else if (type === 'repayment') {
+            cardGroup.style.display = 'block';
+            catGroup.style.display = 'none'; // Auto set to Repayment
         } else {
-            updateCardHint(); // Re-evaluate for expense
-        }
-    }
-
-    function toggleFxInputs() {
-        const isFx = document.getElementById('tx-is-foreign').checked;
-        document.getElementById('fx-inputs').style.display = isFx ? 'block' : 'none';
-        document.getElementById('lbl-amount').innerText = isFx ? '折算金額 (HKD)' : '金額 (HKD)';
-        updateCardHint();
-    }
-    
-    function calcHkdAmount() {
-        const fxAmt = parseFloat(document.getElementById('tx-fx-amount').value) || 0;
-        const rate = parseFloat(document.getElementById('tx-fx-rate').value) || 0;
-        if (fxAmt && rate) {
-            document.getElementById('tx-amount').value = (fxAmt * rate).toFixed(2);
-            updateCardHint();
+            cardGroup.style.display = 'block';
+            catGroup.style.display = 'block';
         }
     }
 
     function updateFormOptions() {
         const select = document.getElementById('tx-card');
-        const currentVal = select.value;
         select.innerHTML = '';
-        
-        const missionDiv = document.getElementById('mission-cards');
-        if(missionDiv) missionDiv.innerHTML = '';
-        
-        const subSelect = document.getElementById('sub-card');
-        if(subSelect) subSelect.innerHTML = '';
-        
-        const recurSelect = document.getElementById('recur-card'); 
-        if(recurSelect) recurSelect.innerHTML = '';
-        
-        const welcomeSelect = document.getElementById('welcome-card'); // New
-        if(welcomeSelect) welcomeSelect.innerHTML = '';
-        
-        const tradeCardSelect = document.getElementById('trade-card'); // New
-        if(tradeCardSelect) {
-            tradeCardSelect.innerHTML = '<option value="">不使用信用卡 (不計入)</option>';
-        }
-
         state.cards.forEach(card => {
             const opt = document.createElement('option');
             opt.value = card.id;
-            opt.text = card.name;
+            opt.text = `${card.name} (${card.percent}%)`;
             select.appendChild(opt);
-            
-            // Subs
-            if(subSelect) {
-                const subOpt = document.createElement('option');
-                subOpt.value = card.id; subOpt.text = card.name;
-                subSelect.appendChild(subOpt);
-            }
-            // Recur Missions
-            if(recurSelect) {
-                const rOpt = document.createElement('option');
-                rOpt.value = card.id; rOpt.text = card.name;
-                recurSelect.appendChild(rOpt);
-            }
-            // Welcome
-            if(welcomeSelect) {
-                const wOpt = document.createElement('option');
-                wOpt.value = card.id; wOpt.text = card.name;
-                welcomeSelect.appendChild(wOpt);
-            }
-            // Trade
-            if(tradeCardSelect) {
-                const tOpt = document.createElement('option');
-                tOpt.value = card.id; tOpt.text = card.name;
-                tradeCardSelect.appendChild(tOpt);
-            }
-
-            // Mission Checklist
-            if(missionDiv) {
-                const div = document.createElement('div');
-                div.className = 'checkbox-item';
-                div.innerHTML = `<input type="checkbox" name="m-card" value="${card.id}" checked> ${card.name}`;
-                missionDiv.appendChild(div);
-            }
         });
-        if (currentVal) select.value = currentVal;
         if(state.cards.length > 0) updateCardHint();
     }
 
     function updateCardHint() {
         const select = document.getElementById('tx-card');
         const hintBox = document.getElementById('card-hint');
+        const hintRate = document.getElementById('hint-rate');
         const type = document.getElementById('tx-type').value;
-        const isFx = document.getElementById('tx-is-foreign').checked;
-
-        if (type !== 'expense') { hintBox.style.display = 'none'; return; }
+        
+        // Don't show hint for Repayment
+        if (type === 'repayment') {
+            hintBox.style.display = 'none';
+            return;
+        }
 
         const cardId = select.value;
         const card = state.cards.find(c => c.id == cardId);
         
-        if (card) {
+        if (card && type === 'expense') {
             hintBox.style.display = 'block';
-            const rate = isFx ? (card.rateFx || 0) : card.rate;
-            
-            let rateText = '';
-            if (card.type === 'miles') {
-                rateText = rate > 0 ? `$${rate}/里 (里數)` : '無回贈';
-                hintBox.style.color = 'var(--miles)';
-            } else {
-                rateText = `${rate}% (現金)`;
-                hintBox.style.color = 'var(--primary)';
-            }
-            hintBox.innerText = `預計回贈: ${rateText}`;
+            hintRate.innerText = card.percent;
         } else {
             hintBox.style.display = 'none';
         }
@@ -2214,21 +2274,7 @@
     
     document.getElementById('tx-card').addEventListener('change', updateCardHint);
 
-    function toggleCardRateInput() {
-        const type = document.getElementById('card-type').value;
-        const lbl = document.getElementById('lbl-rate');
-        const input = document.getElementById('card-rate');
-        const lblFx = document.getElementById('lbl-rate-fx');
-        const inputFx = document.getElementById('card-rate-fx');
-        
-        if (type === 'miles') {
-            lbl.innerText = '本地兌換 ($/里)'; input.placeholder = 'e.g. 6';
-            lblFx.innerText = '外幣兌換 ($/里)'; inputFx.placeholder = 'e.g. 4';
-        } else {
-            lbl.innerText = '本地回贈 (%)'; input.placeholder = 'e.g. 1.5';
-            lblFx.innerText = '外幣回贈 (%)'; inputFx.placeholder = 'e.g. 2';
-        }
-    }
+    // --- Actions ---
 
     function switchTab(tabName) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -2240,276 +2286,201 @@
         } else if (tabName === 'cards') {
             document.querySelectorAll('.tab')[1].classList.add('active');
             document.getElementById('tab-cards').classList.add('active');
-        } else if (tabName === 'trading') {
+        } else {
             document.querySelectorAll('.tab')[2].classList.add('active');
-            document.getElementById('tab-trading').classList.add('active');
-            renderTrading();
-        } else if (tabName === 'analysis') {
-            document.querySelectorAll('.tab')[3].classList.add('active');
             document.getElementById('tab-analysis').classList.add('active');
             renderCharts();
         }
     }
 
-    // --- Transfer Logic (v1.34) ---
-    function transferToTrade() {
-        // Get current values from the form
-        const idStr = document.getElementById('tx-id').value;
-        const amount = document.getElementById('tx-amount').value;
-        const type = document.getElementById('tx-type').value;
-
-        if (!idStr) return; // Should not happen if called from edit mode
-        
-        transferringTxId = parseFloat(idStr); // Set flag to delete this ID later
-
-        // Close current modal
-        closeModals();
-        
-        // Open Trade Modal
-        openModal('trade');
-        
-        // Pre-fill trade modal based on type
-        if (type === 'expense') {
-            // Expense = Buying = Cost
-            document.getElementById('trade-cost').value = amount;
-            document.getElementById('trade-price').focus();
-        } else if (type === 'income') {
-            // Income = Selling = Price
-            document.getElementById('trade-price').value = amount;
-            document.getElementById('trade-cost').focus();
-        }
-    }
-
-    function editTransaction(id) {
-        const tx = state.transactions.find(t => t.id === id);
-        if (!tx) return;
-
-        openModal('transaction');
-        
-        document.getElementById('tx-id').value = tx.id;
-        setTxType(tx.type || 'expense');
-        document.getElementById('tx-amount').value = tx.amount;
-        document.getElementById('tx-desc').value = tx.desc;
-        document.getElementById('tx-date').value = tx.date;
-        
-        // Show Transfer Button
-        const btnTransfer = document.getElementById('btn-transfer');
-        if(btnTransfer) btnTransfer.style.display = 'block';
-
-        // FX handling
-        if (tx.isForeign) {
-             document.getElementById('tx-is-foreign').checked = true;
-             toggleFxInputs();
-             // We don't store original rate/amount yet, so just leave fields blank or 0
-        }
-        
-        if (tx.category) document.getElementById('tx-category').value = tx.category;
-        if (tx.cardId) document.getElementById('tx-card').value = tx.cardId;
-
-        document.getElementById('tx-modal-title').innerText = "編輯紀錄";
-        document.getElementById('btn-submit').innerText = "更新";
-    }
-
-    function handleTransactionSubmit(e) {
+    function addTransaction(e) {
         e.preventDefault();
-        const idStr = document.getElementById('tx-id').value;
         const type = document.getElementById('tx-type').value;
         const desc = document.getElementById('tx-desc').value;
         const amount = parseFloat(document.getElementById('tx-amount').value);
         let category = document.getElementById('tx-category').value;
         const date = document.getElementById('tx-date').value;
-        const isForeign = document.getElementById('tx-is-foreign').checked;
-        const tgAutoEl = document.getElementById('tx-tg-auto');
-        const sendTG = tgAutoEl ? tgAutoEl.checked : false;
         
+        // Multi-currency handling
+        const currency = document.getElementById('tx-currency').value;
+        const fxAmount = parseFloat(document.getElementById('tx-fx-amount').value) || 0;
+        const fxRate = parseFloat(document.getElementById('tx-fx-rate').value) || 0;
+
         let cardId = null;
-        if (type !== 'income') {
+        if (type === 'expense' || type === 'repayment') {
             cardId = document.getElementById('tx-card').value;
-            if (!cardId) { alert('請選擇卡片/帳戶！'); return; }
-        }
-        if (type === 'repayment') category = '信用卡還款';
-
-        const txObj = { type, category, desc, amount, cardId, date, isForeign };
-
-        if (idStr) {
-            const id = parseFloat(idStr);
-            const index = state.transactions.findIndex(t => t.id === id);
-            if (index !== -1) {
-                state.transactions[index] = { ...txObj, id };
+            if (!cardId) {
+                alert('請先新增信用卡！');
+                return;
             }
-        } else {
-            const newTx = { ...txObj, id: Date.now() };
-            state.transactions.unshift(newTx);
-            if (sendTG) sendTelegramTx(newTx);
+        }
+        
+        if (type === 'repayment') {
+            category = '信用卡還款';
         }
 
+        const newTx = {
+            id: Date.now(),
+            type,
+            category,
+            desc,
+            amount,
+            cardId,
+            date,
+            currency,
+            fxAmount,
+            fxRate
+        };
+
+        state.transactions.unshift(newTx);
         saveData();
         render();
         closeModals();
+        e.target.reset();
+        
+        // Restore defaults
+        setDefaultTime();
+        setTxType('expense'); // Reset to expense
+        handleCurrencyChange(); // Reset currency view
     }
 
     function addCard(e) {
         e.preventDefault();
         const name = document.getElementById('card-name').value;
-        const type = document.getElementById('card-type').value;
-        const rate = parseFloat(document.getElementById('card-rate').value);
-        const rateFx = parseFloat(document.getElementById('card-rate-fx').value) || (type==='miles'?rate:0);
+        const percent = parseFloat(document.getElementById('card-percent').value);
         const capVal = document.getElementById('card-cap').value;
         const cap = capVal ? parseFloat(capVal) : 0;
         const note = document.getElementById('card-note').value;
-        const stmtDay = document.getElementById('card-stmt-day').value;
-        const payGap = document.getElementById('card-pay-gap').value || 25;
 
-        state.cards.push({ id: Date.now(), name, type, rate, rateFx, cap, note, stmtDay, payGap });
+        const newCard = {
+            id: Date.now(),
+            name,
+            percent,
+            cap,
+            note
+        };
 
-        saveData(); render(); closeModals();
+        state.cards.push(newCard);
+        saveData();
+        render();
+        closeModals();
+        e.target.reset();
         if(state.cards.length === 1) updateFormOptions();
     }
 
     function importPresetCards() {
-        if (!confirm('匯入推薦列表?')) return;
+        if (!confirm('確定要更新或匯入最新信用卡列表 (包括食飯卡、網購卡) 嗎？')) return;
+        
+        let addedCount = 0;
+        let updatedCount = 0;
+        
         PRESET_CARDS.forEach(p => {
-            if (!state.cards.find(c => c.name === p.name)) {
-                state.cards.push({ ...p, id: Date.now() + Math.floor(Math.random()*10000), stmtDay:'', payGap:25 });
+            const existingCard = state.cards.find(c => c.name === p.name);
+            
+            if (existingCard) {
+                existingCard.percent = p.percent;
+                existingCard.cap = p.cap;
+                existingCard.note = p.note;
+                updatedCount++;
+            } else {
+                state.cards.push({
+                    ...p,
+                    id: Date.now() + Math.floor(Math.random() * 100000), 
+                    spent: 0
+                });
+                addedCount++;
             }
         });
-        saveData(); render(); alert('成功匯入！');
-    }
 
-    function deleteTransaction(id) { if(confirm('刪除?')) { state.transactions = state.transactions.filter(t => t.id !== id); saveData(); render(); } }
-    function deleteCard(id) { if(confirm('刪除卡片?')) { state.cards = state.cards.filter(c => c.id !== id); saveData(); render(); } }
-    
-    function resetData() { if(confirm('警告：清除所有資料？')) { localStorage.removeItem(DB_KEY); location.reload(); } }
-    
-    function updateBackupTimeDisplay() { 
-        const t = localStorage.getItem(BACKUP_TIME_KEY); 
-        const el = document.getElementById('last-backup-time');
-        if(el) el.innerText = t || '從未備份'; 
-    }
-    
-    function saveSettings() {
-        state.settings.startDay = parseInt(document.getElementById('setting-start-day').value);
-        state.settings.tgAutoSend = document.getElementById('setting-tg-auto').checked;
-        saveData(); render(); closeModals(); showToast('設定已更新');
-    }
-    
-    function saveTGSettings() {
-        const token = document.getElementById('tg-token').value;
-        const chatid = document.getElementById('tg-chatid').value;
-        state.settings.tgToken = token;
-        state.settings.tgChatId = chatid;
         saveData();
+        render();
+        alert(`成功新增 ${addedCount} 張新卡，更新 ${updatedCount} 張現有卡片！`);
     }
 
-    function testTG() {
-        const token = document.getElementById('tg-token').value;
-        const chatid = document.getElementById('tg-chatid').value;
-        if(!token || !chatid) { alert('請先輸入 Token 和 Chat ID'); return; }
-        sendTGMessage(token, chatid, '👋 回贈哥: 測試成功！');
+    function deleteTransaction(id) {
+        if(confirm('確定刪除此紀錄?')) {
+            state.transactions = state.transactions.filter(t => t.id !== id);
+            saveData();
+            render();
+        }
     }
 
-    async function sendTGMessage(token, chatId, msg) {
-        try {
-            const url = `https://api.telegram.org/bot${token}/sendMessage`;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'Markdown' })
-            });
-            const data = await response.json();
-            if (data.ok) showToast('✅ TG 已發送');
-            else alert('TG 發送失敗: ' + data.description);
-        } catch (e) { console.error(e); }
-    }
-
-    function sendTelegramTx(tx) {
-        if (!state.settings.tgAutoSend || !state.settings.tgToken || !state.settings.tgChatId) return;
-        const typeIcon = { 'expense': '💸', 'income': '💰', 'repayment': '💳' }[tx.type];
-        const card = state.cards.find(c => c.id == tx.cardId);
-        const cardName = card ? card.name : 'Unknown';
-        
-        let msg = `${typeIcon} *新記賬*\n`;
-        msg += `金額: $${tx.amount}\n`;
-        msg += `描述: ${tx.desc}\n`;
-        if (tx.type === 'expense') msg += `卡片: ${cardName}\n`;
-        msg += `日期: ${tx.date.replace('T', ' ')}`;
-        
-        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
+    function deleteCard(id) {
+        if(confirm('確定刪除此卡片? (相關消費紀錄將保留，但會顯示為未知卡片)')) {
+            state.cards = state.cards.filter(c => c.id !== id);
+            saveData();
+            render();
+        }
     }
     
-    async function sendTelegramReport() {
-        if (!state.settings.tgToken || !state.settings.tgChatId) {
-            alert('請先在設定頁面輸入 Bot Token 及 Chat ID！'); return;
+    function resetData() {
+        if(confirm('警告：這將會清除所有資料！確定嗎？')) {
+            localStorage.removeItem(DB_KEY);
+            location.reload();
         }
-        if(!confirm('確定發送月結單到 Telegram？')) return;
-        
-        const month = document.getElementById('analysis-month').value || new Date().toISOString().slice(0, 7);
-        let totalSpent = 0, totalIncome = 0, totalCashback = 0, totalMiles = 0;
+    }
+    
+    // Export Data as CSV
+    function exportData() {
+        // UTF-8 BOM to fix Chinese encoding in Excel
+        let csvContent = "\uFEFF";
+        // Header
+        csvContent += "日期,時間,類型,類別,描述,金額,信用卡,預計回贈\n";
         
         state.transactions.forEach(tx => {
-            if (tx.date.startsWith(month)) {
-                 if (tx.type === 'expense') {
-                    totalSpent += tx.amount;
-                    const card = state.cards.find(c => c.id == tx.cardId);
-                    if (card) {
-                        const isFx = tx.isForeign;
-                        const rate = isFx ? (card.rateFx || 0) : card.rate;
-                        if (card.type === 'miles' && rate > 0) totalMiles += Math.floor(tx.amount / rate);
-                        else totalCashback += (tx.amount * rate / 100);
-                    }
-                 } else if (tx.type === 'income') {
-                     totalIncome += tx.amount;
-                 }
+            const date = tx.date.split('T')[0];
+            const time = tx.date.split('T')[1] || '';
+            const typeMap = { 'expense': '支出', 'income': '收入', 'repayment': '還款' };
+            const type = typeMap[tx.type] || '支出';
+            const desc = `"${tx.desc.replace(/"/g, '""')}"`; // Escape quotes
+            
+            let cardName = '';
+            let cashback = 0;
+            
+            if (tx.type !== 'income') {
+                const card = state.cards.find(c => c.id == tx.cardId);
+                cardName = card ? card.name : '';
+                if(card && tx.type === 'expense') {
+                   cashback = (tx.amount * card.percent / 100).toFixed(2);
+                }
             }
+            
+            csvContent += `${date},${time},${type},${tx.category},${desc},${tx.amount},${cardName},${cashback}\n`;
         });
-
-        const msg = `📊 *回贈哥月結單 (${month})*\n---------------------------\n💸 總支出: $${totalSpent.toLocaleString()}\n💰 總收入: $${totalIncome.toLocaleString()}\n---------------------------\n🎁 *預計回贈*\n💵 現金: $${totalCashback.toFixed(1)}\n✈️ 里數: ${totalMiles.toLocaleString()} AM`;
-        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
+        
+        // Create download link
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `finance_data_${new Date().toISOString().slice(0,10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
-    // --- Modal & Render ---
     function openModal(type) {
         document.getElementById(`modal-${type}`).classList.add('active');
         if (type === 'transaction') {
-             const title = document.getElementById('tx-modal-title');
-             const btnTransfer = document.getElementById('btn-transfer');
-             
-             if (title.innerText !== "新增紀錄") {
-                 // Resetting form for Add
-                 document.getElementById('tx-form').reset();
-                 document.getElementById('tx-id').value = '';
-                 document.getElementById('btn-submit').innerText = "記賬";
-                 title.innerText = "新增紀錄";
-                 if(btnTransfer) btnTransfer.style.display = 'none'; // Hide transfer btn
-                 setTxType('expense');
-                 document.getElementById('fx-inputs').style.display='none';
-                 setDefaultTime();
-             } else {
-                 if(btnTransfer) btnTransfer.style.display = 'none';
-                 setDefaultTime();
-             }
+            // Re-initialize default
+            setTxType('expense');
+            setDefaultTime();
         }
-        if (type === 'mission') updateFormOptions();
-        if (type === 'welcome') { renderWelcomeList(); updateFormOptions(); }
-        if (type === 'subs') renderSubsList();
-        if (type === 'recur-mission') {
-            updateFormOptions();
-            renderRecurList();
-        }
-        if (type === 'bank-info') renderBankInfo();
-        if (type === 'trade') {
-            updateFormOptions();
-        }
-        if (type === 'settings') {
-             // Refresh settings UI
-             document.getElementById('setting-tg-auto').checked = state.settings.tgAutoSend || false;
-        }
-        if (type === 'menu') { /* Handled by HTML */ }
     }
-    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
-    window.onclick = function(e) { if (e.target.classList.contains('modal-overlay')) closeModals(); }
+
+    function closeModals() {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+    }
+
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            closeModals();
+        }
+    }
 
     init();
 </script>
+
 </body>
 </html>
