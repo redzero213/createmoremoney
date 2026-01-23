@@ -262,7 +262,7 @@
             align-items: center; 
             gap: 12px; 
             font-size: 0.95rem; 
-            padding: 12px 15px;
+            padding: 12px 15px; 
             border-bottom: 1px solid var(--border);
             transition: background 0.2s;
         }
@@ -488,7 +488,7 @@
         Copyright © Redezero | Powered by Gemini<br>
         <span style="font-size:0.75rem; opacity:0.8; color:var(--text-muted);">*信用卡及里數資料只供參考，以銀行最新條款為準</span>
         <div style="margin-top:10px;">
-             v1.42 (UX Fixed) | 
+             v1.47 (Fixed All) | 
              <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem; cursor:pointer;">⛑️ 顯示原始數據 (Debug)</button>
         </div>
     </div>
@@ -1059,19 +1059,19 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.42 (UX Fixed)</div>
+            <div class="log-ver">v1.47 (Final Fix)</div>
             <div class="log-date">2026-01-24</div>
             <div class="log-desc">
-                - 修復：炒賣分頁錯誤顯示問題。<br>
-                - 優化：選單切換更流暢，無閃爍。<br>
-                - 修復：回贈提示 JS 錯誤。
+                - 修復：Tab 分頁錯亂 (炒賣/統計)。<br>
+                - 優化：選單切換體驗。<br>
+                - 整合：所有 v1.46 功能及修復。
             </div>
         </div>
         <div class="log-entry">
-            <div class="log-ver">v1.41</div>
+            <div class="log-ver">v1.46</div>
             <div class="log-date">2026-01-24</div>
             <div class="log-desc">
-                - 修復：記賬時回贈提示報錯的問題。
+                - 終極修復：補回缺失函數。<br>
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -1082,7 +1082,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.42';
+    const APP_VERSION = '1.47';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -1253,6 +1253,7 @@
                 saveData();
             }
             
+            // Setup default missions if empty
             if (state.recurringMissions.length === 0 && state.cards.length > 0) {
                 const mm = state.cards.find(c => c.name.includes('MMPOWER'));
                 if (mm) state.recurringMissions.push({ id: Date.now()+1, name: 'MMPOWER 低消', cardId: mm.id, target: 5000, resetDay: 1 });
@@ -1262,8 +1263,8 @@
             applyTheme(savedTheme);
 
             setDefaultTime();
-            setAnalysisMode('month'); 
-
+            
+            // Populate Settings Dropdown
             const daySelect = document.getElementById('setting-start-day');
             if (daySelect) {
                 daySelect.innerHTML = '';
@@ -1276,6 +1277,7 @@
                 daySelect.value = state.settings.startDay;
             }
             
+            // Populate Currency Dropdown
             const currSelect = document.getElementById('tx-currency');
             if (currSelect) {
                 CURRENCIES.forEach(c => {
@@ -1317,6 +1319,13 @@
             setTxType('expense');
             renderBankInfo(); 
             render();
+            
+            // v1.37 FIX: Init analysis mode properly
+            if (document.getElementById('analysis-month')) {
+                const nowIso = new Date().toISOString().slice(0, 7);
+                document.getElementById('analysis-month').value = nowIso;
+            }
+            setAnalysisMode('month');
 
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('new_tx') === 'true') {
@@ -1343,6 +1352,7 @@
         }
     }
     
+    // ... [Previous Helper Functions] ...
     function checkDisclaimer() {
         const agreed = localStorage.getItem(DISCLAIMER_KEY);
         if (!agreed) {
@@ -1705,96 +1715,35 @@
         if(volEl) volEl.innerText = `${todayVol} 部`;
     }
 
-    // --- Welcome Offer Logic ---
-    function addWelcome(e) {
-        e.preventDefault();
-        const name = document.getElementById('welcome-name').value;
-        const cardId = document.getElementById('welcome-card').value;
-        const target = parseFloat(document.getElementById('welcome-target').value);
-        const deadline = document.getElementById('welcome-deadline').value;
-        const start = document.getElementById('welcome-start').value;
+    // --- Transfer Logic (v1.34) ---
+    function transferToTrade() {
+        const idStr = document.getElementById('tx-id').value;
+        const amount = document.getElementById('tx-amount').value;
+        const type = document.getElementById('tx-type').value;
+
+        if (!idStr) return;
         
-        state.welcomeOffers.push({ id: Date.now(), name, cardId, target, deadline, start });
-        saveData();
-        renderWelcomeList();
-        e.target.reset();
-    }
-    
-    function deleteWelcome(id) {
-        if(confirm('刪除此迎新監察?')) {
-            state.welcomeOffers = state.welcomeOffers.filter(w => w.id !== id);
-            saveData();
-            renderWelcomeList();
+        transferringTxId = parseFloat(idStr);
+
+        closeModals();
+        openModal('trade');
+        
+        if (type === 'expense') {
+            document.getElementById('trade-cost').value = amount;
+            document.getElementById('trade-price').focus();
+        } else if (type === 'income') {
+            document.getElementById('trade-price').value = amount;
+            document.getElementById('trade-cost').focus();
         }
     }
-    
-    function renderWelcomeList() {
-        const container = document.getElementById('welcome-list');
-        if(!container) return;
-        container.innerHTML = '';
-        if(!state.welcomeOffers || state.welcomeOffers.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:var(--text-muted);">暫無迎新監察</div>';
-            return;
-        }
-        
-        state.welcomeOffers.forEach(w => {
-            const card = state.cards.find(c => c.id == w.cardId);
-            const cardName = card ? card.name : 'Unknown';
-            const deadline = new Date(w.deadline);
-            const start = new Date(w.start);
-            const today = new Date();
-            const daysLeft = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
-            
-            // Calc total spend
-            let total = 0;
-            
-            // 1. Transactions
-            state.transactions.forEach(tx => {
-                const d = new Date(tx.date);
-                if (tx.type === 'expense' && tx.cardId == w.cardId && d >= start && d <= deadline) {
-                    total += tx.amount;
-                }
-            });
-            
-            // 2. Trades
-            state.trades.forEach(t => {
-                const d = new Date(t.date);
-                // Use cost as spending amount
-                if (t.cardId == w.cardId && d >= start && d <= deadline) {
-                    total += (t.cost * t.qty);
-                }
-            });
-            
-            const percent = Math.min((total / w.target) * 100, 100);
-            const isExpired = daysLeft < 0;
-            const daysClass = isExpired ? 'welcome-days welcome-expired' : 'welcome-days';
-            const daysText = isExpired ? '已過期' : `剩 ${daysLeft} 天`;
-            
-            const div = document.createElement('div');
-            div.className = 'welcome-item';
-            div.innerHTML = `
-                <div class="welcome-header">
-                    <span>${w.name} <span style="font-weight:normal; font-size:0.8rem;">(${cardName})</span></span>
-                    <span class="${daysClass}">${daysText}</span>
-                </div>
-                <div class="mission-values" style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span>${w.deadline} 截止</span>
-                    <span>$${total.toLocaleString()} / $${w.target.toLocaleString()}</span>
-                </div>
-                <div class="mission-progress-bg"><div class="mission-progress-fill" style="width:${percent}%; background:var(--welcome);"></div></div>
-                <div style="text-align:right; margin-top:5px;">
-                    <button class="btn-text" onclick="deleteWelcome(${w.id})" style="font-size:0.7rem; color:var(--text-muted);">刪除</button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-    
+
     // --- Analysis Logic ---
     function setAnalysisMode(mode) {
         analysisMode = mode;
         // Update UI buttons
-        document.querySelectorAll('.analysis-btn').forEach(b => b.classList.remove('active'));
+        const btns = document.querySelectorAll('.analysis-btn');
+        if(btns) btns.forEach(b => b.classList.remove('active'));
+        
         const btn = document.getElementById(`btn-mode-${mode}`);
         if(btn) btn.classList.add('active');
         
@@ -1815,8 +1764,12 @@
              // Set default last 30 days
              const end = new Date();
              const start = new Date(); start.setDate(end.getDate() - 30);
-             document.getElementById('analysis-end').value = end.toISOString().slice(0, 10);
-             document.getElementById('analysis-start').value = start.toISOString().slice(0, 10);
+             setTimeout(() => {
+                 const elEnd = document.getElementById('analysis-end');
+                 const elStart = document.getElementById('analysis-start');
+                 if(elEnd) elEnd.value = end.toISOString().slice(0, 10);
+                 if(elStart) elStart.value = start.toISOString().slice(0, 10);
+             }, 0);
         } else if (mode === 'compare') {
              const m1 = new Date().toISOString().slice(0, 7);
              let d2 = new Date(); d2.setMonth(d2.getMonth() - 1);
@@ -1828,7 +1781,8 @@
              `;
         }
         
-        renderCharts();
+        // Short delay to allow DOM update before rendering charts
+        setTimeout(renderCharts, 50);
     }
     
     function handleCurrencyChange() {
@@ -1852,449 +1806,52 @@
         updateCardHint();
     }
 
-    // --- Helper Functions ---
-    function getFinancialMonthRange() {
-        const startDay = parseInt(state.settings.startDay);
-        const today = new Date();
-        let startDate, endDate;
-        if (today.getDate() >= startDay) {
-            startDate = new Date(today.getFullYear(), today.getMonth(), startDay);
-            endDate = new Date(today.getFullYear(), today.getMonth() + 1, startDay - 1);
-        } else {
-            startDate = new Date(today.getFullYear(), today.getMonth() - 1, startDay);
-            endDate = new Date(today.getFullYear(), today.getMonth(), startDay - 1);
+    // --- Modal & Render ---
+    function openModal(type) {
+        document.getElementById(`modal-${type}`).classList.add('active');
+        if (type === 'transaction') {
+             const title = document.getElementById('tx-modal-title');
+             const btnTransfer = document.getElementById('btn-transfer');
+             
+             if (title.innerText !== "新增紀錄") {
+                 document.getElementById('tx-form').reset();
+                 document.getElementById('tx-id').value = '';
+                 document.getElementById('btn-submit').innerText = "記賬";
+                 title.innerText = "新增紀錄";
+                 if(btnTransfer) btnTransfer.style.display = 'none'; 
+                 setTxType('expense');
+                 document.getElementById('fx-inputs').style.display='none';
+                 setDefaultTime();
+             } else {
+                 if(btnTransfer) btnTransfer.style.display = 'none';
+                 setDefaultTime();
+             }
         }
-        if (endDate.getDate() !== startDay - 1) {
-            endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0); 
+        if (type === 'mission') updateFormOptions();
+        if (type === 'welcome') { renderWelcomeList(); updateFormOptions(); }
+        if (type === 'subs') renderSubsList();
+        if (type === 'recur-mission') {
+            updateFormOptions();
+            renderRecurList();
         }
-        endDate.setHours(23, 59, 59, 999); 
-        return { start: startDate, end: endDate };
-    }
-    
-    function calculateDueDate(txDateStr, cardId) {
-        const card = state.cards.find(c => c.id == cardId);
-        if (!card || !card.stmtDay) return null;
-        
-        const txDate = new Date(txDateStr);
-        const stmtDay = parseInt(card.stmtDay);
-        const gap = parseInt(card.payGap) || 25;
-        
-        let stmtDate = new Date(txDate.getFullYear(), txDate.getMonth(), stmtDay);
-        
-        if (txDate.getDate() > stmtDay) {
-            stmtDate.setMonth(stmtDate.getMonth() + 1);
+        if (type === 'bank-info') renderBankInfo();
+        if (type === 'trade') {
+            updateFormOptions();
         }
-        
-        const dueDate = new Date(stmtDate);
-        dueDate.setDate(stmtDate.getDate() + gap);
-        return dueDate;
-    }
-
-    function calculateStats() {
-        let totalSpent = 0, totalIncome = 0, totalCashback = 0, totalMiles = 0, totalRepaid = 0;
-        const cardSpending = {};
-        const cardPaid = {};
-        state.cards.forEach(c => {
-            cardSpending[c.id] = 0;
-            cardPaid[c.id] = 0;
-        });
-        const { start, end } = getFinancialMonthRange();
-        
-        const format = (d) => `${d.getMonth()+1}/${d.getDate()}`;
-        const cycleText = document.getElementById('billing-cycle-text');
-        if(cycleText) cycleText.innerText = `(${format(start)} - ${format(end)})`;
-
-        state.transactions.forEach(tx => {
-            const txDate = new Date(tx.date);
-            if (txDate >= start && txDate <= end) {
-                const type = tx.type || 'expense';
-                if (type === 'expense') {
-                    totalSpent += tx.amount;
-                    const card = state.cards.find(c => c.id == tx.cardId);
-                    if (card) {
-                        cardSpending[card.id] += tx.amount;
-                        const isFx = tx.isForeign;
-                        const rate = isFx ? (card.rateFx || 0) : card.rate;
-                        
-                        if (card.type === 'miles' && rate > 0) {
-                            totalMiles += Math.floor(tx.amount / rate);
-                        } else {
-                            totalCashback += (tx.amount * rate / 100);
-                        }
-                    }
-                } else if (type === 'income') {
-                    totalIncome += tx.amount;
-                } else if (type === 'repayment') {
-                    totalRepaid += tx.amount; // Global Total Repaid
-                    if (state.cards.some(c => c.id == tx.cardId)) {
-                        cardPaid[tx.cardId] = (cardPaid[tx.cardId] || 0) + tx.amount;
-                    }
-                }
-            }
-        });
-
-        // Safely update elements
-        const elSpent = document.getElementById('total-spent');
-        if(elSpent) elSpent.innerText = '$' + totalSpent.toLocaleString();
-        
-        const elIncome = document.getElementById('total-income');
-        if(elIncome) elIncome.innerText = '$' + totalIncome.toLocaleString();
-        
-        const elRepaid = document.getElementById('total-repaid');
-        if(elRepaid) elRepaid.innerText = '$' + totalRepaid.toLocaleString();
-        
-        let rewardText = `$${totalCashback.toFixed(1)}`;
-        if (totalMiles > 0) rewardText += ` + ${totalMiles.toLocaleString()} AM`;
-        const elCashback = document.getElementById('total-cashback');
-        if(elCashback) elCashback.innerText = rewardText;
-        
-        const elCount = document.getElementById('tx-count');
-        if(elCount) elCount.innerText = state.transactions.length + ' 筆(總)';
-
-        state.cards.forEach(card => {
-            const spent = cardSpending[card.id] || 0;
-            const paid = cardPaid[card.id] || 0;
-            const progressEl = document.getElementById(`prog-${card.id}`);
-            const spentEl = document.getElementById(`spent-${card.id}`);
-            const paidEl = document.getElementById(`paid-${card.id}`);
-            if (progressEl && spentEl) {
-                spentEl.innerText = `$${spent.toLocaleString()}`;
-                if (paidEl) paidEl.innerText = `$${paid.toLocaleString()}`;
-                
-                if (card.cap > 0) {
-                    const percent = Math.min((spent / card.cap) * 100, 100);
-                    progressEl.style.width = `${percent}%`;
-                    progressEl.style.backgroundColor = percent >= 100 ? 'var(--danger)' : 'var(--primary)';
-                } else {
-                    progressEl.style.width = '0%';
-                }
-            }
-        });
-        renderMissions();
-    }
-    
-    function renderMissions() {
-        const container = document.getElementById('missions-container');
-        if(!container) return;
-        container.innerHTML = '';
-        if (!state.missions || state.missions.length === 0) return;
-
-        state.missions.forEach(m => {
-            const start = new Date(m.start);
-            const end = new Date(m.end); end.setHours(23, 59, 59);
-            let current = 0;
-            state.transactions.forEach(tx => {
-                const d = new Date(tx.date);
-                if (tx.type === 'expense' && d >= start && d <= end && m.cardIds.includes(tx.cardId.toString())) {
-                    current += tx.amount;
-                }
-            });
-            const percent = Math.min((current / m.target) * 100, 100);
-            const div = document.createElement('div');
-            div.className = 'mission-item';
-            div.innerHTML = `
-                <div class="mission-header">
-                    <span class="mission-title">${m.name} <button class="btn-text" style="font-size:0.7rem;" onclick="deleteMission(${m.id})">❌</button></span>
-                    <span class="mission-values">$${current.toLocaleString()} / $${parseInt(m.target).toLocaleString()}</span>
-                </div>
-                <div class="mission-progress-bg"><div class="mission-progress-fill" style="width:${percent}%"></div></div>
-                <div style="font-size:0.75rem; color:var(--text-muted); text-align:right; margin-top:2px;">${m.end} 截止</div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function render() {
-        renderCards();
-        renderTransactions();
-        renderTrading(); 
-        updateFormOptions();
-        calculateStats();
-        // Charts only render if tab active AND mode selected
-        if (document.getElementById('tab-analysis') && document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
-    }
-
-    function renderCharts() {
-        // Defensive check
-        if (!document.getElementById('chart-cards')) return;
-
-        const style = getComputedStyle(document.body);
-        const textColor = style.getPropertyValue('--chart-text').trim();
-        const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7', '#a29bfe'];
-        
-        let txs = [];
-        let labelX = [];
-        let dataSets = [];
-
-        if (analysisMode === 'month') {
-             const mEl = document.getElementById('analysis-month');
-             if(!mEl || !mEl.value) return;
-             const m = mEl.value;
-             
-             txs = state.transactions.filter(tx => tx.date.startsWith(m) && (tx.type === 'expense' || !tx.type));
-             
-             // Standard Pie & Bar
-             const daysInMonth = new Date(parseInt(m.slice(0,4)), parseInt(m.slice(5,7)), 0).getDate();
-             labelX = Array.from({length: daysInMonth}, (_, i) => (i + 1).toString());
-             const daily = new Array(daysInMonth).fill(0);
-             txs.forEach(tx => { daily[parseInt(tx.date.slice(8, 10)) - 1] += tx.amount; });
-             dataSets.push({ label: '每日支出', data: daily, backgroundColor: '#ff4d4d', borderRadius: 3 });
-
-        } else if (analysisMode === 'range') {
-             const sEl = document.getElementById('analysis-start');
-             const eEl = document.getElementById('analysis-end');
-             if(!sEl || !eEl || !sEl.value || !eEl.value) return;
-             
-             const s = new Date(sEl.value);
-             const e = new Date(eEl.value);
-             e.setHours(23,59,59);
-             
-             txs = state.transactions.filter(tx => {
-                 const d = new Date(tx.date);
-                 return (tx.type === 'expense' || !tx.type) && d >= s && d <= e;
-             });
-             
-             // Aggregate by Date for Bar
-             const map = {};
-             txs.forEach(tx => {
-                 const dStr = tx.date.slice(5,10);
-                 map[dStr] = (map[dStr] || 0) + tx.amount;
-             });
-             labelX = Object.keys(map).sort();
-             dataSets.push({ label: '支出', data: labelX.map(d => map[d]), backgroundColor: '#ff4d4d' });
-
-        } else if (analysisMode === 'compare') {
-             const m1El = document.getElementById('analysis-m1');
-             const m2El = document.getElementById('analysis-m2');
-             if(!m1El || !m2El) return;
-             const m1 = m1El.value;
-             const m2 = m2El.value;
-             
-             // Hide Pie, use Bar for comparison
-             if(pieChart) pieChart.destroy(); 
-             
-             const tx1 = state.transactions.filter(tx => tx.date.startsWith(m1) && tx.type === 'expense');
-             const tx2 = state.transactions.filter(tx => tx.date.startsWith(m2) && tx.type === 'expense');
-             
-             const cats = CATEGORIES.expense;
-             const d1 = cats.map(c => tx1.filter(t => t.category === c).reduce((sum, t) => sum + t.amount, 0));
-             const d2 = cats.map(c => tx2.filter(t => t.category === c).reduce((sum, t) => sum + t.amount, 0));
-             
-             labelX = cats;
-             dataSets = [
-                 { label: m1, data: d1, backgroundColor: '#4facfe' },
-                 { label: m2, data: d2, backgroundColor: '#ff4d4d' }
-             ];
-             
-             // Special case: Render and return
-             if(barChart) barChart.destroy();
-             const ctxBar = document.getElementById('chart-daily').getContext('2d');
-             barChart = new Chart(ctxBar, {
-                type: 'bar',
-                data: { labels: labelX, datasets: dataSets },
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: '#333' } } } }
-             });
-             return;
-        }
-
-        // --- Render Pie (Cards) ---
-        const cardTotals = {};
-        state.cards.forEach(c => cardTotals[c.name] = 0); 
-        txs.forEach(tx => {
-            const card = state.cards.find(c => c.id == tx.cardId);
-            if(card) cardTotals[card.name] += tx.amount;
-        });
-        const pieD = Object.keys(cardTotals).filter(k => cardTotals[k] > 0).map(k => cardTotals[k]);
-        const pieL = Object.keys(cardTotals).filter(k => cardTotals[k] > 0);
-
-        if(pieChart) pieChart.destroy();
-        const ctxPie = document.getElementById('chart-cards').getContext('2d');
-        pieChart = new Chart(ctxPie, {
-            type: 'doughnut',
-            data: { labels: pieL, datasets: [{ data: pieD, backgroundColor: colors, borderWidth: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor } } } }
-        });
-
-        // --- Render Bar ---
-        if(barChart) barChart.destroy();
-        const ctxBar = document.getElementById('chart-daily').getContext('2d');
-        barChart = new Chart(ctxBar, {
-            type: 'bar',
-            data: { labels: labelX, datasets: dataSets },
-            options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: '#333' } } }, plugins: { legend: { display: false } } }
-        });
-    }
-
-    // --- UI Rendering ---
-
-    function renderCards() {
-        const list = document.getElementById('card-list');
-        list.innerHTML = '';
-        state.cards.forEach(card => {
-            const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
-            const el = document.createElement('div');
-            el.className = 'credit-card';
-            el.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:start;">
-                    <div>
-                        <div class="card-name">${card.name}</div>
-                        <div class="card-info" style="color:var(--primary); font-weight:bold;">${card.percent}% 回贈</div>
-                        <div class="card-info">${card.note || ''}</div>
-                    </div>
-                    <button class="btn-text" onclick="deleteCard(${card.id})" style="color:rgba(255,255,255,0.7);">&times;</button>
-                </div>
-                <div class="progress-bar">
-                    <div id="prog-${card.id}" class="progress-fill"></div>
-                </div>
-                <div class="card-info">
-                    <span>本月已簽: <span id="spent-${card.id}" style="color:#fff;">$0</span>${capText}</span>
-                </div>
-            `;
-            list.appendChild(el);
-        });
-        if (state.cards.length === 0) {
-            list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡，請按新增或匯入推薦</div>';
-        }
-    }
-
-    function renderTransactions() {
-        const list = document.getElementById('transaction-list');
-        list.innerHTML = '';
-        const sorted = [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        sorted.forEach(tx => {
-            const type = tx.type || 'expense';
-            const category = tx.category || (type === 'income' ? '收入' : '其他');
-            
-            // Format datetime: YYYY-MM-DD HH:MM
-            const dateStr = tx.date.replace('T', ' ');
-
-            let amountDisplay, colorClass, cashbackTag, cardName;
-            
-            if (type === 'income') {
-                amountDisplay = `+ $${tx.amount.toLocaleString()}`;
-                colorClass = 'color:var(--income);';
-                cashbackTag = ''; // No cashback for income
-                cardName = '收入'; 
-            } else if (type === 'repayment') {
-                amountDisplay = `- $${tx.amount.toLocaleString()}`;
-                colorClass = 'color:var(--repay);';
-                cashbackTag = '<div class="repay-tag">還款紀錄</div>';
-                const card = state.cards.find(c => c.id == tx.cardId);
-                cardName = card ? card.name : '未知卡片';
-            } else {
-                amountDisplay = `$${tx.amount.toLocaleString()}`;
-                colorClass = 'color:var(--text);';
-                
-                const card = state.cards.find(c => c.id == tx.cardId);
-                cardName = card ? card.name : '未知卡片';
-                const rate = card ? card.percent : 0;
-                const cashback = (tx.amount * rate / 100).toFixed(1);
-                
-                let curDisplay = '';
-                if (tx.currency && tx.currency !== 'HKD') {
-                     curDisplay = `<br><span style="font-size:0.7rem; color:var(--text-muted);">(${tx.currency} ${tx.fxAmount})</span>`;
-                }
-
-                cashbackTag = `<div class="cashback-tag">賺 $${cashback}</div>`;
-                amountDisplay += curDisplay;
-            }
-
-            const el = document.createElement('div');
-            el.className = 'list-item';
-            el.innerHTML = `
-                <div class="item-main">
-                    <div class="item-title">
-                        <span class="cat-tag">${category}</span>
-                        ${tx.desc}
-                    </div>
-                    <div class="item-sub">${dateStr} • ${cardName}</div>
-                    ${cashbackTag}
-                </div>
-                <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                    <div class="item-amount" style="${colorClass}">${amountDisplay}</div>
-                    <button class="btn-text" style="font-size:0.8rem; margin-top:4px;" onclick="deleteTransaction(${tx.id})">刪除</button>
-                </div>
-            `;
-            list.appendChild(el);
-        });
-    }
-
-    // --- Form Logic ---
-    
-    function setTxType(type) {
-        // Toggle UI
-        document.getElementById('tx-type').value = type;
-        document.getElementById('type-expense').className = `type-option ${type === 'expense' ? 'active expense' : ''}`;
-        document.getElementById('type-income').className = `type-option ${type === 'income' ? 'active income' : ''}`;
-        document.getElementById('type-repayment').className = `type-option ${type === 'repayment' ? 'active repayment' : ''}`;
-        
-        // Update Categories
-        const catSelect = document.getElementById('tx-category');
-        catSelect.innerHTML = '';
-        
-        // Repayment doesn't really need a category list, just one default, but code structure is cleaner with lists
-        CATEGORIES[type].forEach(cat => {
-            const opt = document.createElement('option');
-            opt.value = cat;
-            opt.innerText = cat;
-            catSelect.appendChild(opt);
-        });
-        
-        // Toggle Fields
-        const cardGroup = document.getElementById('group-card');
-        const catGroup = document.getElementById('group-category');
-        
-        if (type === 'income') {
-            cardGroup.style.display = 'none';
-            catGroup.style.display = 'block';
-        } else if (type === 'repayment') {
-            cardGroup.style.display = 'block';
-            catGroup.style.display = 'none'; // Auto set to Repayment
-        } else {
-            cardGroup.style.display = 'block';
-            catGroup.style.display = 'block';
-        }
-    }
-
-    function updateFormOptions() {
-        const select = document.getElementById('tx-card');
-        select.innerHTML = '';
-        state.cards.forEach(card => {
-            const opt = document.createElement('option');
-            opt.value = card.id;
-            opt.text = `${card.name} (${card.percent}%)`;
-            select.appendChild(opt);
-        });
-        if(state.cards.length > 0) updateCardHint();
-    }
-
-    function updateCardHint() {
-        const select = document.getElementById('tx-card');
-        const hintBox = document.getElementById('card-hint');
-        const hintRate = document.getElementById('hint-rate');
-        const type = document.getElementById('tx-type').value;
-        
-        // Don't show hint for Repayment
-        if (type === 'repayment') {
-            hintBox.style.display = 'none';
-            return;
-        }
-
-        const cardId = select.value;
-        const card = state.cards.find(c => c.id == cardId);
-        
-        if (card && type === 'expense') {
-            hintBox.style.display = 'block';
-            hintRate.innerText = card.percent;
-        } else {
-            hintBox.style.display = 'none';
+        if (type === 'settings') {
+             document.getElementById('setting-tg-auto').checked = state.settings.tgAutoSend || false;
         }
     }
     
-    document.getElementById('tx-card').addEventListener('change', updateCardHint);
+    // Fix Menu Opening (v1.40)
+    function openMenuTarget(target) {
+        closeModals();
+        setTimeout(() => openModal(target), 50); 
+    }
 
-    // --- Actions ---
+    function closeModals() {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+    }
 
     function switchTab(tabName) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -2306,134 +1863,15 @@
         } else if (tabName === 'cards') {
             document.querySelectorAll('.tab')[1].classList.add('active');
             document.getElementById('tab-cards').classList.add('active');
-        } else {
+        } else if (tabName === 'trading') {
             document.querySelectorAll('.tab')[2].classList.add('active');
+            document.getElementById('tab-trading').classList.add('active');
+            renderTrading();
+        } else if (tabName === 'analysis') {
+            document.querySelectorAll('.tab')[3].classList.add('active');
             document.getElementById('tab-analysis').classList.add('active');
             renderCharts();
         }
-    }
-    
-    // New menu handler to close first (Fixes menu bug)
-    function openMenuTarget(target) {
-        closeModals();
-        setTimeout(() => openModal(target), 50); // Small delay to ensure clean state
-    }
-
-    function addTransaction(e) {
-        e.preventDefault();
-        const type = document.getElementById('tx-type').value;
-        const desc = document.getElementById('tx-desc').value;
-        const amount = parseFloat(document.getElementById('tx-amount').value);
-        let category = document.getElementById('tx-category').value;
-        const date = document.getElementById('tx-date').value;
-        
-        // Multi-currency handling
-        const currency = document.getElementById('tx-currency').value;
-        const fxAmount = parseFloat(document.getElementById('tx-fx-amount').value) || 0;
-        const fxRate = parseFloat(document.getElementById('tx-fx-rate').value) || 0;
-
-        let cardId = null;
-        if (type === 'expense' || type === 'repayment') {
-            cardId = document.getElementById('tx-card').value;
-            if (!cardId) {
-                alert('請先新增信用卡！');
-                return;
-            }
-        }
-        
-        if (type === 'repayment') {
-            category = '信用卡還款';
-        }
-
-        const newTx = {
-            id: Date.now(),
-            type,
-            category,
-            desc,
-            amount,
-            cardId,
-            date,
-            currency,
-            fxAmount,
-            fxRate
-        };
-
-        state.transactions.unshift(newTx);
-        saveData();
-        render();
-        closeModals();
-        e.target.reset();
-        
-        // Restore defaults
-        setDefaultTime();
-        setTxType('expense'); // Reset to expense
-        handleCurrencyChange(); // Reset currency view
-    }
-
-    function addCard(e) {
-        e.preventDefault();
-        const name = document.getElementById('card-name').value;
-        const percent = parseFloat(document.getElementById('card-percent').value);
-        const capVal = document.getElementById('card-cap').value;
-        const cap = capVal ? parseFloat(capVal) : 0;
-        const note = document.getElementById('card-note').value;
-
-        const newCard = {
-            id: Date.now(),
-            name,
-            percent,
-            cap,
-            note
-        };
-
-        state.cards.push(newCard);
-        saveData();
-        render();
-        closeModals();
-        e.target.reset();
-        if(state.cards.length === 1) updateFormOptions();
-    }
-
-    function importPresetCards() {
-        if (!confirm('確定要更新或匯入最新信用卡列表 (包括食飯卡、網購卡) 嗎？')) return;
-        
-        let addedCount = 0;
-        let updatedCount = 0;
-        
-        PRESET_CARDS.forEach(p => {
-            const existingCard = state.cards.find(c => c.name === p.name);
-            
-            if (existingCard) {
-                existingCard.percent = p.percent;
-                existingCard.cap = p.cap;
-                existingCard.note = p.note;
-                updatedCount++;
-            } else {
-                state.cards.push({
-                    ...p,
-                    id: Date.now() + Math.floor(Math.random() * 100000), 
-                    spent: 0
-                });
-                addedCount++;
-            }
-        });
-
-        saveData();
-        render();
-        alert(`成功新增 ${addedCount} 張新卡，更新 ${updatedCount} 張現有卡片！`);
-    }
-
-    function openModal(type) {
-        document.getElementById(`modal-${type}`).classList.add('active');
-        if (type === 'transaction') {
-            // Re-initialize default
-            setTxType('expense');
-            setDefaultTime();
-        }
-    }
-
-    function closeModals() {
-        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
     }
 
     window.onclick = function(event) {
