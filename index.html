@@ -556,7 +556,10 @@
                  <label for="tx-tg-auto" style="margin:0; font-size:0.85rem; cursor:pointer;">📡 即時發送 TG 通知 (需先設定)</label>
             </div>
 
-            <button type="submit" class="btn" id="btn-submit">記賬</button>
+            <div style="display:flex; gap:10px;">
+                <button type="submit" class="btn" id="btn-submit" style="flex:2;">記賬</button>
+                <button type="button" id="btn-transfer" class="btn" style="flex:1; background:var(--trade); color:#000; display:none;" onclick="transferToTrade()">📱 轉炒賣</button>
+            </div>
         </form>
     </div>
 </div>
@@ -973,8 +976,8 @@
         </div>
         
         <div class="help-section">
-            <div class="help-title">🎯 每月任務</div>
-            <div class="help-step">點擊頂部 🎯 圖示，設定每月要跑數的卡。系統會按你設定的「重置日」自動計算當月進度。</div>
+            <div class="help-title">🔄 舊賬轉移</div>
+            <div class="help-step">在「賬目紀錄」點擊「✏️ 編輯」，按下方「📱 轉炒賣」，即可將舊有買賣記錄轉換至炒賣頁面。</div>
         </div>
         
         <button class="btn" onclick="closeModals()">明白哂！</button>
@@ -987,19 +990,19 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.33 (Welcome Offer)</div>
+            <div class="log-ver">v1.34 (Migration Tool)</div>
+            <div class="log-date">2026-01-23</div>
+            <div class="log-desc">
+                - 新增：📱 「轉移至炒賣」功能 (在編輯賬目中)。<br>
+                - 優化：自動填充原價/售價，並移除舊有紀錄。<br>
+            </div>
+        </div>
+        <div class="log-entry">
+            <div class="log-ver">v1.33</div>
             <div class="log-date">2026-01-23</div>
             <div class="log-desc">
                 - 新增：🎁 迎新監察，自動加總記賬及炒賣。<br>
                 - 新增：炒賣交易可連結信用卡。<br>
-                - 更新：WeWa 卡備註 (推廣至1月31日)。
-            </div>
-        </div>
-        <div class="log-entry">
-            <div class="log-ver">v1.32</div>
-            <div class="log-date">2026-01-23</div>
-            <div class="log-desc">
-                - 🛡️ 安全模式及數據急救。
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -1010,7 +1013,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.33';
+    const APP_VERSION = '1.34';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -1093,7 +1096,7 @@
     // Preset Cards
     const PRESET_CARDS = [
         { name: '現金 / 其他', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: '不計回贈' },
-        { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, rateFx: 0.4, cap: 5200, note: '🔥推廣至1月31日' },
+        { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, rateFx: 0.4, cap: 5200, note: '🔥2026食飯10% (需核實)' },
         { name: '渣打國泰 (食/網/外)', type: 'miles', rate: 4, rateFx: 4, cap: 0, note: '✈️ $4/里' },
         { name: 'HSBC EveryMile', type: 'miles', rate: 5, rateFx: 2, cap: 0, note: '✈️ 指定商戶 $2/里 (需核實)' },
         { name: 'DBS Black World', type: 'miles', rate: 6, rateFx: 4, cap: 0, note: '✈️ 外幣$4/里' },
@@ -1125,6 +1128,7 @@
     
     let pieChart = null;
     let barChart = null;
+    let transferringTxId = null; // v1.34 temp
 
     function init() {
         try {
@@ -1520,9 +1524,24 @@
             date: new Date().toISOString(),
             shop, model, cap, color, cost, price, qty, profit, cardId
         });
+        
+        // v1.34: Delete original transaction if transferring
+        if (transferringTxId) {
+             state.transactions = state.transactions.filter(t => t.id !== transferringTxId);
+             transferringTxId = null; // Clear flag
+             alert("已成功轉換至炒賣，並刪除原有的記賬紀錄。");
+        }
 
         saveData();
         renderTrading();
+        // If we switched to trading tab via transfer, make sure it renders
+        if (document.getElementById('tab-trading').classList.contains('active')) {
+             renderTrading();
+        } else {
+             // Force switch to see the new entry
+             switchTab('trading');
+        }
+        
         closeModals();
         // Reset visual selection
         document.querySelectorAll('.grid-btn.selected').forEach(b => b.classList.remove('selected'));
@@ -2034,7 +2053,7 @@
         const subSelect = document.getElementById('sub-card');
         if(subSelect) subSelect.innerHTML = '';
         
-        const recurSelect = document.getElementById('recur-card'); 
+        const recurSelect = document.getElementById('recur-card'); // New
         if(recurSelect) recurSelect.innerHTML = '';
         
         const welcomeSelect = document.getElementById('welcome-card'); // New
@@ -2156,6 +2175,35 @@
         }
     }
 
+    // --- Transfer Logic (v1.34) ---
+    function transferToTrade() {
+        // Get current values from the form
+        const idStr = document.getElementById('tx-id').value;
+        const amount = document.getElementById('tx-amount').value;
+        const type = document.getElementById('tx-type').value;
+
+        if (!idStr) return; // Should not happen if called from edit mode
+        
+        transferringTxId = parseFloat(idStr); // Set flag to delete this ID later
+
+        // Close current modal
+        closeModals();
+        
+        // Open Trade Modal
+        openModal('trade');
+        
+        // Pre-fill trade modal based on type
+        if (type === 'expense') {
+            // Expense = Buying = Cost
+            document.getElementById('trade-cost').value = amount;
+            document.getElementById('trade-price').focus();
+        } else if (type === 'income') {
+            // Income = Selling = Price
+            document.getElementById('trade-price').value = amount;
+            document.getElementById('trade-cost').focus();
+        }
+    }
+
     function editTransaction(id) {
         const tx = state.transactions.find(t => t.id === id);
         if (!tx) return;
@@ -2168,6 +2216,10 @@
         document.getElementById('tx-desc').value = tx.desc;
         document.getElementById('tx-date').value = tx.date;
         
+        // Show Transfer Button
+        const btnTransfer = document.getElementById('btn-transfer');
+        if(btnTransfer) btnTransfer.style.display = 'block';
+
         // FX handling
         if (tx.isForeign) {
              document.getElementById('tx-is-foreign').checked = true;
@@ -2344,15 +2396,20 @@
         document.getElementById(`modal-${type}`).classList.add('active');
         if (type === 'transaction') {
              const title = document.getElementById('tx-modal-title');
+             const btnTransfer = document.getElementById('btn-transfer');
+             
              if (title.innerText !== "新增紀錄") {
+                 // Resetting form for Add
                  document.getElementById('tx-form').reset();
                  document.getElementById('tx-id').value = '';
                  document.getElementById('btn-submit').innerText = "記賬";
                  title.innerText = "新增紀錄";
+                 if(btnTransfer) btnTransfer.style.display = 'none'; // Hide transfer btn
                  setTxType('expense');
                  document.getElementById('fx-inputs').style.display='none';
                  setDefaultTime();
              } else {
+                 if(btnTransfer) btnTransfer.style.display = 'none';
                  setDefaultTime();
              }
         }
@@ -2365,11 +2422,9 @@
         }
         if (type === 'bank-info') renderBankInfo();
         if (type === 'trade') {
-            // No specific init needed other than clearing selection if desired, handled in close
             updateFormOptions();
         }
         if (type === 'settings') {
-             // Refresh settings UI
              document.getElementById('setting-tg-auto').checked = state.settings.tgAutoSend || false;
         }
     }
