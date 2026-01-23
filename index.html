@@ -111,18 +111,40 @@
         .icon-btn:active {
             transform: scale(0.95);
         }
+        
+        .menu-btn {
+            font-size: 0.9rem;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+        }
 
         /* Layout */
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: background 0.3s; }
 
         /* Dashboard Stats */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; display: flex; flex-direction: column; justify-content: center; }
         .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
         .profit-pos { color: var(--primary); }
         .profit-neg { color: var(--danger); }
+
+        /* Menu Grid (New v1.35) */
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 10px; }
+        .menu-item { 
+            background: var(--surface-hover); border: 1px solid var(--border); border-radius: 12px; 
+            padding: 20px 10px; text-align: center; cursor: pointer; transition: all 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .menu-item:hover { transform: translateY(-2px); border-color: var(--primary); }
+        .menu-icon { font-size: 2rem; }
+        .menu-label { font-size: 0.9rem; font-weight: bold; color: var(--text); }
+        .menu-desc { font-size: 0.75rem; color: var(--text-muted); }
 
         /* Lists */
         .list-item {
@@ -348,11 +370,9 @@
 
 <header>
     <h1><span class="logo-icon">💰</span> 回贈哥</h1>
+    <!-- New Action Bar with Icons -->
     <div class="header-actions">
-        <button class="icon-btn" onclick="openModal('welcome')" title="迎新監察" style="color:var(--welcome)">🎁</button>
-        <button class="icon-btn" onclick="openModal('recur-mission')" title="每月任務">🎯</button>
-        <button class="icon-btn" onclick="openModal('data')" title="備份與同步">☁️</button>
-        <button class="icon-btn" id="btn-theme" onclick="toggleTheme()" title="切換模式">☀️</button>
+        <button class="menu-btn" onclick="openModal('menu')">☰ 選單</button>
     </div>
 </header>
 
@@ -360,6 +380,33 @@
     
     <!-- Environment Indicator -->
     <div id="env-indicator" class="mode-indicator" style="display:none;"></div>
+
+    <!-- Overview Stats -->
+    <div class="panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-size:0.9rem; color:var(--text-muted);">本月概覽 <span id="billing-cycle-text" style="font-size:0.75rem;">(1-31號)</span></div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">總支出</div>
+                <div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">總收入</div>
+                <div class="stat-value" id="total-income" style="color:var(--income)">$0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">本月已還</div>
+                <div class="stat-value" id="total-repaid" style="color:var(--repay)">$0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">回贈估算</div>
+                <div class="stat-value" id="total-cashback" style="color:var(--primary); font-size: 0.9rem;">$0</div>
+            </div>
+        </div>
+        <!-- Missions -->
+        <div id="missions-container"></div>
+    </div>
 
     <!-- Tabs -->
     <div class="tabs">
@@ -371,40 +418,6 @@
 
     <!-- Tab 1: Transactions -->
     <div id="tab-transactions" class="tab-content active">
-         <!-- Overview Stats (Only on Main Tab) -->
-        <div class="panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div style="font-size:0.9rem; color:var(--text-muted);">本月概覽 <span id="billing-cycle-text" style="font-size:0.75rem;">(1-31號)</span></div>
-                <div style="display:flex; gap:10px;">
-                     <button class="btn-text" onclick="openModal('subs')" title="固定開支" style="font-size:0.8rem;">🔄 固定</button>
-                     <button class="btn-text" onclick="openModal('settings')" style="font-size:0.8rem;">⚙️ 設定</button>
-                </div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">總支出</div>
-                    <div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">總收入</div>
-                    <div class="stat-value" id="total-income" style="color:var(--income)">$0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">本月已還</div>
-                    <div class="stat-value" id="total-repaid" style="color:var(--repay)">$0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">回贈估算</div>
-                    <div class="stat-value" id="total-cashback" style="color:var(--primary); font-size: 0.9rem;">$0</div>
-                </div>
-            </div>
-            <!-- Missions -->
-            <div id="missions-container"></div>
-            <div style="text-align:right; margin-top:10px;">
-                <button class="btn-text" onclick="openModal('mission')" style="font-size:0.8rem; display:inline-flex; color:var(--mission);">+ 新增限時任務</button>
-            </div>
-        </div>
-
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h2 style="margin:0; font-size:1.1rem;">最近賬目</h2>
@@ -479,6 +492,9 @@
     <div class="footer">
         Copyright © Redezero | Powered by Gemini<br>
         <span style="font-size:0.75rem; opacity:0.8; color:var(--text-muted);">*信用卡及里數資料只供參考，以銀行最新條款為準</span>
+        <div style="margin-top:10px;">
+             <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem; cursor:pointer;">⛑️ 顯示原始數據 (Debug)</button>
+        </div>
     </div>
 
 </div>
@@ -486,6 +502,59 @@
 <!-- Floating Add Button (Main) -->
 <div id="main-fab">
     <button class="fab" onclick="openModal('transaction')">+</button>
+</div>
+
+<!-- Main Menu Modal (New v1.35) -->
+<div id="modal-menu" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2>功能選單</h2>
+        <div class="menu-grid">
+            <div class="menu-item" onclick="openModal('mission'); closeModals();">
+                <div class="menu-icon">➕</div>
+                <div class="menu-label">新增限時任務</div>
+                <div class="menu-desc">設定一次性簽賬目標</div>
+            </div>
+            <div class="menu-item" onclick="openModal('recur-mission'); closeModals();">
+                <div class="menu-icon">🎯</div>
+                <div class="menu-label">每月任務</div>
+                <div class="menu-desc">管理每月自動重置目標</div>
+            </div>
+            <div class="menu-item" onclick="openModal('welcome'); closeModals();">
+                <div class="menu-icon">🎁</div>
+                <div class="menu-label">迎新監察</div>
+                <div class="menu-desc">追蹤新卡簽賬進度</div>
+            </div>
+            <div class="menu-item" onclick="openModal('subs'); closeModals();">
+                <div class="menu-icon">🔄</div>
+                <div class="menu-label">固定開支</div>
+                <div class="menu-desc">管理每月訂閱項目</div>
+            </div>
+            <div class="menu-item" onclick="openModal('bank-info'); closeModals();">
+                <div class="menu-icon">ℹ️</div>
+                <div class="menu-label">銀行資訊</div>
+                <div class="menu-desc">熱線及推廣連結</div>
+            </div>
+            <div class="menu-item" onclick="openModal('data'); closeModals();">
+                <div class="menu-icon">☁️</div>
+                <div class="menu-label">備份與同步</div>
+                <div class="menu-desc">轉移資料到新裝置</div>
+            </div>
+            <div class="menu-item" onclick="openModal('settings'); closeModals();">
+                <div class="menu-icon">⚙️</div>
+                <div class="menu-label">設定</div>
+                <div class="menu-desc">結算日及 TG 推送</div>
+            </div>
+            <div class="menu-item" onclick="toggleTheme(); closeModals();">
+                <div class="menu-icon">🌗</div>
+                <div class="menu-label">切換模式</div>
+                <div class="menu-desc">深色 / 淺色主題</div>
+            </div>
+        </div>
+        <div style="margin-top:15px; text-align:center;">
+            <button class="btn-text" onclick="openModal('log');">📋 查看更新日誌</button>
+        </div>
+    </div>
 </div>
 
 <!-- Add/Edit Transaction Modal -->
@@ -881,10 +950,6 @@
                 <span>每次記賬自動推送到 TG</span>
             </label>
         </div>
-
-        <div class="help-section" style="margin-top:20px;">
-             <button class="icon-btn" onclick="openModal('log')" style="width:100%; justify-content: flex-start; padding: 10px; font-size:0.9rem;">📋 查看更新日誌</button>
-        </div>
     </div>
 </div>
 
@@ -961,23 +1026,18 @@
         <h2 style="margin-top:0;">💡 使用說明 & 教學</h2>
         
         <div class="help-section">
-            <div class="help-title">🎁 迎新監察</div>
-            <div class="help-step">點擊 🎁 圖示。新增迎新任務後，系統會自動統計該卡的日常記賬及<strong>已連結的炒賣交易</strong>，計算迎新進度。</div>
+            <div class="help-title">⚠️ 資料合併救星</div>
+            <div class="help-step">如果你在「主畫面App」和「Safari」都有資料：</div>
+            <div class="help-step">1. 去 App 版 -> 匯出 JSON。</div>
+            <div class="help-step">2. 去 Safari 版 -> 選擇剛才的檔案 -> 揀 <strong>「🔗 合併」</strong>。</div>
+            <div class="help-step">3. 之後就可以統一用 Safari 版啦！</div>
         </div>
 
         <div class="help-section">
-            <div class="help-title">✈️ TG 推送</div>
-            <div class="help-step">在「⚙️ 設定」輸入 Bot Token 及 Chat ID。之後在「統計分析」頁按「✈️ 推送」即可將月結單傳送到 Telegram。</div>
-        </div>
-        
-        <div class="help-section">
-            <div class="help-title">📱 炒賣紀錄</div>
-            <div class="help-step">去「📱 炒賣」分頁，可極速記錄放機資料。記得選取<strong>「付款信用卡」</strong>，以便計入迎新！</div>
-        </div>
-        
-        <div class="help-section">
-            <div class="help-title">🔄 舊賬轉移</div>
-            <div class="help-step">在「賬目紀錄」點擊「✏️ 編輯」，按下方「📱 轉炒賣」，即可將舊有買賣記錄轉換至炒賣頁面。</div>
+            <div class="help-title">📱 iOS 捷徑 (一開即記)</div>
+            <div class="help-step">1. 複製此網址：<br><code style="background:#444; padding:4px; border-radius:4px; color:#fff; word-break: break-all; font-size: 0.8rem; display:block; margin-top:4px;">https://redzero213.github.io/createmoremoney/?new_tx=true</code></div>
+            <div class="help-step">2. 在捷徑 App -> 自動化 -> 交易 -> 選擇信用卡。</div>
+            <div class="help-step">3. 動作選<strong>「開啟 URL」</strong>，填入上面網址。</div>
         </div>
         
         <button class="btn" onclick="closeModals()">明白哂！</button>
@@ -990,19 +1050,19 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.34 (Migration Tool)</div>
+            <div class="log-ver">v1.35 (UI Reform)</div>
             <div class="log-date">2026-01-23</div>
             <div class="log-desc">
-                - 新增：📱 「轉移至炒賣」功能 (在編輯賬目中)。<br>
-                - 優化：自動填充原價/售價，並移除舊有紀錄。<br>
+                - 介面大整容：改用「☰ 選單」統一管理功能。<br>
+                - 修復：修正每月結算日的日期計算問題 (End of Day Bug)。<br>
+                - 優化：導航選單更直觀。
             </div>
         </div>
         <div class="log-entry">
-            <div class="log-ver">v1.33</div>
+            <div class="log-ver">v1.34</div>
             <div class="log-date">2026-01-23</div>
             <div class="log-desc">
-                - 新增：🎁 迎新監察，自動加總記賬及炒賣。<br>
-                - 新增：炒賣交易可連結信用卡。<br>
+                - 新增：📱 「轉移至炒賣」功能。
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -1013,7 +1073,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.34';
+    const APP_VERSION = '1.35';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -1121,14 +1181,14 @@
         missions: [], 
         recurringMissions: [],
         subscriptions: [],
-        trades: [],
-        welcomeOffers: [], // New v1.33
+        trades: [], 
+        welcomeOffers: [],
         settings: { startDay: 1, tgToken: '', tgChatId: '', tgAutoSend: false } 
     };
     
     let pieChart = null;
     let barChart = null;
-    let transferringTxId = null; // v1.34 temp
+    let transferringTxId = null;
 
     function init() {
         try {
@@ -1147,7 +1207,7 @@
                 if (!state.settings) state.settings = { startDay: 1, tgToken: '', tgChatId: '', tgAutoSend: false };
                 if (!state.recurringMissions) state.recurringMissions = [];
                 if (!state.trades) state.trades = []; 
-                if (!state.welcomeOffers) state.welcomeOffers = []; // v1.33
+                if (!state.welcomeOffers) state.welcomeOffers = [];
             } else {
                 state.cards = generatePresetCards();
                 saveData();
@@ -1195,7 +1255,7 @@
             // Populate Trade Shops Grid
             const shopGrid = document.getElementById('trade-shop-grid');
             if(shopGrid) {
-                shopGrid.innerHTML = ''; // Clear first to avoid dupes on re-run
+                shopGrid.innerHTML = '';
                 TRADE_SHOPS.forEach(shop => {
                     const div = document.createElement('div');
                     div.className = 'grid-btn';
@@ -1239,7 +1299,7 @@
         }
     }
     
-    // ... [Previous Helper Functions] ...
+    // ... [Helpers] ...
     function checkDisclaimer() {
         const agreed = localStorage.getItem(DISCLAIMER_KEY);
         if (!agreed) {
@@ -1511,7 +1571,7 @@
         const cost = parseFloat(document.getElementById('trade-cost').value) || 0;
         const price = parseFloat(document.getElementById('trade-price').value) || 0;
         const qty = parseInt(document.getElementById('trade-qty').value) || 1;
-        const cardId = document.getElementById('trade-card').value; // New
+        const cardId = document.getElementById('trade-card').value; 
 
         if(!shop || !model || !cap || !color) {
             alert("請選擇所有選項"); return;
@@ -1535,7 +1595,7 @@
         saveData();
         renderTrading();
         // If we switched to trading tab via transfer, make sure it renders
-        if (document.getElementById('tab-trading').classList.contains('active')) {
+        if (document.getElementById('tab-trading') && document.getElementById('tab-trading').classList.contains('active')) {
              renderTrading();
         } else {
              // Force switch to see the new entry
@@ -1699,7 +1759,11 @@
             startDate = new Date(today.getFullYear(), today.getMonth() - 1, startDay);
             endDate = new Date(today.getFullYear(), today.getMonth(), startDay - 1);
         }
-        if (endDate.getDate() !== startDay - 1) endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0); 
+        // Fix: Set endDate to 23:59:59.999
+        if (endDate.getDate() !== startDay - 1) {
+            endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0); 
+        }
+        endDate.setHours(23, 59, 59, 999); // Critical fix for v1.35
         return { start: startDate, end: endDate };
     }
     
@@ -1733,7 +1797,8 @@
         const { start, end } = getFinancialMonthRange();
         
         const format = (d) => `${d.getMonth()+1}/${d.getDate()}`;
-        document.getElementById('billing-cycle-text').innerText = `(${format(start)} - ${format(end)})`;
+        const cycleText = document.getElementById('billing-cycle-text');
+        if(cycleText) cycleText.innerText = `(${format(start)} - ${format(end)})`;
 
         state.transactions.forEach(tx => {
             const txDate = new Date(tx.date);
@@ -1764,13 +1829,23 @@
             }
         });
 
-        document.getElementById('total-spent').innerText = '$' + totalSpent.toLocaleString();
-        document.getElementById('total-income').innerText = '$' + totalIncome.toLocaleString();
+        // Safely update elements
+        const elSpent = document.getElementById('total-spent');
+        if(elSpent) elSpent.innerText = '$' + totalSpent.toLocaleString();
+        
+        const elIncome = document.getElementById('total-income');
+        if(elIncome) elIncome.innerText = '$' + totalIncome.toLocaleString();
+        
+        const elRepaid = document.getElementById('total-repaid');
+        if(elRepaid) elRepaid.innerText = '$' + totalRepaid.toLocaleString();
         
         let rewardText = `$${totalCashback.toFixed(1)}`;
         if (totalMiles > 0) rewardText += ` + ${totalMiles.toLocaleString()} AM`;
-        document.getElementById('total-cashback').innerText = rewardText;
-        document.getElementById('tx-count').innerText = state.transactions.length + ' 筆(總)';
+        const elCashback = document.getElementById('total-cashback');
+        if(elCashback) elCashback.innerText = rewardText;
+        
+        const elCount = document.getElementById('tx-count');
+        if(elCount) elCount.innerText = state.transactions.length + ' 筆(總)';
 
         state.cards.forEach(card => {
             const spent = cardSpending[card.id] || 0;
@@ -1831,7 +1906,7 @@
         renderTrading(); 
         updateFormOptions();
         calculateStats();
-        if (document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
+        if (document.getElementById('tab-analysis') && document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
     }
 
     function renderCharts() {
@@ -1918,9 +1993,10 @@
     function quickRepay(cardId) {
         openModal('transaction');
         setTxType('repayment');
-        document.getElementById('tx-card').value = cardId;
-        // Optional: Pre-fill amount? For now, leave blank for user to input.
-        document.getElementById('tx-amount').focus();
+        const select = document.getElementById('tx-card');
+        if (select) select.value = cardId;
+        const amt = document.getElementById('tx-amount');
+        if (amt) amt.focus();
     }
 
     function renderTransactions() {
@@ -2053,7 +2129,7 @@
         const subSelect = document.getElementById('sub-card');
         if(subSelect) subSelect.innerHTML = '';
         
-        const recurSelect = document.getElementById('recur-card'); // New
+        const recurSelect = document.getElementById('recur-card'); 
         if(recurSelect) recurSelect.innerHTML = '';
         
         const welcomeSelect = document.getElementById('welcome-card'); // New
@@ -2425,8 +2501,10 @@
             updateFormOptions();
         }
         if (type === 'settings') {
+             // Refresh settings UI
              document.getElementById('setting-tg-auto').checked = state.settings.tgAutoSend || false;
         }
+        if (type === 'menu') { /* Handled by HTML */ }
     }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
     window.onclick = function(e) { if (e.target.classList.contains('modal-overlay')) closeModals(); }
