@@ -488,7 +488,7 @@
         Copyright © Redezero | Powered by Gemini<br>
         <span style="font-size:0.75rem; opacity:0.8; color:var(--text-muted);">*信用卡及里數資料只供參考，以銀行最新條款為準</span>
         <div style="margin-top:10px;">
-             v1.40 (Stable Fix) | 
+             v1.41 (Hint Fix) | 
              <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem; cursor:pointer;">⛑️ 顯示原始數據 (Debug)</button>
         </div>
     </div>
@@ -1059,19 +1059,18 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.40 (Stable Fix)</div>
+            <div class="log-ver">v1.41 (Hint Fix)</div>
             <div class="log-date">2026-01-24</div>
             <div class="log-desc">
-                - 修復：Tab 切換邏輯錯誤 (炒賣頁面正常顯示)。<br>
-                - 修復：選單彈出後立即關閉的問題。<br>
-                - 優化：代碼結構更穩定。
+                - 修復：記賬時回贈提示報錯的問題。<br>
+                - 優化：確保外幣回贈提示即時更新。
             </div>
         </div>
         <div class="log-entry">
-            <div class="log-ver">v1.39</div>
+            <div class="log-ver">v1.40</div>
             <div class="log-date">2026-01-24</div>
             <div class="log-desc">
-                - 修正參考錯誤。
+                - 修復：Tab 切換邏輯及選單問題。
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -1082,7 +1081,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.40';
+    const APP_VERSION = '1.41';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -2272,22 +2271,32 @@
     function updateCardHint() {
         const select = document.getElementById('tx-card');
         const hintBox = document.getElementById('card-hint');
-        const hintRate = document.getElementById('hint-rate');
         const type = document.getElementById('tx-type').value;
-        
-        // Don't show hint for Repayment
-        if (type === 'repayment') {
-            hintBox.style.display = 'none';
-            return;
+        const isFxEl = document.getElementById('tx-is-foreign');
+        const isFx = isFxEl ? isFxEl.checked : false;
+
+        if (type !== 'expense') { 
+            if(hintBox) hintBox.style.display = 'none'; 
+            return; 
         }
 
         const cardId = select.value;
         const card = state.cards.find(c => c.id == cardId);
         
-        if (card && type === 'expense') {
+        if (card && hintBox) {
             hintBox.style.display = 'block';
-            hintRate.innerText = card.percent;
-        } else {
+            const rate = isFx ? (card.rateFx || 0) : (card.rate || 0); // Use card.rate
+            
+            let rateText = '';
+            if (card.type === 'miles') {
+                rateText = rate > 0 ? `$${rate}/里 (里數)` : '無回贈';
+                hintBox.style.color = 'var(--miles)';
+            } else {
+                rateText = `${rate}% (現金)`;
+                hintBox.style.color = 'var(--primary)';
+            }
+            hintBox.innerText = `預計回贈: ${rateText}`;
+        } else if(hintBox) {
             hintBox.style.display = 'none';
         }
     }
