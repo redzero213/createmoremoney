@@ -246,14 +246,6 @@
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
 
-        /* Help & Data Content */
-        .help-section { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
-        .help-section:last-child { border-bottom: none; }
-        .help-title { color: var(--primary); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-        .help-step { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4; color: var(--text); opacity: 0.9; }
-        .ios-icon { display: inline-block; width: 20px; height: 20px; background: #eee; color: #333; border-radius: 4px; vertical-align: middle; text-align: center; line-height: 20px; font-size: 12px; font-weight: bold; }
-        .data-btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-
         /* Checkbox Group */
         .checkbox-group { 
             display: flex; 
@@ -496,6 +488,7 @@
         Copyright © Redezero | Powered by Gemini<br>
         <span style="font-size:0.75rem; opacity:0.8; color:var(--text-muted);">*信用卡及里數資料只供參考，以銀行最新條款為準</span>
         <div style="margin-top:10px;">
+             v1.39 (Stable) | 
              <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem; cursor:pointer;">⛑️ 顯示原始數據 (Debug)</button>
         </div>
     </div>
@@ -507,7 +500,7 @@
     <button class="fab" onclick="openModal('transaction')">+</button>
 </div>
 
-<!-- Main Menu Modal (v1.36) -->
+<!-- Main Menu Modal -->
 <div id="modal-menu" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
@@ -576,7 +569,7 @@
             <input type="hidden" id="tx-type" value="expense">
             <input type="hidden" id="tx-id">
             
-            <!-- Currency Select (v1.36) -->
+            <!-- Currency Select -->
             <div class="form-group" style="display:flex; gap:10px;">
                 <div style="flex:1;">
                     <label>貨幣</label>
@@ -852,7 +845,7 @@
     </div>
 </div>
 
-<!-- Welcome Offer Modal (New v1.33) -->
+<!-- Welcome Offer Modal -->
 <div id="modal-welcome" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
@@ -1066,20 +1059,18 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.37 (Fix Startup)</div>
-            <div class="log-date">2026-01-23</div>
+            <div class="log-ver">v1.39 (Stability Fix)</div>
+            <div class="log-date">2026-01-24</div>
             <div class="log-desc">
-                - 修復：v1.36 啟動時找不到元素導致的白畫面錯誤。<br>
-                - 優化：代碼穩定性提升。
+                - 修復：函數定義錯誤導致的 ReferenceError。<br>
+                - 優化：代碼結構整理，減少運行錯誤。
             </div>
         </div>
         <div class="log-entry">
-            <div class="log-ver">v1.36 (Multi-Currency)</div>
-            <div class="log-date">2026-01-23</div>
+            <div class="log-ver">v1.38</div>
+            <div class="log-date">2026-01-24</div>
             <div class="log-desc">
-                - 新增：💱 多幣種記賬 (JPY, TWD, USD...)。<br>
-                - 新增：📊 統計分析大改版 (自訂範圍 / 月度比較)。<br>
-                - 修復：選單在小螢幕的顯示問題。
+                - 🛡️ 安全模式：防止介面因缺少元素而崩潰。<br>
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -1090,7 +1081,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.37';
+    const APP_VERSION = '1.39';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -1210,6 +1201,34 @@
     let transferringTxId = null;
     let analysisMode = 'month'; // 'month', 'range', 'compare'
 
+    // --- Helper Definitions (Moved up for safety) ---
+    function updateBackupTimeDisplay() { 
+        const t = localStorage.getItem(BACKUP_TIME_KEY); 
+        const el = document.getElementById('last-backup-time');
+        if(el) el.innerText = t || '從未備份'; 
+    }
+
+    function deleteTransaction(id) { 
+        if(confirm('刪除?')) { 
+            state.transactions = state.transactions.filter(t => t.id !== id); 
+            saveData(); render(); 
+        } 
+    }
+
+    function deleteCard(id) { 
+        if(confirm('刪除卡片?')) { 
+            state.cards = state.cards.filter(c => c.id !== id); 
+            saveData(); render(); 
+        } 
+    }
+
+    function resetData() { 
+        if(confirm('警告：清除所有資料？')) { 
+            localStorage.removeItem(DB_KEY); 
+            location.reload(); 
+        } 
+    }
+
     function init() {
         try {
             const stored = localStorage.getItem(DB_KEY);
@@ -1244,8 +1263,7 @@
 
             setDefaultTime();
             
-            // v1.37 FIX: Don't set analysis-month value here, as it doesn't exist yet.
-            // Let setAnalysisMode handle the initialization.
+            // v1.37 FIX: Let setAnalysisMode handle the initialization.
             setAnalysisMode('month'); 
 
             // Populate Settings Dropdown
@@ -1288,7 +1306,7 @@
             // Populate Trade Shops Grid
             const shopGrid = document.getElementById('trade-shop-grid');
             if(shopGrid) {
-                shopGrid.innerHTML = ''; // Clear first to avoid dupes on re-run
+                shopGrid.innerHTML = ''; 
                 TRADE_SHOPS.forEach(shop => {
                     const div = document.createElement('div');
                     div.className = 'grid-btn';
@@ -1313,7 +1331,7 @@
             }
         } catch (err) {
             console.error(err);
-            alert("⚠️ 系統偵測到錯誤，可能因版本更新導致。請嘗試按頁面底部的「⛑️ 顯示原始數據」以備份資料，然後重置。");
+            alert("⚠️ 系統偵測到錯誤。請嘗試按頁面底部的「⛑️ 顯示原始數據」以備份資料。");
         }
     }
     
@@ -1332,7 +1350,6 @@
         }
     }
     
-    // ... [Previous Helper Functions] ...
     function checkDisclaimer() {
         const agreed = localStorage.getItem(DISCLAIMER_KEY);
         if (!agreed) {
@@ -1695,7 +1712,7 @@
         if(volEl) volEl.innerText = `${todayVol} 部`;
     }
 
-    // --- Welcome Offer Logic (v1.33) ---
+    // --- Welcome Offer Logic ---
     function addWelcome(e) {
         e.preventDefault();
         const name = document.getElementById('welcome-name').value;
@@ -1746,7 +1763,7 @@
                 }
             });
             
-            // 2. Trades (v1.33)
+            // 2. Trades
             state.trades.forEach(t => {
                 const d = new Date(t.date);
                 // Use cost as spending amount
@@ -1780,15 +1797,17 @@
         });
     }
     
-    // --- Analysis Logic (v1.36) ---
+    // --- Analysis Logic ---
     function setAnalysisMode(mode) {
         analysisMode = mode;
         // Update UI buttons
         document.querySelectorAll('.analysis-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`btn-mode-${mode}`).classList.add('active');
+        const btn = document.getElementById(`btn-mode-${mode}`);
+        if(btn) btn.classList.add('active');
         
         // Update Inputs Area
         const container = document.getElementById('analysis-inputs');
+        if(!container) return;
         container.innerHTML = '';
         
         if (mode === 'month') {
@@ -2003,6 +2022,9 @@
     }
 
     function renderCharts() {
+        // Defensive check
+        if (!document.getElementById('chart-cards')) return;
+
         const style = getComputedStyle(document.body);
         const textColor = style.getPropertyValue('--chart-text').trim();
         const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7', '#a29bfe'];
@@ -2012,8 +2034,10 @@
         let dataSets = [];
 
         if (analysisMode === 'month') {
-             const m = document.getElementById('analysis-month').value;
-             if(!m) return;
+             const mEl = document.getElementById('analysis-month');
+             if(!mEl || !mEl.value) return;
+             const m = mEl.value;
+             
              txs = state.transactions.filter(tx => tx.date.startsWith(m) && (tx.type === 'expense' || !tx.type));
              
              // Standard Pie & Bar
@@ -2024,12 +2048,12 @@
              dataSets.push({ label: '每日支出', data: daily, backgroundColor: '#ff4d4d', borderRadius: 3 });
 
         } else if (analysisMode === 'range') {
-             const sVal = document.getElementById('analysis-start').value;
-             const eVal = document.getElementById('analysis-end').value;
-             if(!sVal || !eVal) return;
+             const sEl = document.getElementById('analysis-start');
+             const eEl = document.getElementById('analysis-end');
+             if(!sEl || !eEl || !sEl.value || !eEl.value) return;
              
-             const s = new Date(sVal);
-             const e = new Date(eVal);
+             const s = new Date(sEl.value);
+             const e = new Date(eEl.value);
              e.setHours(23,59,59);
              
              txs = state.transactions.filter(tx => {
@@ -2047,8 +2071,11 @@
              dataSets.push({ label: '支出', data: labelX.map(d => map[d]), backgroundColor: '#ff4d4d' });
 
         } else if (analysisMode === 'compare') {
-             const m1 = document.getElementById('analysis-m1').value;
-             const m2 = document.getElementById('analysis-m2').value;
+             const m1El = document.getElementById('analysis-m1');
+             const m2El = document.getElementById('analysis-m2');
+             if(!m1El || !m2El) return;
+             const m1 = m1El.value;
+             const m2 = m2El.value;
              
              // Hide Pie, use Bar for comparison
              if(pieChart) pieChart.destroy(); 
