@@ -109,7 +109,7 @@
         .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: background 0.3s; }
 
         /* Dashboard Stats */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; display: flex; flex-direction: column; justify-content: center; }
         .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
@@ -354,7 +354,7 @@
     <h1><span class="logo-icon">💰</span> 回贈哥</h1>
     <!-- New Action Bar with Icons -->
     <div class="header-actions">
-        <button class="menu-btn" onclick="openModal('menu')">☰ 選單</button>
+        <button class="menu-btn" onclick="openMenuTarget('menu')">☰ 選單</button>
     </div>
 </header>
 
@@ -488,7 +488,7 @@
         Copyright © Redezero | Powered by Gemini<br>
         <span style="font-size:0.75rem; opacity:0.8; color:var(--text-muted);">*信用卡及里數資料只供參考，以銀行最新條款為準</span>
         <div style="margin-top:10px;">
-             v1.39 (Stable) | 
+             v1.40 (Stable Fix) | 
              <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem; cursor:pointer;">⛑️ 顯示原始數據 (Debug)</button>
         </div>
     </div>
@@ -506,37 +506,37 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2>功能選單</h2>
         <div class="menu-grid">
-            <div class="menu-item" onclick="openModal('mission'); closeModals();">
+            <div class="menu-item" onclick="openMenuTarget('mission')">
                 <div class="menu-icon">➕</div>
                 <div class="menu-label">新增限時任務</div>
                 <div class="menu-desc">設定一次性簽賬目標</div>
             </div>
-            <div class="menu-item" onclick="openModal('recur-mission'); closeModals();">
+            <div class="menu-item" onclick="openMenuTarget('recur-mission')">
                 <div class="menu-icon">🎯</div>
                 <div class="menu-label">每月任務</div>
                 <div class="menu-desc">管理每月自動重置目標</div>
             </div>
-            <div class="menu-item" onclick="openModal('welcome'); closeModals();">
+            <div class="menu-item" onclick="openMenuTarget('welcome')">
                 <div class="menu-icon">🎁</div>
                 <div class="menu-label">迎新監察</div>
                 <div class="menu-desc">追蹤新卡簽賬進度</div>
             </div>
-            <div class="menu-item" onclick="openModal('subs'); closeModals();">
+            <div class="menu-item" onclick="openMenuTarget('subs')">
                 <div class="menu-icon">🔄</div>
                 <div class="menu-label">固定開支</div>
                 <div class="menu-desc">管理每月訂閱項目</div>
             </div>
-            <div class="menu-item" onclick="openModal('bank-info'); closeModals();">
+            <div class="menu-item" onclick="openMenuTarget('bank-info')">
                 <div class="menu-icon">ℹ️</div>
                 <div class="menu-label">銀行資訊</div>
                 <div class="menu-desc">熱線及推廣連結</div>
             </div>
-            <div class="menu-item" onclick="openModal('data'); closeModals();">
+            <div class="menu-item" onclick="openMenuTarget('data')">
                 <div class="menu-icon">☁️</div>
                 <div class="menu-label">備份與同步</div>
                 <div class="menu-desc">轉移資料到新裝置</div>
             </div>
-            <div class="menu-item" onclick="openModal('settings'); closeModals();">
+            <div class="menu-item" onclick="openMenuTarget('settings')">
                 <div class="menu-icon">⚙️</div>
                 <div class="menu-label">設定</div>
                 <div class="menu-desc">結算日及 TG 推送</div>
@@ -548,7 +548,7 @@
             </div>
         </div>
         <div style="margin-top:15px; text-align:center;">
-            <button class="btn-text" onclick="openModal('log');">📋 查看更新日誌</button>
+            <button class="btn-text" onclick="openMenuTarget('log')">📋 查看更新日誌</button>
         </div>
     </div>
 </div>
@@ -1059,18 +1059,19 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.39 (Stability Fix)</div>
+            <div class="log-ver">v1.40 (Stable Fix)</div>
             <div class="log-date">2026-01-24</div>
             <div class="log-desc">
-                - 修復：函數定義錯誤導致的 ReferenceError。<br>
-                - 優化：代碼結構整理，減少運行錯誤。
+                - 修復：Tab 切換邏輯錯誤 (炒賣頁面正常顯示)。<br>
+                - 修復：選單彈出後立即關閉的問題。<br>
+                - 優化：代碼結構更穩定。
             </div>
         </div>
         <div class="log-entry">
-            <div class="log-ver">v1.38</div>
+            <div class="log-ver">v1.39</div>
             <div class="log-date">2026-01-24</div>
             <div class="log-desc">
-                - 🛡️ 安全模式：防止介面因缺少元素而崩潰。<br>
+                - 修正參考錯誤。
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -1081,7 +1082,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.39';
+    const APP_VERSION = '1.40';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -1199,9 +1200,9 @@
     let pieChart = null;
     let barChart = null;
     let transferringTxId = null;
-    let analysisMode = 'month'; // 'month', 'range', 'compare'
+    let analysisMode = 'month'; 
 
-    // --- Helper Definitions (Moved up for safety) ---
+    // --- Helper Definitions ---
     function updateBackupTimeDisplay() { 
         const t = localStorage.getItem(BACKUP_TIME_KEY); 
         const el = document.getElementById('last-backup-time');
@@ -1252,7 +1253,6 @@
                 saveData();
             }
             
-            // Setup default missions if empty
             if (state.recurringMissions.length === 0 && state.cards.length > 0) {
                 const mm = state.cards.find(c => c.name.includes('MMPOWER'));
                 if (mm) state.recurringMissions.push({ id: Date.now()+1, name: 'MMPOWER 低消', cardId: mm.id, target: 5000, resetDay: 1 });
@@ -1262,11 +1262,8 @@
             applyTheme(savedTheme);
 
             setDefaultTime();
-            
-            // v1.37 FIX: Let setAnalysisMode handle the initialization.
             setAnalysisMode('month'); 
 
-            // Populate Settings Dropdown
             const daySelect = document.getElementById('setting-start-day');
             if (daySelect) {
                 daySelect.innerHTML = '';
@@ -1279,7 +1276,6 @@
                 daySelect.value = state.settings.startDay;
             }
             
-            // Populate Currency Dropdown
             const currSelect = document.getElementById('tx-currency');
             if (currSelect) {
                 CURRENCIES.forEach(c => {
@@ -1289,7 +1285,6 @@
                 });
             }
 
-            // TG Settings
             const tgTokenEl = document.getElementById('tg-token');
             if(tgTokenEl) tgTokenEl.value = state.settings.tgToken || '';
             
@@ -1299,11 +1294,9 @@
             const tgAutoEl = document.getElementById('setting-tg-auto');
             if(tgAutoEl) tgAutoEl.checked = state.settings.tgAutoSend || false;
             
-            // Settings for auto-open
             const txTgEl = document.getElementById('tx-tg-auto');
             if(txTgEl) txTgEl.checked = state.settings.tgAutoSend || false;
 
-            // Populate Trade Shops Grid
             const shopGrid = document.getElementById('trade-shop-grid');
             if(shopGrid) {
                 shopGrid.innerHTML = ''; 
@@ -2319,6 +2312,12 @@
             renderCharts();
         }
     }
+    
+    // New menu handler to close first (Fixes menu bug)
+    function openMenuTarget(target) {
+        closeModals();
+        setTimeout(() => openModal(target), 50); // Small delay to ensure clean state
+    }
 
     function addTransaction(e) {
         e.preventDefault();
@@ -2422,69 +2421,6 @@
         saveData();
         render();
         alert(`成功新增 ${addedCount} 張新卡，更新 ${updatedCount} 張現有卡片！`);
-    }
-
-    function deleteTransaction(id) {
-        if(confirm('確定刪除此紀錄?')) {
-            state.transactions = state.transactions.filter(t => t.id !== id);
-            saveData();
-            render();
-        }
-    }
-
-    function deleteCard(id) {
-        if(confirm('確定刪除此卡片? (相關消費紀錄將保留，但會顯示為未知卡片)')) {
-            state.cards = state.cards.filter(c => c.id !== id);
-            saveData();
-            render();
-        }
-    }
-    
-    function resetData() {
-        if(confirm('警告：這將會清除所有資料！確定嗎？')) {
-            localStorage.removeItem(DB_KEY);
-            location.reload();
-        }
-    }
-    
-    // Export Data as CSV
-    function exportData() {
-        // UTF-8 BOM to fix Chinese encoding in Excel
-        let csvContent = "\uFEFF";
-        // Header
-        csvContent += "日期,時間,類型,類別,描述,金額,信用卡,預計回贈\n";
-        
-        state.transactions.forEach(tx => {
-            const date = tx.date.split('T')[0];
-            const time = tx.date.split('T')[1] || '';
-            const typeMap = { 'expense': '支出', 'income': '收入', 'repayment': '還款' };
-            const type = typeMap[tx.type] || '支出';
-            const desc = `"${tx.desc.replace(/"/g, '""')}"`; // Escape quotes
-            
-            let cardName = '';
-            let cashback = 0;
-            
-            if (tx.type !== 'income') {
-                const card = state.cards.find(c => c.id == tx.cardId);
-                cardName = card ? card.name : '';
-                if(card && tx.type === 'expense') {
-                   cashback = (tx.amount * card.percent / 100).toFixed(2);
-                }
-            }
-            
-            csvContent += `${date},${time},${type},${tx.category},${desc},${tx.amount},${cardName},${cashback}\n`;
-        });
-        
-        // Create download link
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `finance_data_${new Date().toISOString().slice(0,10)}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
     }
 
     function openModal(type) {
