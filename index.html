@@ -28,6 +28,7 @@
             --repay: #ff9f43; /* 還款橙 */
             --miles: #a29bfe; /* 里數紫 */
             --mission: #f39c12; /* 任務黃 */
+            --welcome: #e84393; /* 迎新粉 */
             --sub: #e17055; /* 訂閱紅 */
             --trade: #00cec9; /* 炒賣青 */
             --info: #0984e3; /* 資訊藍 */
@@ -52,6 +53,7 @@
             --repay: #e37400;
             --miles: #6c5ce7;
             --mission: #d35400;
+            --welcome: #d63031;
             --sub: #d63031;
             --trade: #00b894;
             --info: #0984e3;
@@ -115,7 +117,7 @@
         .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: background 0.3s; }
 
         /* Dashboard Stats */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; display: flex; flex-direction: column; justify-content: center; }
         .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
@@ -296,6 +298,14 @@
         .recur-item.completed .recur-tick { display: block; }
         .recur-item.completed .recur-progress { color: var(--primary); }
 
+        /* Welcome Offer Item */
+        .welcome-item { 
+            background: var(--surface-hover); border: 1px solid var(--welcome); border-radius: 8px; padding: 12px; margin-bottom: 10px; position: relative; overflow: hidden;
+        }
+        .welcome-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; }
+        .welcome-days { font-size: 0.8rem; background: var(--welcome); color: #fff; padding: 2px 6px; border-radius: 4px; }
+        .welcome-expired { background: var(--danger); }
+        
         /* Changelog */
         .log-entry { margin-bottom: 15px; padding-left: 10px; border-left: 3px solid var(--primary); }
         .log-ver { font-weight: bold; color: var(--primary); font-size: 1rem; }
@@ -339,9 +349,8 @@
 <header>
     <h1><span class="logo-icon">💰</span> 回贈哥</h1>
     <div class="header-actions">
+        <button class="icon-btn" onclick="openModal('welcome')" title="迎新監察" style="color:var(--welcome)">🎁</button>
         <button class="icon-btn" onclick="openModal('recur-mission')" title="每月任務">🎯</button>
-        <button class="icon-btn" onclick="openModal('subs')" title="固定開支">🔄</button>
-        <button class="icon-btn" onclick="openModal('bank-info')" title="銀行資訊">ℹ️</button>
         <button class="icon-btn" onclick="openModal('data')" title="備份與同步">☁️</button>
         <button class="icon-btn" id="btn-theme" onclick="toggleTheme()" title="切換模式">☀️</button>
     </div>
@@ -366,7 +375,10 @@
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <div style="font-size:0.9rem; color:var(--text-muted);">本月概覽 <span id="billing-cycle-text" style="font-size:0.75rem;">(1-31號)</span></div>
-                <button class="btn-text" onclick="openModal('settings')" style="font-size:0.8rem;">⚙️ 設定</button>
+                <div style="display:flex; gap:10px;">
+                     <button class="btn-text" onclick="openModal('subs')" title="固定開支" style="font-size:0.8rem;">🔄 固定</button>
+                     <button class="btn-text" onclick="openModal('settings')" style="font-size:0.8rem;">⚙️ 設定</button>
+                </div>
             </div>
             <div class="stats-grid">
                 <div class="stat-card">
@@ -467,9 +479,6 @@
     <div class="footer">
         Copyright © Redezero | Powered by Gemini<br>
         <span style="font-size:0.75rem; opacity:0.8; color:var(--text-muted);">*信用卡及里數資料只供參考，以銀行最新條款為準</span>
-        <div style="margin-top:10px;">
-             <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem; cursor:pointer;">⛑️ 顯示原始數據 (Debug)</button>
-        </div>
     </div>
 
 </div>
@@ -615,6 +624,15 @@
                      <button type="button" class="btn-small" onclick="adjustTradeQty(1)">+</button>
                  </div>
             </div>
+            
+            <div class="form-group">
+                <label style="color:var(--welcome)">💳 付款信用卡 (計入迎新/回贈)</label>
+                <select id="trade-card" style="border-color:var(--welcome);">
+                     <option value="">不使用信用卡 (不計入)</option>
+                     <!-- JS Populated -->
+                </select>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">*選取後，此筆交易的原價總額將計入迎新進度。</div>
+            </div>
 
             <button type="submit" class="btn" style="background:var(--trade); color:#000;">記錄交易</button>
         </form>
@@ -751,6 +769,38 @@
                 </select>
             </div>
             <button type="submit" class="btn-small" style="width:100%;">+ 加入清單</button>
+        </form>
+    </div>
+</div>
+
+<!-- Welcome Offer Modal (New v1.33) -->
+<div id="modal-welcome" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2 style="margin-top:0;">🎁 迎新監察</h2>
+        <div style="margin-bottom:15px; font-size:0.85rem; color:var(--text-muted);">
+            追蹤新卡簽賬要求 (包含普通記賬及已連結的炒賣交易)。
+        </div>
+        <div id="welcome-list" style="margin-bottom:20px;"></div>
+        
+        <form id="welcome-form" onsubmit="addWelcome(event)" style="background:var(--surface-hover); padding:10px; border-radius:8px;">
+            <h3 style="margin-top:0; font-size:0.9rem;">新增迎新目標</h3>
+            <div class="form-group">
+                <input type="text" id="welcome-name" placeholder="項目名稱 (e.g. SC Cathay 迎新)" required>
+            </div>
+            <div class="row-group">
+                <div class="form-group"><select id="welcome-card" required></select></div>
+                <div class="form-group"><input type="number" id="welcome-target" placeholder="目標金額" required></div>
+            </div>
+             <div class="form-group">
+                <label>截止日期 (Deadline)</label>
+                <input type="date" id="welcome-deadline" required>
+            </div>
+             <div class="form-group">
+                <label>開始計算日期 (發卡日)</label>
+                <input type="date" id="welcome-start" required>
+            </div>
+            <button type="submit" class="btn-small" style="width:100%; color:var(--welcome); border-color:var(--welcome);">+ 加入監察</button>
         </form>
     </div>
 </div>
@@ -908,18 +958,18 @@
         <h2 style="margin-top:0;">💡 使用說明 & 教學</h2>
         
         <div class="help-section">
+            <div class="help-title">🎁 迎新監察</div>
+            <div class="help-step">點擊 🎁 圖示。新增迎新任務後，系統會自動統計該卡的日常記賬及<strong>已連結的炒賣交易</strong>，計算迎新進度。</div>
+        </div>
+
+        <div class="help-section">
             <div class="help-title">✈️ TG 推送</div>
             <div class="help-step">在「⚙️ 設定」輸入 Bot Token 及 Chat ID。之後在「統計分析」頁按「✈️ 推送」即可將月結單傳送到 Telegram。</div>
         </div>
         
         <div class="help-section">
             <div class="help-title">📱 炒賣紀錄</div>
-            <div class="help-step">去「📱 炒賣」分頁，可極速記錄放機資料。系統已更新 iPhone 17 原價。</div>
-        </div>
-
-        <div class="help-section">
-            <div class="help-title">✂️ 分單計算</div>
-            <div class="help-step">在記賬頁面，按金額旁邊的「✂️」按鈕，可以計算折扣、加一服務費及人頭攤分。</div>
+            <div class="help-step">去「📱 炒賣」分頁，可極速記錄放機資料。記得選取<strong>「付款信用卡」</strong>，以便計入迎新！</div>
         </div>
         
         <div class="help-section">
@@ -937,18 +987,19 @@
         <button class="close-modal" onclick="closeModals()">&times;</button>
         <h2 style="margin-top:0;">📋 更新日誌</h2>
         <div class="log-entry">
-            <div class="log-ver">v1.32 (Rescue Update)</div>
+            <div class="log-ver">v1.33 (Welcome Offer)</div>
             <div class="log-date">2026-01-23</div>
             <div class="log-desc">
-                - 🛡️ 安全模式：防止介面因缺少元素而崩潰。<br>
-                - ⛑️ 數據急救：新增按鈕以彈出 JSON 數據作備份。
+                - 新增：🎁 迎新監察，自動加總記賬及炒賣。<br>
+                - 新增：炒賣交易可連結信用卡。<br>
+                - 更新：WeWa 卡備註 (推廣至1月31日)。
             </div>
         </div>
         <div class="log-entry">
-            <div class="log-ver">v1.31</div>
-            <div class="log-date">2026-01-22</div>
+            <div class="log-ver">v1.32</div>
+            <div class="log-date">2026-01-23</div>
             <div class="log-desc">
-                - 新增：📡 實時 TG 同步功能。
+                - 🛡️ 安全模式及數據急救。
             </div>
         </div>
         <button class="btn" onclick="closeModals()">關閉</button>
@@ -959,7 +1010,7 @@
 
 <script>
     // --- Data & Config ---
-    const APP_VERSION = '1.32';
+    const APP_VERSION = '1.33';
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
@@ -1042,7 +1093,7 @@
     // Preset Cards
     const PRESET_CARDS = [
         { name: '現金 / 其他', type: 'cashback', rate: 0, rateFx: 0, cap: 0, note: '不計回贈' },
-        { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, rateFx: 0.4, cap: 5200, note: '🔥2026食飯10% (需核實)' },
+        { name: 'WeWa Card (食飯)', type: 'cashback', rate: 10, rateFx: 0.4, cap: 5200, note: '🔥推廣至1月31日' },
         { name: '渣打國泰 (食/網/外)', type: 'miles', rate: 4, rateFx: 4, cap: 0, note: '✈️ $4/里' },
         { name: 'HSBC EveryMile', type: 'miles', rate: 5, rateFx: 2, cap: 0, note: '✈️ 指定商戶 $2/里 (需核實)' },
         { name: 'DBS Black World', type: 'miles', rate: 6, rateFx: 4, cap: 0, note: '✈️ 外幣$4/里' },
@@ -1067,7 +1118,8 @@
         missions: [], 
         recurringMissions: [],
         subscriptions: [],
-        trades: [], 
+        trades: [],
+        welcomeOffers: [], // New v1.33
         settings: { startDay: 1, tgToken: '', tgChatId: '', tgAutoSend: false } 
     };
     
@@ -1091,6 +1143,7 @@
                 if (!state.settings) state.settings = { startDay: 1, tgToken: '', tgChatId: '', tgAutoSend: false };
                 if (!state.recurringMissions) state.recurringMissions = [];
                 if (!state.trades) state.trades = []; 
+                if (!state.welcomeOffers) state.welcomeOffers = []; // v1.33
             } else {
                 state.cards = generatePresetCards();
                 saveData();
@@ -1454,6 +1507,7 @@
         const cost = parseFloat(document.getElementById('trade-cost').value) || 0;
         const price = parseFloat(document.getElementById('trade-price').value) || 0;
         const qty = parseInt(document.getElementById('trade-qty').value) || 1;
+        const cardId = document.getElementById('trade-card').value; // New
 
         if(!shop || !model || !cap || !color) {
             alert("請選擇所有選項"); return;
@@ -1464,7 +1518,7 @@
         state.trades.unshift({
             id: Date.now(),
             date: new Date().toISOString(),
-            shop, model, cap, color, cost, price, qty, profit
+            shop, model, cap, color, cost, price, qty, profit, cardId
         });
 
         saveData();
@@ -1501,12 +1555,14 @@
 
             const pClass = t.profit >= 0 ? 'profit-pos' : 'profit-neg';
             const pSign = t.profit >= 0 ? '+' : '';
+            const card = state.cards.find(c => c.id == t.cardId);
+            const cardBadge = card ? `<span class="cat-tag" style="font-size:0.6rem;">💳 ${card.name}</span>` : '';
             
             html += `
                 <div class="list-item">
                     <div class="item-main">
                         <div class="item-title"><span class="shop-tag">${t.shop}</span> ${t.model} ${t.cap} ${t.color}</div>
-                        <div class="item-sub">${t.date.slice(0, 16).replace('T', ' ')} • 收: $${t.price} (原: $${t.cost})</div>
+                        <div class="item-sub">${t.date.slice(0, 16).replace('T', ' ')} • 收: $${t.price} (原: $${t.cost}) ${cardBadge}</div>
                     </div>
                     <div class="item-actions">
                          <div class="item-amount" style="font-size:0.9rem;">x${t.qty}</div>
@@ -1525,6 +1581,91 @@
         if(profitEl) profitEl.innerHTML = `<span class="${pTotalClass}">${todayProfit >= 0 ? '+' : ''}$${todayProfit}</span>`;
         const volEl = document.getElementById('trade-today-vol');
         if(volEl) volEl.innerText = `${todayVol} 部`;
+    }
+
+    // --- Welcome Offer Logic (v1.33) ---
+    function addWelcome(e) {
+        e.preventDefault();
+        const name = document.getElementById('welcome-name').value;
+        const cardId = document.getElementById('welcome-card').value;
+        const target = parseFloat(document.getElementById('welcome-target').value);
+        const deadline = document.getElementById('welcome-deadline').value;
+        const start = document.getElementById('welcome-start').value;
+        
+        state.welcomeOffers.push({ id: Date.now(), name, cardId, target, deadline, start });
+        saveData();
+        renderWelcomeList();
+        e.target.reset();
+    }
+    
+    function deleteWelcome(id) {
+        if(confirm('刪除此迎新監察?')) {
+            state.welcomeOffers = state.welcomeOffers.filter(w => w.id !== id);
+            saveData();
+            renderWelcomeList();
+        }
+    }
+    
+    function renderWelcomeList() {
+        const container = document.getElementById('welcome-list');
+        if(!container) return;
+        container.innerHTML = '';
+        if(!state.welcomeOffers || state.welcomeOffers.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:var(--text-muted);">暫無迎新監察</div>';
+            return;
+        }
+        
+        state.welcomeOffers.forEach(w => {
+            const card = state.cards.find(c => c.id == w.cardId);
+            const cardName = card ? card.name : 'Unknown';
+            const deadline = new Date(w.deadline);
+            const start = new Date(w.start);
+            const today = new Date();
+            const daysLeft = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+            
+            // Calc total spend
+            let total = 0;
+            
+            // 1. Transactions
+            state.transactions.forEach(tx => {
+                const d = new Date(tx.date);
+                if (tx.type === 'expense' && tx.cardId == w.cardId && d >= start && d <= deadline) {
+                    total += tx.amount;
+                }
+            });
+            
+            // 2. Trades (v1.33)
+            state.trades.forEach(t => {
+                const d = new Date(t.date);
+                // Use cost as spending amount
+                if (t.cardId == w.cardId && d >= start && d <= deadline) {
+                    total += (t.cost * t.qty);
+                }
+            });
+            
+            const percent = Math.min((total / w.target) * 100, 100);
+            const isExpired = daysLeft < 0;
+            const daysClass = isExpired ? 'welcome-days welcome-expired' : 'welcome-days';
+            const daysText = isExpired ? '已過期' : `剩 ${daysLeft} 天`;
+            
+            const div = document.createElement('div');
+            div.className = 'welcome-item';
+            div.innerHTML = `
+                <div class="welcome-header">
+                    <span>${w.name} <span style="font-weight:normal; font-size:0.8rem;">(${cardName})</span></span>
+                    <span class="${daysClass}">${daysText}</span>
+                </div>
+                <div class="mission-values" style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span>${w.deadline} 截止</span>
+                    <span>$${total.toLocaleString()} / $${w.target.toLocaleString()}</span>
+                </div>
+                <div class="mission-progress-bg"><div class="mission-progress-fill" style="width:${percent}%; background:var(--welcome);"></div></div>
+                <div style="text-align:right; margin-top:5px;">
+                    <button class="btn-text" onclick="deleteWelcome(${w.id})" style="font-size:0.7rem; color:var(--text-muted);">刪除</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
     }
 
     // --- Helper Functions ---
@@ -1573,8 +1714,7 @@
         const { start, end } = getFinancialMonthRange();
         
         const format = (d) => `${d.getMonth()+1}/${d.getDate()}`;
-        const cycleText = document.getElementById('billing-cycle-text');
-        if(cycleText) cycleText.innerText = `(${format(start)} - ${format(end)})`;
+        document.getElementById('billing-cycle-text').innerText = `(${format(start)} - ${format(end)})`;
 
         state.transactions.forEach(tx => {
             const txDate = new Date(tx.date);
@@ -1597,7 +1737,7 @@
                 } else if (type === 'income') {
                     totalIncome += tx.amount;
                 } else if (type === 'repayment') {
-                    totalRepaid += tx.amount;
+                    totalRepaid += tx.amount; // Global Total Repaid
                     if (state.cards.some(c => c.id == tx.cardId)) {
                         cardPaid[tx.cardId] = (cardPaid[tx.cardId] || 0) + tx.amount;
                     }
@@ -1605,23 +1745,13 @@
             }
         });
 
-        // Safely update elements
-        const elSpent = document.getElementById('total-spent');
-        if(elSpent) elSpent.innerText = '$' + totalSpent.toLocaleString();
-        
-        const elIncome = document.getElementById('total-income');
-        if(elIncome) elIncome.innerText = '$' + totalIncome.toLocaleString();
-        
-        const elRepaid = document.getElementById('total-repaid');
-        if(elRepaid) elRepaid.innerText = '$' + totalRepaid.toLocaleString();
+        document.getElementById('total-spent').innerText = '$' + totalSpent.toLocaleString();
+        document.getElementById('total-income').innerText = '$' + totalIncome.toLocaleString();
         
         let rewardText = `$${totalCashback.toFixed(1)}`;
         if (totalMiles > 0) rewardText += ` + ${totalMiles.toLocaleString()} AM`;
-        const elCashback = document.getElementById('total-cashback');
-        if(elCashback) elCashback.innerText = rewardText;
-        
-        const elCount = document.getElementById('tx-count');
-        if(elCount) elCount.innerText = state.transactions.length + ' 筆(總)';
+        document.getElementById('total-cashback').innerText = rewardText;
+        document.getElementById('tx-count').innerText = state.transactions.length + ' 筆(總)';
 
         state.cards.forEach(card => {
             const spent = cardSpending[card.id] || 0;
@@ -1769,10 +1899,9 @@
     function quickRepay(cardId) {
         openModal('transaction');
         setTxType('repayment');
-        const select = document.getElementById('tx-card');
-        if (select) select.value = cardId;
-        const amt = document.getElementById('tx-amount');
-        if (amt) amt.focus();
+        document.getElementById('tx-card').value = cardId;
+        // Optional: Pre-fill amount? For now, leave blank for user to input.
+        document.getElementById('tx-amount').focus();
     }
 
     function renderTransactions() {
@@ -1863,24 +1992,19 @@
         });
         
         const showCard = type !== 'income';
-        const groupCard = document.getElementById('group-card');
-        if(groupCard) groupCard.style.display = showCard ? 'block' : 'none';
+        document.getElementById('group-card').style.display = showCard ? 'block' : 'none';
+        document.getElementById('group-category').style.display = type === 'repayment' ? 'none' : 'block';
         
-        const groupCat = document.getElementById('group-category');
-        if(groupCat) groupCat.style.display = type === 'repayment' ? 'none' : 'block';
+        document.getElementById('fx-toggle-container').style.display = type === 'expense' ? 'flex' : 'none';
+        document.getElementById('fx-inputs').style.display = 'none'; // reset
+        document.getElementById('tx-is-foreign').checked = false;
         
-        const fxToggle = document.getElementById('fx-toggle-container');
-        if(fxToggle) fxToggle.style.display = type === 'expense' ? 'flex' : 'none';
-        
-        const fxInputs = document.getElementById('fx-inputs');
-        if(fxInputs) fxInputs.style.display = 'none'; 
-        
-        const isForeign = document.getElementById('tx-is-foreign');
-        if(isForeign) isForeign.checked = false;
-        
-        const hint = document.getElementById('card-hint');
-        if(hint && type === 'repayment') hint.style.display = 'none';
-        else updateCardHint();
+        // Force hide hint for repayment immediately
+        if (type === 'repayment') {
+            document.getElementById('card-hint').style.display = 'none';
+        } else {
+            updateCardHint(); // Re-evaluate for expense
+        }
     }
 
     function toggleFxInputs() {
@@ -1912,22 +2036,47 @@
         
         const recurSelect = document.getElementById('recur-card'); 
         if(recurSelect) recurSelect.innerHTML = '';
+        
+        const welcomeSelect = document.getElementById('welcome-card'); // New
+        if(welcomeSelect) welcomeSelect.innerHTML = '';
+        
+        const tradeCardSelect = document.getElementById('trade-card'); // New
+        if(tradeCardSelect) {
+            tradeCardSelect.innerHTML = '<option value="">不使用信用卡 (不計入)</option>';
+        }
 
         state.cards.forEach(card => {
             const opt = document.createElement('option');
             opt.value = card.id;
             opt.text = card.name;
             select.appendChild(opt);
+            
+            // Subs
             if(subSelect) {
                 const subOpt = document.createElement('option');
                 subOpt.value = card.id; subOpt.text = card.name;
                 subSelect.appendChild(subOpt);
             }
+            // Recur Missions
             if(recurSelect) {
                 const rOpt = document.createElement('option');
                 rOpt.value = card.id; rOpt.text = card.name;
                 recurSelect.appendChild(rOpt);
             }
+            // Welcome
+            if(welcomeSelect) {
+                const wOpt = document.createElement('option');
+                wOpt.value = card.id; wOpt.text = card.name;
+                welcomeSelect.appendChild(wOpt);
+            }
+            // Trade
+            if(tradeCardSelect) {
+                const tOpt = document.createElement('option');
+                tOpt.value = card.id; tOpt.text = card.name;
+                tradeCardSelect.appendChild(tOpt);
+            }
+
+            // Mission Checklist
             if(missionDiv) {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
@@ -1943,18 +2092,14 @@
         const select = document.getElementById('tx-card');
         const hintBox = document.getElementById('card-hint');
         const type = document.getElementById('tx-type').value;
-        const isFxEl = document.getElementById('tx-is-foreign');
-        const isFx = isFxEl ? isFxEl.checked : false;
+        const isFx = document.getElementById('tx-is-foreign').checked;
 
-        if (type !== 'expense') { 
-            if(hintBox) hintBox.style.display = 'none'; 
-            return; 
-        }
+        if (type !== 'expense') { hintBox.style.display = 'none'; return; }
 
         const cardId = select.value;
         const card = state.cards.find(c => c.id == cardId);
         
-        if (card && hintBox) {
+        if (card) {
             hintBox.style.display = 'block';
             const rate = isFx ? (card.rateFx || 0) : card.rate;
             
@@ -1967,7 +2112,7 @@
                 hintBox.style.color = 'var(--primary)';
             }
             hintBox.innerText = `預計回贈: ${rateText}`;
-        } else if(hintBox) {
+        } else {
             hintBox.style.display = 'none';
         }
     }
@@ -2023,9 +2168,11 @@
         document.getElementById('tx-desc').value = tx.desc;
         document.getElementById('tx-date').value = tx.date;
         
+        // FX handling
         if (tx.isForeign) {
-             const fxEl = document.getElementById('tx-is-foreign');
-             if(fxEl) { fxEl.checked = true; toggleFxInputs(); }
+             document.getElementById('tx-is-foreign').checked = true;
+             toggleFxInputs();
+             // We don't store original rate/amount yet, so just leave fields blank or 0
         }
         
         if (tx.category) document.getElementById('tx-category').value = tx.category;
@@ -2043,8 +2190,7 @@
         const amount = parseFloat(document.getElementById('tx-amount').value);
         let category = document.getElementById('tx-category').value;
         const date = document.getElementById('tx-date').value;
-        const isForeignEl = document.getElementById('tx-is-foreign');
-        const isForeign = isForeignEl ? isForeignEl.checked : false;
+        const isForeign = document.getElementById('tx-is-foreign').checked;
         const tgAutoEl = document.getElementById('tx-tg-auto');
         const sendTG = tgAutoEl ? tgAutoEl.checked : false;
         
@@ -2211,12 +2357,17 @@
              }
         }
         if (type === 'mission') updateFormOptions();
+        if (type === 'welcome') { renderWelcomeList(); updateFormOptions(); }
         if (type === 'subs') renderSubsList();
         if (type === 'recur-mission') {
             updateFormOptions();
             renderRecurList();
         }
         if (type === 'bank-info') renderBankInfo();
+        if (type === 'trade') {
+            // No specific init needed other than clearing selection if desired, handled in close
+            updateFormOptions();
+        }
         if (type === 'settings') {
              // Refresh settings UI
              document.getElementById('setting-tg-auto').checked = state.settings.tgAutoSend || false;
