@@ -11,22 +11,8 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --primary: #00d26a; --primary-dark: #00a855; --bg: #121212; --surface: #1e1e1e;
-            --surface-hover: #2d2d2d; --text: #e0e0e0; --text-muted: #a0a0a0; --danger: #ff4d4d;
-            --income: #4facfe; --repay: #ff9f43; --miles: #a29bfe; --mission: #f39c12;
-            --welcome: #e84393; --sub: #e17055; --trade: #00cec9; --info: #0984e3;
-            --telegram: #229ED9; --border: #333; --card-gradient: linear-gradient(135deg, #2c3e50, #000000);
-            --shadow: 0 4px 6px rgba(0,0,0,0.3); --chart-text: #e0e0e0;
-        }
-        [data-theme="light"] {
-            --primary: #00b85c; --primary-dark: #008f45; --bg: #f4f6f8; --surface: #ffffff;
-            --surface-hover: #eef2f5; --text: #1a1a1a; --text-muted: #666666; --danger: #d93025;
-            --income: #1a73e8; --repay: #e37400; --miles: #6c5ce7; --mission: #d35400;
-            --welcome: #d63031; --sub: #d63031; --trade: #00b894; --info: #0984e3;
-            --telegram: #229ED9; --border: #e0e0e0; --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af);
-            --shadow: 0 2px 8px rgba(0,0,0,0.08); --chart-text: #333333;
-        }
+        :root { --primary: #00d26a; --primary-dark: #00a855; --bg: #121212; --surface: #1e1e1e; --surface-hover: #2d2d2d; --text: #e0e0e0; --text-muted: #a0a0a0; --danger: #ff4d4d; --income: #4facfe; --repay: #ff9f43; --miles: #a29bfe; --mission: #f39c12; --welcome: #e84393; --sub: #e17055; --trade: #00cec9; --info: #0984e3; --telegram: #229ED9; --border: #333; --card-gradient: linear-gradient(135deg, #2c3e50, #000000); --shadow: 0 4px 6px rgba(0,0,0,0.3); --chart-text: #e0e0e0; }
+        [data-theme="light"] { --primary: #00b85c; --primary-dark: #008f45; --bg: #f4f6f8; --surface: #ffffff; --surface-hover: #eef2f5; --text: #1a1a1a; --text-muted: #666666; --danger: #d93025; --income: #1a73e8; --repay: #e37400; --miles: #6c5ce7; --mission: #d35400; --welcome: #d63031; --sub: #d63031; --trade: #00b894; --info: #0984e3; --telegram: #229ED9; --border: #e0e0e0; --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af); --shadow: 0 2px 8px rgba(0,0,0,0.08); --chart-text: #333333; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; transition: background-color 0.3s, color 0.3s; }
         header { background: var(--surface); padding: 12px 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
@@ -55,6 +41,7 @@
         .shop-tag { background: var(--trade); color: #000; font-weight: bold; }
         .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; }
         .miles-tag { font-size: 0.75rem; color: var(--miles); background: rgba(162, 155, 254, 0.15); padding: 2px 6px; border-radius: 4px; display: inline-block; }
+        .due-tag { font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 2px; }
         .form-group { margin-bottom: 15px; } label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
         input, select { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1rem; outline: none; }
         .row-group { display: flex; gap: 10px; } .row-group > div { flex: 1; }
@@ -109,7 +96,7 @@
 <div class="container">
     <div class="panel">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <div style="font-size:0.9rem; color:var(--text-muted);">本月概覽 <span id="billing-cycle-text" style="font-size:0.75rem;">(1-31號)</span></div>
+            <div style="font-size:0.9rem; color:var(--text-muted);">本月概覽 <span id="billing-cycle-text" style="font-size:0.75rem;"></span></div>
             <button class="btn-text" onclick="openMenuTarget('settings')" style="font-size:0.8rem;">⚙️ 設定</button>
         </div>
         <div class="stats-grid">
@@ -134,7 +121,7 @@
                 <h2 style="margin:0; font-size:1.1rem;">最近賬目</h2>
                 <span class="stat-label" id="tx-count">0 筆</span>
             </div>
-            <div id="transaction-list"><div style="text-align:center; padding:20px; color:var(--text-muted);">暫無紀錄</div></div>
+            <div id="transaction-list"></div>
         </div>
     </div>
 
@@ -185,7 +172,7 @@
     </div>
     
     <div class="footer">
-        Copyright © Redezero | v1.53 <br>
+        Copyright © Redezero | v1.54 <br>
         <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem;">⛑️ 下載備份</button>
     </div>
 </div>
@@ -260,7 +247,7 @@
     <div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>✂️ 分單</h2><div class="form-group"><input type="number" id="split-total" placeholder="總額" oninput="calcSplit()"></div><div class="row-group"><label><input type="checkbox" id="split-service" onchange="calcSplit()" style="width:auto;"> +10%</label><input type="number" id="split-discount" placeholder="折扣%" oninput="calcSplit()"></div><div class="form-group"><div style="display:flex;gap:10px;"><button type="button" class="btn-small" onclick="adjustPeople(-1)">-</button><input type="number" id="split-people" value="2" style="text-align:center;" oninput="calcSplit()"><button type="button" class="btn-small" onclick="adjustPeople(1)">+</button></div></div><div style="text-align:center; margin:15px;"><div id="split-result" style="font-size:2rem; font-weight:bold;">$0.00</div></div><button type="button" class="btn" onclick="applySplit()">填入</button></div>
 </div>
 
-<!-- Other Modals (Card, Recurring, Welcome, Subs, Bank, Settings, Data) -->
+<!-- Other Modals -->
 <div id="modal-card" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>新增卡片</h2><form id="card-form" onsubmit="addCard(event)"><div class="form-group"><input type="text" id="card-name" required placeholder="名稱"></div><div class="form-group"><select id="card-type" onchange="toggleCardRateInput()"><option value="cashback">現金回贈</option><option value="miles">里數</option></select></div><div class="row-group"><input type="number" id="card-rate" placeholder="Rate"><input type="number" id="card-rate-fx" placeholder="FX Rate"></div><div class="row-group"><input type="number" id="card-stmt-day" placeholder="截數日"><input type="number" id="card-pay-gap" placeholder="還款期"></div><div class="form-group"><input type="number" id="card-cap" placeholder="上限"></div><div class="form-group"><input type="text" id="card-note" placeholder="備註"></div><button type="submit" class="btn">新增</button></form></div></div>
 <div id="modal-recur-mission" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>每月任務</h2><div id="recur-list"></div><form onsubmit="addRecurMission(event)"><input type="text" id="recur-name" required placeholder="任務名"><div class="row-group"><input type="number" id="recur-target" required placeholder="目標"><select id="recur-card" required></select></div><select id="recur-reset-day"><option value="1">1號重置</option><option value="12">12號重置</option></select><button type="submit" class="btn-small">+ 加入</button></form></div></div>
 <div id="modal-welcome" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>迎新監察</h2><div id="welcome-list"></div><form onsubmit="addWelcome(event)"><input type="text" id="welcome-name" required placeholder="迎新名"><div class="row-group"><select id="welcome-card" required></select><input type="number" id="welcome-target" required placeholder="目標"></div><input type="date" id="welcome-deadline" required><input type="date" id="welcome-start" required><button type="submit" class="btn-small">+ 加入</button></form></div></div>
@@ -269,22 +256,21 @@
 <div id="modal-data" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>備份</h2><button class="btn" onclick="exportData('json')">下載 JSON</button><button class="btn" onclick="exportData('csv')">下載 CSV</button><input type="file" id="file-input" onchange="importData(this)" style="display:none;"><button class="btn" onclick="triggerImport()">還原 JSON</button><button class="btn-small" onclick="cleanDuplicateCards()">清理重複卡</button><button class="btn-small" onclick="resetData()" style="color:var(--danger)">重置資料</button></div></div>
 <div id="modal-settings" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>設定</h2><select id="setting-start-day" onchange="saveSettings()"></select><hr><input type="password" id="tg-token" placeholder="TG Token" onchange="saveTGSettings()"><input type="text" id="tg-chatid" placeholder="TG Chat ID" onchange="saveTGSettings()"><a href="#" onclick="testTG()">測試發送</a><br><label><input type="checkbox" id="setting-tg-auto" onchange="saveSettings()" style="width:auto;"> 自動發送</label><br><button class="btn-text" onclick="openModal('log')">更新日誌</button></div></div>
 <div id="modal-mission" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>限時任務</h2><form onsubmit="addMission(event)"><input type="text" id="mission-name" required placeholder="任務名"><input type="number" id="mission-target" required placeholder="目標"><div class="row-group"><input type="date" id="mission-start"><input type="date" id="mission-end"></div><div id="mission-cards" class="checkbox-group"></div><button type="submit" class="btn">建立</button></form></div></div>
-<div id="modal-log" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>更新日誌</h2><p>v1.53 重構修復版</p></div></div>
+<div id="modal-log" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>更新日誌</h2><p>v1.54 終極修復版</p></div></div>
 
 <div id="toast"></div>
 
 <script>
-    const APP_VERSION = '1.53';
-    const DB_KEY = 'rebate_bro_data_v2';
-    
-    // Constants
-    const CATEGORIES = { expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他', '固定開支'], income: ['薪金', '賣野', '投資', '其他'], repayment: ['信用卡還款'] };
+    // Config
+    const DB_KEY='rebate_bro_data_v2', BACKUP_TIME_KEY='rebate_bro_backup_time';
     const CURRENCIES = ['HKD', 'CNY', 'USD', 'JPY', 'TWD', 'GBP', 'EUR', 'KRW', 'AUD', 'SGD'];
     const TRADE_SHOPS = ['雪球', '萬通', '日韓', '誠信', 'bobo', 'YY', 'G79', 'F9', 'DIY', '新宇宙', '溫記', '鵬程'];
     const IPHONE_PRICES = { 'Pro': { '256GB': 9399, '512GB': 11099, '1TB': 12799 }, 'Pro Max': { '256GB': 10199, '512GB': 11899, '1TB': 13599, '2TB': 16999 } };
-    const BANK_INFO = [ { name: 'HSBC', promoUrl: '', rewardUrl: '', csPhone: '2233 3000', csTrick: '1>0' } ]; // Simplified for space
-    const PRESET_CARDS = [ { name: '現金', type: 'cashback', rate: 0 }, { name: 'WeWa', type: 'cashback', rate: 10 } ]; // Simplified
+    const CATEGORIES = { expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他', '固定開支'], income: ['薪金', '賣野', '投資', '其他'], repayment: ['信用卡還款'] };
+    const PRESET_CARDS = [ { name: '現金', type: 'cashback', rate: 0 }, { name: 'WeWa', type: 'cashback', rate: 10 } ];
+    const BANK_INFO = [ { name: 'HSBC', promoUrl: '', rewardUrl: '', csPhone: '2233 3000', csTrick: '1>0' } ];
 
+    // State
     let state = { transactions: [], cards: [], missions: [], recurringMissions: [], subscriptions: [], trades: [], welcomeOffers: [], settings: { startDay: 1 } };
     let pieChart = null, barChart = null, transferringTxId = null, analysisMode = 'month';
 
@@ -296,7 +282,7 @@
             if(!state.cards) state.cards = [];
             if(!state.settings) state.settings = { startDay: 1 };
             
-            // Populate Dropdowns
+            // Dropdowns
             const dS = document.getElementById('setting-start-day');
             if(dS) { dS.innerHTML=''; for(let i=1;i<=31;i++) { let o=document.createElement('option'); o.value=i; o.text=i+'號'; dS.add(o); } dS.value=state.settings.startDay; }
             
@@ -333,6 +319,7 @@
     
     function renderCards() {
         const l = document.getElementById('card-list'); l.innerHTML = '';
+        if(state.cards.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡</div>';
         state.cards.forEach(c => {
             l.innerHTML += `<div class="credit-card"><div><div class="card-name">${c.name}</div><div class="card-info">${c.rate || c.percent || 0}%</div></div><button class="btn-text" onclick="deleteCard(${c.id})">X</button></div>`;
         });
@@ -341,6 +328,7 @@
     function renderTransactions() {
         const l = document.getElementById('transaction-list'); l.innerHTML = '';
         const sorted = [...state.transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
+        if(sorted.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">暫無紀錄</div>';
         sorted.forEach(tx => {
             const card = state.cards.find(c => c.id == tx.cardId);
             const cName = card ? card.name : '';
@@ -352,6 +340,7 @@
     
     function renderTrading() {
         const l = document.getElementById('trade-list'); l.innerHTML = '';
+        if(state.trades.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">暫無交易</div>';
         state.trades.forEach(t => {
             const p = t.profit >= 0 ? 'profit-pos' : 'profit-neg';
             l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title"><span class="shop-tag">${t.shop}</span> ${t.model} ${t.cap}</div><div class="item-sub">${t.date.slice(0,10)} • 收:$${t.price}</div></div><div><div class="item-amount">x${t.qty} <span class="${p}">$${t.profit}</span></div><button class="btn-text" onclick="deleteTrade(${t.id})">X</button></div></div>`;
@@ -361,7 +350,8 @@
     function calculateStats() {
         let spent=0, inc=0, repay=0, cash=0;
         const {start, end} = getFinancialMonthRange();
-        document.getElementById('billing-cycle-text').innerText = `(${start.getMonth()+1}/${start.getDate()} - ${end.getMonth()+1}/${end.getDate()})`;
+        const cycleText = document.getElementById('billing-cycle-text');
+        if(cycleText) cycleText.innerText = `(${start.getMonth()+1}/${start.getDate()} - ${end.getMonth()+1}/${end.getDate()})`;
         
         state.transactions.forEach(tx => {
             const d = new Date(tx.date);
@@ -380,10 +370,54 @@
         document.getElementById('total-cashback').innerText = '$'+cash.toFixed(1);
     }
     
+    // Charts (Full Logic)
     function renderCharts() {
         if(!document.getElementById('chart-cards')) return;
-        // Chart logic simplified for stability
-        // ... (Chart implementation would go here, keeping it minimal to avoid syntax errors)
+        const style = getComputedStyle(document.body);
+        const textColor = style.getPropertyValue('--chart-text').trim();
+        const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7', '#a29bfe'];
+        
+        let txs = [], labelX = [], dataSets = [];
+
+        if (analysisMode === 'month') {
+             const m = document.getElementById('analysis-month').value;
+             txs = state.transactions.filter(tx => tx.date.startsWith(m) && (tx.type === 'expense' || !tx.type));
+             const daysInMonth = new Date(parseInt(m.slice(0,4)), parseInt(m.slice(5,7)), 0).getDate();
+             labelX = Array.from({length: daysInMonth}, (_, i) => (i + 1).toString());
+             const daily = new Array(daysInMonth).fill(0);
+             txs.forEach(tx => { daily[parseInt(tx.date.slice(8, 10)) - 1] += tx.amount; });
+             dataSets.push({ label: '支出', data: daily, backgroundColor: '#ff4d4d', borderRadius: 3 });
+        } else if (analysisMode === 'range') {
+             const s = new Date(document.getElementById('analysis-start').value);
+             const e = new Date(document.getElementById('analysis-end').value); e.setHours(23,59,59);
+             txs = state.transactions.filter(tx => { const d = new Date(tx.date); return (tx.type === 'expense' || !tx.type) && d >= s && d <= e; });
+             const map = {}; txs.forEach(tx => { const dStr = tx.date.slice(5,10); map[dStr] = (map[dStr] || 0) + tx.amount; });
+             labelX = Object.keys(map).sort(); dataSets.push({ label: '支出', data: labelX.map(d => map[d]), backgroundColor: '#ff4d4d' });
+        } else if (analysisMode === 'compare') {
+             const m1 = document.getElementById('analysis-m1').value;
+             const m2 = document.getElementById('analysis-m2').value;
+             if(pieChart) { pieChart.destroy(); pieChart=null; }
+             const tx1 = state.transactions.filter(tx => tx.date.startsWith(m1) && tx.type === 'expense');
+             const tx2 = state.transactions.filter(tx => tx.date.startsWith(m2) && tx.type === 'expense');
+             const cats = CATEGORIES.expense;
+             const d1 = cats.map(c => tx1.filter(t => t.category === c).reduce((sum, t) => sum + t.amount, 0));
+             const d2 = cats.map(c => tx2.filter(t => t.category === c).reduce((sum, t) => sum + t.amount, 0));
+             labelX = cats; dataSets = [ { label: m1, data: d1, backgroundColor: '#4facfe' }, { label: m2, data: d2, backgroundColor: '#ff4d4d' } ];
+             if(barChart) barChart.destroy();
+             barChart = new Chart(document.getElementById('chart-daily').getContext('2d'), { type: 'bar', data: { labels: labelX, datasets: dataSets }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: '#333' } } } } });
+             return;
+        }
+
+        const cardTotals = {}; state.cards.forEach(c => cardTotals[c.name] = 0); 
+        txs.forEach(tx => { const card = state.cards.find(c => c.id == tx.cardId); if(card) cardTotals[card.name] += tx.amount; });
+        const pieD = Object.keys(cardTotals).filter(k => cardTotals[k] > 0).map(k => cardTotals[k]);
+        const pieL = Object.keys(cardTotals).filter(k => cardTotals[k] > 0);
+
+        if(pieChart) pieChart.destroy();
+        pieChart = new Chart(document.getElementById('chart-cards').getContext('2d'), { type: 'doughnut', data: { labels: pieL, datasets: [{ data: pieD, backgroundColor: colors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor } } } } });
+
+        if(barChart) barChart.destroy();
+        barChart = new Chart(document.getElementById('chart-daily').getContext('2d'), { type: 'bar', data: { labels: labelX, datasets: dataSets }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: '#333' } } }, plugins: { legend: { display: false } } } });
     }
 
     // Helpers
@@ -391,16 +425,10 @@
         const s = state.settings.startDay || 1;
         const now = new Date();
         let start, end;
-        if(now.getDate() >= s) {
-            start = new Date(now.getFullYear(), now.getMonth(), s);
-            end = new Date(now.getFullYear(), now.getMonth()+1, s-1);
-        } else {
-            start = new Date(now.getFullYear(), now.getMonth()-1, s);
-            end = new Date(now.getFullYear(), now.getMonth(), s-1);
-        }
+        if(now.getDate() >= s) { start = new Date(now.getFullYear(), now.getMonth(), s); end = new Date(now.getFullYear(), now.getMonth()+1, s-1); } 
+        else { start = new Date(now.getFullYear(), now.getMonth()-1, s); end = new Date(now.getFullYear(), now.getMonth(), s-1); }
         return {start, end};
     }
-    
     function setDefaultTime() { document.getElementById('tx-date').value = new Date().toISOString().slice(0,16); }
     
     // Actions
@@ -419,6 +447,8 @@
         if(type==='transaction') {
             document.getElementById('tx-form').reset();
             document.getElementById('tx-id').value='';
+            document.getElementById('btn-submit').innerText='記賬';
+            document.getElementById('btn-transfer').style.display='none';
             setTxType('expense');
             setDefaultTime();
         }
@@ -452,11 +482,17 @@
     function updateFormOptions() {
         const s = document.getElementById('tx-card'); s.innerHTML='';
         const ts = document.getElementById('trade-card'); if(ts) ts.innerHTML='<option value="">不使用</option>';
+        const ws = document.getElementById('welcome-card'); if(ws) ws.innerHTML='';
+        const rs = document.getElementById('recur-card'); if(rs) rs.innerHTML='';
+
         state.cards.forEach(c => {
             let o = document.createElement('option'); o.value=c.id; o.text=c.name;
             s.add(o);
             if(ts) { let o2=document.createElement('option'); o2.value=c.id; o2.text=c.name; ts.add(o2); }
+            if(ws) { let o3=document.createElement('option'); o3.value=c.id; o3.text=c.name; ws.add(o3); }
+            if(rs) { let o4=document.createElement('option'); o4.value=c.id; o4.text=c.name; rs.add(o4); }
         });
+        updateCardHint();
     }
 
     function handleTransactionSubmit(e) {
@@ -477,6 +513,7 @@
             if(idx!==-1) state.transactions[idx] = tx;
         } else {
             state.transactions.unshift(tx);
+            if(state.settings.tgAutoSend) sendTelegramTx(tx);
         }
         saveData(); render(); closeModals();
     }
@@ -492,7 +529,7 @@
         document.getElementById('tx-date').value=tx.date;
         document.getElementById('tx-card').value=tx.cardId;
         document.getElementById('tx-modal-title').innerText="編輯";
-        document.getElementById('btn-transfer').style.display='block';
+        const btn = document.getElementById('btn-transfer'); if(btn) btn.style.display='block';
     }
     
     function deleteTransaction(id) { if(confirm('Del?')) { state.transactions=state.transactions.filter(t=>t.id!==id); saveData(); render(); } }
@@ -515,6 +552,7 @@
         const cost = parseFloat(document.getElementById('trade-cost').value);
         const price = parseFloat(document.getElementById('trade-price').value);
         const qty = parseInt(document.getElementById('trade-qty').value);
+        const cid = document.getElementById('trade-card').value;
         state.trades.unshift({
             id: Date.now(),
             shop: document.getElementById('trade-shop').value,
@@ -522,8 +560,10 @@
             cap: document.getElementById('trade-cap').value,
             color: document.getElementById('trade-color').value,
             cost, price, qty, profit: (price-cost)*qty,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            cardId: cid
         });
+        if(transferringTxId) { state.transactions=state.transactions.filter(t=>t.id!==transferringTxId); transferringTxId=null; }
         saveData(); render(); closeModals();
     }
     
@@ -532,28 +572,30 @@
         const amt = document.getElementById('tx-amount').value;
         const type = document.getElementById('tx-type').value;
         if(!id) return;
-        
         transferringTxId = parseFloat(id);
-        closeModals();
-        openModal('trade');
-        
+        closeModals(); openModal('trade');
         if(type==='expense') { document.getElementById('trade-cost').value=amt; }
         else { document.getElementById('trade-price').value=amt; }
     }
     
+    function addWelcome(e) { e.preventDefault(); state.welcomeOffers.push({id:Date.now(), name:document.getElementById('welcome-name').value, cardId:document.getElementById('welcome-card').value, target:parseFloat(document.getElementById('welcome-target').value), deadline:document.getElementById('welcome-deadline').value, start:document.getElementById('welcome-start').value}); saveData(); renderWelcomeList(); e.target.reset(); }
+    function deleteWelcome(id) { if(confirm('Del?')) { state.welcomeOffers=state.welcomeOffers.filter(w=>w.id!==id); saveData(); renderWelcomeList(); } }
+    
+    function addRecurMission(e) { e.preventDefault(); state.recurringMissions.push({id:Date.now(), name:document.getElementById('recur-name').value, target:parseFloat(document.getElementById('recur-target').value), cardId:document.getElementById('recur-card').value, resetDay:parseInt(document.getElementById('recur-reset-day').value)}); saveData(); renderRecurList(); e.target.reset(); }
+    function deleteRecurMission(id) { if(confirm('Del?')) { state.recurringMissions=state.recurringMissions.filter(m=>m.id!==id); saveData(); renderRecurList(); } }
+
+    function addSubscription(e) { e.preventDefault(); state.subscriptions.push({id:Date.now(), name:document.getElementById('sub-name').value, amount:parseFloat(document.getElementById('sub-amount').value), cardId:document.getElementById('sub-card').value}); saveData(); renderSubsList(); e.target.reset(); }
+    function deleteSub(id) { if(confirm('Del?')) { state.subscriptions=state.subscriptions.filter(s=>s.id!==id); saveData(); renderSubsList(); } }
+
     // UI Helpers
     function selectTradeOption(type, val, el) {
         document.getElementById('trade-'+type).value=val;
         if(el.parentElement) Array.from(el.parentElement.children).forEach(c=>c.classList.remove('selected'));
         el.classList.add('selected');
-        
-        // Auto price logic
         if(type==='model' || type==='cap') {
             const m = document.getElementById('trade-model').value;
             const c = document.getElementById('trade-cap').value;
-            if(m && c && IPHONE_PRICES[m] && IPHONE_PRICES[m][c]) {
-                document.getElementById('trade-cost').value = IPHONE_PRICES[m][c];
-            }
+            if(m && c && IPHONE_PRICES[m] && IPHONE_PRICES[m][c]) document.getElementById('trade-cost').value = IPHONE_PRICES[m][c];
         }
     }
     function adjustTradeQty(d) {
@@ -597,7 +639,62 @@
         document.getElementById('tx-amount').value = parseFloat(document.getElementById('split-result').innerText.replace('$',''));
         closeModals();
     }
-    function setAnalysisMode() { /* simplified placeholder to prevent error */ }
+    function setAnalysisMode(mode) {
+        analysisMode = mode;
+        const container = document.getElementById('analysis-inputs');
+        if(!container) return;
+        container.innerHTML = '';
+        if(mode==='month') {
+            container.innerHTML = `<input type="month" id="analysis-month" value="${new Date().toISOString().slice(0,7)}" onchange="renderCharts()">`;
+        } else if(mode==='range') {
+            container.innerHTML = `<input type="date" id="analysis-start" onchange="renderCharts()"> - <input type="date" id="analysis-end" onchange="renderCharts()">`;
+        } else {
+             container.innerHTML = `<input type="month" id="analysis-m1" onchange="renderCharts()"> vs <input type="month" id="analysis-m2" onchange="renderCharts()">`;
+        }
+        setTimeout(renderCharts, 100);
+    }
+
+    // TG
+    function saveSettings() {
+        state.settings.startDay = parseInt(document.getElementById('setting-start-day').value);
+        state.settings.tgAutoSend = document.getElementById('setting-tg-auto').checked;
+        saveData(); render(); closeModals(); showToast('Saved');
+    }
+    function saveTGSettings() {
+        state.settings.tgToken = document.getElementById('tg-token').value;
+        state.settings.tgChatId = document.getElementById('tg-chatid').value;
+        saveData();
+    }
+    function testTG() { sendTGMessage(state.settings.tgToken, state.settings.tgChatId, 'Test'); }
+    async function sendTGMessage(t, cid, msg) {
+        try { await fetch(`https://api.telegram.org/bot${t}/sendMessage`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({chat_id:cid, text:msg})}); showToast('Sent'); } catch(e){ alert('Error'); }
+    }
+    function sendTelegramTx(tx) {
+        if(!state.settings.tgAutoSend) return;
+        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, `New Tx: $${tx.amount} (${tx.desc})`);
+    }
+    function sendTelegramReport() {
+        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, 'Monthly Report...');
+    }
+
+    // Export/Import (Restored)
+    function exportData(type) {
+        const str = type==='json' ? JSON.stringify(state) : 'Date,Desc,Amount\n'+state.transactions.map(t=>`${t.date},${t.desc},${t.amount}`).join('\n');
+        const blob = new Blob([str], {type: type==='json'?'application/json':'text/csv'});
+        const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backup.'+type; a.click();
+    }
+    function triggerImport() { document.getElementById('file-input').click(); }
+    function importData(input) {
+        const reader = new FileReader();
+        reader.onload = e => { state = JSON.parse(e.target.result); saveData(); location.reload(); };
+        reader.readAsText(input.files[0]);
+    }
+    function cleanDuplicateCards() {
+        // Simple dedupe logic
+        const names = new Set();
+        state.cards = state.cards.filter(c => !names.has(c.name) && names.add(c.name));
+        saveData(); render();
+    }
 
     // Init
     init();
