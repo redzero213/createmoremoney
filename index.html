@@ -317,14 +317,43 @@
         if(document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
     }
     
-    function renderCards() {
-        const l = document.getElementById('card-list'); l.innerHTML = '';
-        if(state.cards.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡</div>';
-        state.cards.forEach(c => {
-            l.innerHTML += `<div class="credit-card"><div><div class="card-name">${c.name}</div><div class="card-info">${c.rate || c.percent || 0}%</div></div><button class="btn-text" onclick="deleteCard(${c.id})">X</button></div>`;
+function renderCards() {
+        const list = document.getElementById('card-list');
+        list.innerHTML = '';
+        if (state.cards.length === 0) {
+            list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡</div>';
+            return;
+        }
+        state.cards.forEach(card => {
+            const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
+            // 確保回贈率顯示正確 (兼容舊版 percent 及新版 rate)
+            const rate = card.rate !== undefined ? card.rate : (card.percent || 0);
+            
+            const el = document.createElement('div');
+            el.className = 'credit-card';
+            el.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div>
+                        <div class="card-name">${card.name}</div>
+                        <div class="card-info" style="color:var(--primary); font-weight:bold;">${rate}% 回贈</div>
+                        <div class="card-info" style="font-size:0.75rem; opacity:0.8;">${card.note || ''}</div>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-text" onclick="quickRepay(${card.id})" title="快速還款" style="color:#fff; border:1px solid rgba(255,255,255,0.3); padding:2px 8px; border-radius:4px;">💵 還款</button>
+                        <button class="btn-text" onclick="deleteCard(${card.id})" style="color:rgba(255,255,255,0.7); font-size:1.2rem;">&times;</button>
+                    </div>
+                </div>
+                <div class="progress-bar" style="height:6px; background:rgba(255,255,255,0.2); border-radius:3px; margin-top:10px; overflow:hidden;">
+                    <div id="prog-${card.id}" class="progress-fill" style="height:100%; background:var(--primary); width:0%; transition:width 0.3s;"></div>
+                </div>
+                <div class="card-info" style="margin-top:8px; display:flex; justify-content:space-between;">
+                    <span>本月簽: <span id="spent-${card.id}" style="color:#fff; font-weight:bold;">$0</span>${capText}</span>
+                    <span style="font-size:0.8rem; color:var(--repay);">已還: <span id="paid-${card.id}">$0</span></span>
+                </div>
+            `;
+            list.appendChild(el);
         });
     }
-
     function renderTransactions() {
         const l = document.getElementById('transaction-list'); l.innerHTML = '';
         const sorted = [...state.transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
