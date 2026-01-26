@@ -16,8 +16,8 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; transition: background-color 0.3s, color 0.3s; }
         header { background: var(--surface); padding: 12px 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
-        h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
-        .logo-icon { font-size: 1.4rem; }
+        h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .app-logo { width: 28px; height: 28px; object-fit: contain; }
         .menu-btn { font-size: 0.9rem; background: var(--surface-hover); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 5px; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
@@ -49,9 +49,9 @@
         .type-option { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
         .type-option.active.expense { background: rgba(255, 77, 77, 0.15); color: var(--danger); }
         .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); }
-        .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); }
+        .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); border: 1px solid var(--repay); }
         .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
-        .grid-btn { padding: 10px 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.85rem; text-align: center; }
+        .grid-btn { padding: 10px 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.85rem; text-align: center; display:flex; align-items:center; justify-content:center; flex-direction:column; min-height:45px;}
         .grid-btn.selected { background: var(--trade); color: #000; border-color: var(--trade); font-weight: bold; }
         .analysis-controls { display: flex; gap: 5px; background: var(--bg); padding: 5px; border-radius: 8px; margin-bottom: 15px; overflow-x: auto; }
         .analysis-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 6px; font-size: 0.85rem; white-space: nowrap; }
@@ -82,12 +82,37 @@
         .recur-item, .welcome-item { background: var(--surface-hover); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
         .recur-item.completed { border-color: var(--primary); background: rgba(0, 210, 106, 0.05); }
         .footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 30px; padding-bottom: 20px; }
+        .toggle-switch { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; margin-bottom: 10px; }
+        .toggle-switch input { width: auto; margin: 0; }
+        
+        /* CSS Phone Icons */
+        .phone-icon {
+            width: 28px; height: 50px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            margin-bottom: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+        .phone-icon::before { /* Camera */
+            content: ''; position: absolute;
+            top: 5px; left: 4px;
+            width: 14px; height: 14px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 4px;
+        }
+        .phone-icon.silver { background: linear-gradient(135deg, #e3e4e5 0%, #999 100%); }
+        .phone-icon.orange { background: linear-gradient(135deg, #e0cda7 0%, #a68c6d 100%); }
+        .phone-icon.blue { background: linear-gradient(135deg, #8faecf 0%, #324a5e 100%); }
     </style>
 </head>
 <body>
 
 <header>
-    <h1><span class="logo-icon">💰</span> 回贈哥</h1>
+    <h1>
+        <img src="https://cdn-icons-png.flaticon.com/512/6963/6963703.png" alt="Logo" class="app-logo"> 
+        回贈哥
+    </h1>
     <div class="header-actions">
         <button class="menu-btn" onclick="openMenuTarget('menu')">☰ 選單</button>
     </div>
@@ -97,7 +122,7 @@
     <div class="panel">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <div style="font-size:0.9rem; color:var(--text-muted);">本月概覽 <span id="billing-cycle-text" style="font-size:0.75rem;"></span></div>
-            <button class="btn-text" onclick="openMenuTarget('settings')" style="font-size:0.8rem;">⚙️ 設定</button>
+            <button class="btn-text" onclick="openMenuTarget('subs')" style="font-size:0.8rem;">🔄 固定開支</button>
         </div>
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-label">總支出</div><div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div></div>
@@ -141,7 +166,7 @@
     <div id="tab-trading" class="tab-content">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h2 style="margin:0; font-size:1.1rem;">📱 炒賣紀錄</h2>
+                <h2 style="margin:0; font-size:1.1rem;">📱 iPhone 17 炒賣紀錄</h2>
                 <button class="btn-small" onclick="openModal('trade')" style="background:var(--trade); border-color:var(--trade); color:#000;">+ 新增交易</button>
             </div>
             <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom:15px;">
@@ -158,6 +183,12 @@
                 <h2 style="margin:0; font-size:1.1rem;">統計分析</h2>
                  <button class="btn-small" onclick="sendTelegramReport()" style="background:var(--telegram); color:white;">✈️ 推送</button>
             </div>
+             
+             <label class="toggle-switch">
+                 <input type="checkbox" id="analysis-include-trade" onchange="renderCharts()">
+                 <span>包含炒賣數據 (Cost)</span>
+             </label>
+
              <div class="analysis-controls">
                 <button class="analysis-btn active" onclick="setAnalysisMode('month')" id="btn-mode-month">📅 單月</button>
                 <button class="analysis-btn" onclick="setAnalysisMode('range')" id="btn-mode-range">📆 自訂範圍</button>
@@ -172,7 +203,7 @@
     </div>
     
     <div class="footer">
-        Copyright © Redezero | v1.54 <br>
+        Copyright © Redezero | v1.58 <br>
         <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem;">⛑️ 下載備份</button>
     </div>
 </div>
@@ -229,15 +260,22 @@
 <div id="modal-trade" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">&times;</button>
-        <h2>📱 iPhone 交易</h2>
+        <h2>📱 iPhone 17 交易</h2>
         <form id="trade-form" onsubmit="addTrade(event)">
             <div class="form-group"><label>店舖</label><div class="btn-grid" id="trade-shop-grid"></div><input type="hidden" id="trade-shop" required></div>
             <div class="form-group"><label>型號</label><div class="btn-grid" style="grid-template-columns: 1fr 1fr;"><div class="grid-btn" onclick="selectTradeOption('model', 'Pro', this)">Pro</div><div class="grid-btn" onclick="selectTradeOption('model', 'Pro Max', this)">Pro Max</div></div><input type="hidden" id="trade-model" required></div>
-            <div class="form-group"><label>容量</label><div class="btn-grid"><div class="grid-btn" onclick="selectTradeOption('cap', '256GB', this)">256</div><div class="grid-btn" onclick="selectTradeOption('cap', '512GB', this)">512</div><div class="grid-btn" onclick="selectTradeOption('cap', '1TB', this)">1TB</div><div class="grid-btn" onclick="selectTradeOption('cap', '2TB', this)">2TB</div><div class="grid-btn" onclick="selectTradeOption('cap', '其他', this)">其他</div></div><input type="hidden" id="trade-cap" required></div>
-            <div class="form-group"><label>顏色</label><div class="btn-grid"><div class="grid-btn" onclick="selectTradeOption('color', '銀', this)">銀</div><div class="grid-btn" onclick="selectTradeOption('color', '橙', this)">橙</div><div class="grid-btn" onclick="selectTradeOption('color', '藍', this)">藍</div></div><input type="hidden" id="trade-color" required></div>
-            <div class="row-group"><div class="form-group"><label>原價</label><input type="number" id="trade-cost" required></div><div class="form-group"><label>放售</label><input type="number" id="trade-price" required></div></div>
+            <div class="form-group"><label>容量</label><div class="btn-grid" style="grid-template-columns: repeat(3, 1fr);"><div class="grid-btn" onclick="selectTradeOption('cap', '256GB', this)">256GB</div><div class="grid-btn" onclick="selectTradeOption('cap', '512GB', this)">512GB</div><div class="grid-btn" onclick="selectTradeOption('cap', '1TB', this)">1TB</div><div class="grid-btn" onclick="selectTradeOption('cap', '2TB', this)">2TB</div><div class="grid-btn" onclick="selectTradeOption('cap', '其他', this)">其他</div></div><input type="hidden" id="trade-cap" required></div>
+            <div class="form-group"><label>顏色</label>
+                <div class="btn-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="grid-btn" onclick="selectTradeOption('color', '銀', this)"><div class="phone-icon silver"></div>銀</div>
+                    <div class="grid-btn" onclick="selectTradeOption('color', '橙', this)"><div class="phone-icon orange"></div>橙</div>
+                    <div class="grid-btn" onclick="selectTradeOption('color', '藍', this)"><div class="phone-icon blue"></div>藍</div>
+                </div>
+                <input type="hidden" id="trade-color" required>
+            </div>
+            <div class="row-group"><div class="form-group"><label>原價 (可修改)</label><input type="number" id="trade-cost" required></div><div class="form-group"><label>放售</label><input type="number" id="trade-price" required></div></div>
             <div class="form-group"><label>數量</label><div style="display:flex;gap:10px;"><button type="button" class="btn-small" onclick="adjustTradeQty(-1)">-</button><input type="number" id="trade-qty" value="1" style="text-align:center;"><button type="button" class="btn-small" onclick="adjustTradeQty(1)">+</button></div></div>
-            <div class="form-group"><label>付款信用卡</label><select id="trade-card"><option value="">不使用</option></select></div>
+            <div class="form-group"><label>付款信用卡</label><select id="trade-card"><option value="">不使用 (只計利潤)</option></select><div style="font-size:0.75rem; color:var(--text-muted);">*自動計入該卡簽賬額</div></div>
             <button type="submit" class="btn" style="background:var(--trade); color:#000;">記錄交易</button>
         </form>
     </div>
@@ -256,7 +294,7 @@
 <div id="modal-data" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>備份</h2><button class="btn" onclick="exportData('json')">下載 JSON</button><button class="btn" onclick="exportData('csv')">下載 CSV</button><input type="file" id="file-input" onchange="importData(this)" style="display:none;"><button class="btn" onclick="triggerImport()">還原 JSON</button><button class="btn-small" onclick="cleanDuplicateCards()">清理重複卡</button><button class="btn-small" onclick="resetData()" style="color:var(--danger)">重置資料</button></div></div>
 <div id="modal-settings" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>設定</h2><select id="setting-start-day" onchange="saveSettings()"></select><hr><input type="password" id="tg-token" placeholder="TG Token" onchange="saveTGSettings()"><input type="text" id="tg-chatid" placeholder="TG Chat ID" onchange="saveTGSettings()"><a href="#" onclick="testTG()">測試發送</a><br><label><input type="checkbox" id="setting-tg-auto" onchange="saveSettings()" style="width:auto;"> 自動發送</label><br><button class="btn-text" onclick="openModal('log')">更新日誌</button></div></div>
 <div id="modal-mission" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>限時任務</h2><form onsubmit="addMission(event)"><input type="text" id="mission-name" required placeholder="任務名"><input type="number" id="mission-target" required placeholder="目標"><div class="row-group"><input type="date" id="mission-start"><input type="date" id="mission-end"></div><div id="mission-cards" class="checkbox-group"></div><button type="submit" class="btn">建立</button></form></div></div>
-<div id="modal-log" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>更新日誌</h2><p>v1.54 終極修復版</p></div></div>
+<div id="modal-log" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>更新日誌</h2><p>v1.58 機身圖示版</p></div></div>
 
 <div id="toast"></div>
 
@@ -264,7 +302,7 @@
     // Config
     const DB_KEY='rebate_bro_data_v2', BACKUP_TIME_KEY='rebate_bro_backup_time';
     const CURRENCIES = ['HKD', 'CNY', 'USD', 'JPY', 'TWD', 'GBP', 'EUR', 'KRW', 'AUD', 'SGD'];
-    const TRADE_SHOPS = ['雪球', '萬通', '日韓', '誠信', 'bobo', 'YY', 'G79', 'F9', 'DIY', '新宇宙', '溫記', '鵬程'];
+    const TRADE_SHOPS = ['雪球', '萬通', '日韓', '誠信', 'bobo', 'YY', 'G79', 'F9', 'DIY', '新宇宙', '溫記', '鵬程', 'iTrade', '星耀', 'Carousell'];
     const IPHONE_PRICES = { 'Pro': { '256GB': 9399, '512GB': 11099, '1TB': 12799 }, 'Pro Max': { '256GB': 10199, '512GB': 11899, '1TB': 13599, '2TB': 16999 } };
     const CATEGORIES = { expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他', '固定開支'], income: ['薪金', '賣野', '投資', '其他'], repayment: ['信用卡還款'] };
     const PRESET_CARDS = [ { name: '現金', type: 'cashback', rate: 0 }, { name: 'WeWa', type: 'cashback', rate: 10 } ];
@@ -282,7 +320,6 @@
             if(!state.cards) state.cards = [];
             if(!state.settings) state.settings = { startDay: 1 };
             
-            // Dropdowns
             const dS = document.getElementById('setting-start-day');
             if(dS) { dS.innerHTML=''; for(let i=1;i<=31;i++) { let o=document.createElement('option'); o.value=i; o.text=i+'號'; dS.add(o); } dS.value=state.settings.startDay; }
             
@@ -292,10 +329,10 @@
             const shopG = document.getElementById('trade-shop-grid');
             if(shopG) { shopG.innerHTML=''; TRADE_SHOPS.forEach(sh=>{ let d=document.createElement('div'); d.className='grid-btn'; d.innerText=sh; d.onclick=()=>selectTradeOption('shop', sh, d); shopG.appendChild(d); }); }
 
-            // TG
             if(state.settings.tgToken) document.getElementById('tg-token').value = state.settings.tgToken;
             if(state.settings.tgChatId) document.getElementById('tg-chatid').value = state.settings.tgChatId;
             if(document.getElementById('setting-tg-auto')) document.getElementById('setting-tg-auto').checked = state.settings.tgAutoSend;
+            if(document.getElementById('tx-tg-auto')) document.getElementById('tx-tg-auto').checked = state.settings.tgAutoSend;
 
             setDefaultTime();
             setAnalysisMode('month');
@@ -317,43 +354,27 @@
         if(document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
     }
     
-function renderCards() {
-        const list = document.getElementById('card-list');
-        list.innerHTML = '';
-        if (state.cards.length === 0) {
-            list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡</div>';
-            return;
-        }
-        state.cards.forEach(card => {
-            const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
-            // 確保回贈率顯示正確 (兼容舊版 percent 及新版 rate)
-            const rate = card.rate !== undefined ? card.rate : (card.percent || 0);
-            
-            const el = document.createElement('div');
-            el.className = 'credit-card';
-            el.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:start;">
-                    <div>
-                        <div class="card-name">${card.name}</div>
-                        <div class="card-info" style="color:var(--primary); font-weight:bold;">${rate}% 回贈</div>
-                        <div class="card-info" style="font-size:0.75rem; opacity:0.8;">${card.note || ''}</div>
+    function renderCards() {
+        const l = document.getElementById('card-list'); l.innerHTML = '';
+        if(state.cards.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡</div>';
+        state.cards.forEach(c => {
+            const r = c.rate !== undefined ? c.rate : (c.percent || 0);
+            const capText = c.cap > 0 ? ` / $${c.cap.toLocaleString()}` : '';
+            l.innerHTML += `
+                <div class="credit-card">
+                    <div style="display:flex; justify-content:space-between;">
+                        <div><div class="card-name">${c.name}</div><div class="card-info">${r}%</div></div>
+                        <div><button class="btn-text" onclick="quickRepay(${c.id})">還</button><button class="btn-text" onclick="deleteCard(${c.id})">X</button></div>
                     </div>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn-text" onclick="quickRepay(${card.id})" title="快速還款" style="color:#fff; border:1px solid rgba(255,255,255,0.3); padding:2px 8px; border-radius:4px;">💵 還款</button>
-                        <button class="btn-text" onclick="deleteCard(${card.id})" style="color:rgba(255,255,255,0.7); font-size:1.2rem;">&times;</button>
+                    <div class="progress-bar"><div id="prog-${c.id}" class="progress-fill"></div></div>
+                    <div class="card-info" style="margin-top:5px;display:flex;justify-content:space-between;">
+                         <span>簽: <span id="spent-${c.id}">0</span>${capText}</span>
+                         <span>還: <span id="paid-${c.id}">0</span></span>
                     </div>
-                </div>
-                <div class="progress-bar" style="height:6px; background:rgba(255,255,255,0.2); border-radius:3px; margin-top:10px; overflow:hidden;">
-                    <div id="prog-${card.id}" class="progress-fill" style="height:100%; background:var(--primary); width:0%; transition:width 0.3s;"></div>
-                </div>
-                <div class="card-info" style="margin-top:8px; display:flex; justify-content:space-between;">
-                    <span>本月簽: <span id="spent-${card.id}" style="color:#fff; font-weight:bold;">$0</span>${capText}</span>
-                    <span style="font-size:0.8rem; color:var(--repay);">已還: <span id="paid-${card.id}">$0</span></span>
-                </div>
-            `;
-            list.appendChild(el);
+                </div>`;
         });
     }
+
     function renderTransactions() {
         const l = document.getElementById('transaction-list'); l.innerHTML = '';
         const sorted = [...state.transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -363,7 +384,8 @@ function renderCards() {
             const cName = card ? card.name : '';
             const color = tx.type === 'income' ? 'var(--income)' : (tx.type === 'repayment' ? 'var(--repay)' : 'var(--text)');
             const sign = tx.type === 'income' ? '+' : (tx.type === 'repayment' ? '-' : '');
-            l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title">${tx.category} ${tx.desc}</div><div class="item-sub">${tx.date.slice(0,16).replace('T',' ')} • ${cName}</div></div><div style="text-align:right"><div class="item-amount" style="color:${color}">${sign}$${tx.amount}</div><button class="btn-text" onclick="editTransaction(${tx.id})">✎</button></div></div>`;
+            let xtra = ''; if(tx.currency && tx.currency!=='HKD') xtra=`<br><small>${tx.currency} ${tx.fxAmount}</small>`;
+            l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title">${tx.category} ${tx.desc}</div><div class="item-sub">${tx.date.slice(0,16).replace('T',' ')} • ${cName}</div></div><div style="text-align:right"><div class="item-amount" style="color:${color}">${sign}$${tx.amount}${xtra}</div><button class="btn-text" onclick="editTransaction(${tx.id})">✎</button></div></div>`;
         });
     }
     
@@ -372,31 +394,78 @@ function renderCards() {
         if(state.trades.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">暫無交易</div>';
         state.trades.forEach(t => {
             const p = t.profit >= 0 ? 'profit-pos' : 'profit-neg';
-            l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title"><span class="shop-tag">${t.shop}</span> ${t.model} ${t.cap}</div><div class="item-sub">${t.date.slice(0,10)} • 收:$${t.price}</div></div><div><div class="item-amount">x${t.qty} <span class="${p}">$${t.profit}</span></div><button class="btn-text" onclick="deleteTrade(${t.id})">X</button></div></div>`;
+            const card = state.cards.find(c => c.id == t.cardId);
+            const cName = card ? `<span class="cat-tag" style="font-size:0.6rem">💳 ${card.name}</span>` : '';
+            l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title"><span class="shop-tag">${t.shop}</span> ${t.model} ${t.cap}</div><div class="item-sub">${t.date.slice(0,10)} • 收:$${t.price} ${cName}</div></div><div><div class="item-amount">x${t.qty} <span class="${p}">$${t.profit}</span></div><button class="btn-text" onclick="deleteTrade(${t.id})">X</button></div></div>`;
         });
     }
 
     function calculateStats() {
-        let spent=0, inc=0, repay=0, cash=0;
+        let spent=0, inc=0, repay=0, cash=0, miles=0;
+        const cardSpent = {}, cardPaid = {};
+        state.cards.forEach(c=>{ cardSpent[c.id]=0; cardPaid[c.id]=0; });
+
         const {start, end} = getFinancialMonthRange();
-        const cycleText = document.getElementById('billing-cycle-text');
-        if(cycleText) cycleText.innerText = `(${start.getMonth()+1}/${start.getDate()} - ${end.getMonth()+1}/${end.getDate()})`;
+        const cycle = document.getElementById('billing-cycle-text');
+        if(cycle) cycle.innerText = `(${start.getMonth()+1}/${start.getDate()} - ${end.getMonth()+1}/${end.getDate()})`;
         
+        // 1. Transactions
         state.transactions.forEach(tx => {
             const d = new Date(tx.date);
             if(d>=start && d<=end) {
                 if(tx.type==='expense') {
                     spent += tx.amount;
                     const c = state.cards.find(x=>x.id==tx.cardId);
-                    if(c) cash += (tx.amount * (c.rate||0) / 100);
+                    if(c) {
+                        cardSpent[c.id] += tx.amount;
+                        const r = tx.isForeign ? (c.rateFx||0) : (c.rate||0);
+                        if(c.type==='miles' && r>0) miles += Math.floor(tx.amount/r);
+                        else cash += (tx.amount * r / 100);
+                    }
                 } else if(tx.type==='income') inc += tx.amount;
-                else if(tx.type==='repayment') repay += tx.amount;
+                else if(tx.type==='repayment') {
+                    repay += tx.amount;
+                    if(tx.cardId) cardPaid[tx.cardId] += tx.amount;
+                }
             }
         });
+
+        // 2. Trades (Integrated Logic)
+        state.trades.forEach(t => {
+            const d = new Date(t.date);
+            if(t.cardId && d>=start && d<=end) {
+                const totalCost = t.cost * t.qty;
+                // Add to card spending stats
+                cardSpent[t.cardId] += totalCost;
+                
+                // Calculate rewards
+                const c = state.cards.find(x=>x.id==t.cardId);
+                if(c) {
+                     const r = c.rate || 0; 
+                     if(c.type==='miles' && r>0) miles += Math.floor(totalCost/r);
+                     else cash += (totalCost * r / 100);
+                }
+            }
+        });
+
         document.getElementById('total-spent').innerText = '$'+spent.toLocaleString();
         document.getElementById('total-income').innerText = '$'+inc.toLocaleString();
         document.getElementById('total-repaid').innerText = '$'+repay.toLocaleString();
-        document.getElementById('total-cashback').innerText = '$'+cash.toFixed(1);
+        document.getElementById('total-cashback').innerText = '$'+cash.toFixed(1) + (miles>0 ? ` + ${miles} AM` : '');
+
+        // Update Cards
+        state.cards.forEach(c => {
+             const s = cardSpent[c.id] || 0;
+             const p = cardPaid[c.id] || 0;
+             const elS = document.getElementById('spent-'+c.id); if(elS) elS.innerText = '$'+s.toLocaleString();
+             const elP = document.getElementById('paid-'+c.id); if(elP) elP.innerText = '$'+p.toLocaleString();
+             const elBar = document.getElementById('prog-'+c.id); 
+             if(elBar) {
+                 const pct = c.cap > 0 ? Math.min((s/c.cap)*100, 100) : 0;
+                 elBar.style.width = pct+'%';
+                 elBar.style.backgroundColor = pct>=100 ? 'var(--danger)' : 'var(--primary)';
+             }
+        });
     }
     
     // Charts (Full Logic)
@@ -407,28 +476,43 @@ function renderCards() {
         const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7', '#a29bfe'];
         
         let txs = [], labelX = [], dataSets = [];
+        
+        // Filter logic for Include Trade
+        const includeTrade = document.getElementById('analysis-include-trade').checked;
+        let pool = [...state.transactions];
+        if(includeTrade) {
+            state.trades.forEach(t => {
+                pool.push({ date: t.date, amount: t.cost * t.qty, type: 'expense', cardId: t.cardId, category: '炒賣' });
+            });
+        }
 
         if (analysisMode === 'month') {
              const m = document.getElementById('analysis-month').value;
-             txs = state.transactions.filter(tx => tx.date.startsWith(m) && (tx.type === 'expense' || !tx.type));
-             const daysInMonth = new Date(parseInt(m.slice(0,4)), parseInt(m.slice(5,7)), 0).getDate();
-             labelX = Array.from({length: daysInMonth}, (_, i) => (i + 1).toString());
-             const daily = new Array(daysInMonth).fill(0);
+             if(!m) return;
+             txs = pool.filter(tx => tx.date.startsWith(m) && (tx.type === 'expense'));
+             const days = new Date(parseInt(m.slice(0,4)), parseInt(m.slice(5,7)), 0).getDate();
+             labelX = Array.from({length: days}, (_, i) => (i + 1).toString());
+             const daily = new Array(days).fill(0);
              txs.forEach(tx => { daily[parseInt(tx.date.slice(8, 10)) - 1] += tx.amount; });
              dataSets.push({ label: '支出', data: daily, backgroundColor: '#ff4d4d', borderRadius: 3 });
+
         } else if (analysisMode === 'range') {
-             const s = new Date(document.getElementById('analysis-start').value);
-             const e = new Date(document.getElementById('analysis-end').value); e.setHours(23,59,59);
-             txs = state.transactions.filter(tx => { const d = new Date(tx.date); return (tx.type === 'expense' || !tx.type) && d >= s && d <= e; });
+             const sVal = document.getElementById('analysis-start').value;
+             const eVal = document.getElementById('analysis-end').value;
+             if(!sVal || !eVal) return;
+             const s = new Date(sVal); const e = new Date(eVal); e.setHours(23,59,59);
+             txs = pool.filter(tx => { const d = new Date(tx.date); return (tx.type === 'expense') && d >= s && d <= e; });
              const map = {}; txs.forEach(tx => { const dStr = tx.date.slice(5,10); map[dStr] = (map[dStr] || 0) + tx.amount; });
              labelX = Object.keys(map).sort(); dataSets.push({ label: '支出', data: labelX.map(d => map[d]), backgroundColor: '#ff4d4d' });
+
         } else if (analysisMode === 'compare') {
              const m1 = document.getElementById('analysis-m1').value;
              const m2 = document.getElementById('analysis-m2').value;
+             if(!m1 || !m2) return;
              if(pieChart) { pieChart.destroy(); pieChart=null; }
-             const tx1 = state.transactions.filter(tx => tx.date.startsWith(m1) && tx.type === 'expense');
-             const tx2 = state.transactions.filter(tx => tx.date.startsWith(m2) && tx.type === 'expense');
-             const cats = CATEGORIES.expense;
+             const tx1 = pool.filter(tx => tx.date.startsWith(m1) && tx.type === 'expense');
+             const tx2 = pool.filter(tx => tx.date.startsWith(m2) && tx.type === 'expense');
+             const cats = CATEGORIES.expense.concat(['炒賣']);
              const d1 = cats.map(c => tx1.filter(t => t.category === c).reduce((sum, t) => sum + t.amount, 0));
              const d2 = cats.map(c => tx2.filter(t => t.category === c).reduce((sum, t) => sum + t.amount, 0));
              labelX = cats; dataSets = [ { label: m1, data: d1, backgroundColor: '#4facfe' }, { label: m2, data: d2, backgroundColor: '#ff4d4d' } ];
@@ -476,8 +560,6 @@ function renderCards() {
         if(type==='transaction') {
             document.getElementById('tx-form').reset();
             document.getElementById('tx-id').value='';
-            document.getElementById('btn-submit').innerText='記賬';
-            document.getElementById('btn-transfer').style.display='none';
             setTxType('expense');
             setDefaultTime();
         }
@@ -534,7 +616,9 @@ function renderCards() {
             category: document.getElementById('tx-category').value,
             cardId: document.getElementById('tx-card').value,
             desc: document.getElementById('tx-desc').value,
-            date: document.getElementById('tx-date').value
+            date: document.getElementById('tx-date').value,
+            currency: document.getElementById('tx-currency').value,
+            fxAmount: parseFloat(document.getElementById('tx-fx-amount').value)||0
         };
         
         if(idStr) {
@@ -556,9 +640,9 @@ function renderCards() {
         document.getElementById('tx-amount').value=tx.amount;
         document.getElementById('tx-desc').value=tx.desc;
         document.getElementById('tx-date').value=tx.date;
-        document.getElementById('tx-card').value=tx.cardId;
+        if(tx.cardId) document.getElementById('tx-card').value=tx.cardId;
         document.getElementById('tx-modal-title').innerText="編輯";
-        const btn = document.getElementById('btn-transfer'); if(btn) btn.style.display='block';
+        document.getElementById('btn-transfer').style.display='block';
     }
     
     function deleteTransaction(id) { if(confirm('Del?')) { state.transactions=state.transactions.filter(t=>t.id!==id); saveData(); render(); } }
@@ -571,6 +655,7 @@ function renderCards() {
             id: Date.now(),
             name: document.getElementById('card-name').value,
             rate: parseFloat(document.getElementById('card-rate').value)||0,
+            cap: parseFloat(document.getElementById('card-cap').value)||0,
             note: document.getElementById('card-note').value
         });
         saveData(); render(); closeModals();
@@ -607,6 +692,12 @@ function renderCards() {
         else { document.getElementById('trade-price').value=amt; }
     }
     
+    function quickRepay(cid) {
+        openModal('transaction'); setTxType('repayment');
+        document.getElementById('tx-card').value = cid;
+        document.getElementById('tx-amount').focus();
+    }
+
     function addWelcome(e) { e.preventDefault(); state.welcomeOffers.push({id:Date.now(), name:document.getElementById('welcome-name').value, cardId:document.getElementById('welcome-card').value, target:parseFloat(document.getElementById('welcome-target').value), deadline:document.getElementById('welcome-deadline').value, start:document.getElementById('welcome-start').value}); saveData(); renderWelcomeList(); e.target.reset(); }
     function deleteWelcome(id) { if(confirm('Del?')) { state.welcomeOffers=state.welcomeOffers.filter(w=>w.id!==id); saveData(); renderWelcomeList(); } }
     
@@ -670,6 +761,11 @@ function renderCards() {
     }
     function setAnalysisMode(mode) {
         analysisMode = mode;
+        const btns = document.querySelectorAll('.analysis-btn');
+        if(btns) btns.forEach(b => b.classList.remove('active'));
+        const activeBtn = document.getElementById(`btn-mode-${mode}`);
+        if(activeBtn) activeBtn.classList.add('active');
+        
         const container = document.getElementById('analysis-inputs');
         if(!container) return;
         container.innerHTML = '';
@@ -695,15 +791,93 @@ function renderCards() {
         saveData();
     }
     function testTG() { sendTGMessage(state.settings.tgToken, state.settings.tgChatId, 'Test'); }
+    
     async function sendTGMessage(t, cid, msg) {
-        try { await fetch(`https://api.telegram.org/bot${t}/sendMessage`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({chat_id:cid, text:msg})}); showToast('Sent'); } catch(e){ alert('Error'); }
+        try { 
+            const res = await fetch(`https://api.telegram.org/bot${t}/sendMessage`, {
+                method:'POST', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({chat_id:cid, text:msg, parse_mode:'Markdown'})
+            });
+            const data = await res.json();
+            if(data.ok) showToast('✅ TG 發送成功');
+            else {
+                console.error('TG Error:', data);
+                alert('TG 發送失敗: ' + data.description); 
+            }
+        } catch(e){ 
+            console.error(e); 
+            alert('網絡錯誤，無法連接 Telegram API'); 
+        }
     }
+
     function sendTelegramTx(tx) {
         if(!state.settings.tgAutoSend) return;
-        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, `New Tx: $${tx.amount} (${tx.desc})`);
+        
+        const card = state.cards.find(c => c.id == tx.cardId);
+        const cardName = card ? card.name : 'N/A';
+        const dateObj = new Date(tx.date);
+        const dateStr = `${dateObj.getFullYear()}-${(dateObj.getMonth()+1).toString().padStart(2,'0')}-${dateObj.getDate().toString().padStart(2,'0')} ${dateObj.getHours().toString().padStart(2,'0')}:${dateObj.getMinutes().toString().padStart(2,'0')}`;
+        
+        let msg = `🔔 *新增記賬通知*\n`;
+        msg += `──────────────\n`;
+        msg += `💰 *金額*: HKD ${tx.amount.toLocaleString()}\n`;
+        if(tx.currency && tx.currency !== 'HKD') {
+            msg += `💱 *外幣*: ${tx.currency} ${tx.fxAmount.toLocaleString()} (Rate: ${tx.fxRate})\n`;
+        }
+        if(tx.type === 'expense') {
+             msg += `💳 *卡片*: ${cardName}\n`;
+        }
+        msg += `📝 *描述*: ${tx.desc}\n`;
+        msg += `📂 *類別*: ${tx.category}\n`;
+        msg += `📅 *時間*: ${dateStr}\n`;
+        
+        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
     }
-    function sendTelegramReport() {
-        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, 'Monthly Report...');
+    
+    async function sendTelegramReport() {
+        if (!state.settings.tgToken || !state.settings.tgChatId) {
+            alert('請先在設定頁面輸入 Bot Token 及 Chat ID！'); return;
+        }
+        if(!confirm('確定發送月結單到 Telegram？')) return;
+        
+        // Calculate totals for the report (similar to calculateStats logic)
+        const monthInput = document.getElementById('analysis-month') ? document.getElementById('analysis-month').value : new Date().toISOString().slice(0, 7);
+        let totalSpent = 0, totalIncome = 0, totalCashback = 0, totalMiles = 0, totalRepaid = 0;
+        
+        state.transactions.forEach(tx => {
+            if (tx.date.startsWith(monthInput)) {
+                 if (tx.type === 'expense') {
+                    totalSpent += tx.amount;
+                    const card = state.cards.find(c => c.id == tx.cardId);
+                    if (card) {
+                        const isFx = tx.isForeign;
+                        const rate = isFx ? (card.rateFx || 0) : (card.rate || 0);
+                        if (card.type === 'miles' && rate > 0) totalMiles += Math.floor(tx.amount / rate);
+                        else totalCashback += (tx.amount * rate / 100);
+                    }
+                 } else if (tx.type === 'income') {
+                     totalIncome += tx.amount;
+                 } else if (tx.type === 'repayment') {
+                     totalRepaid += tx.amount;
+                 }
+            }
+        });
+
+        // Add Trading to Report if selected? Usually reports are financial.
+        // Let's keep it clean.
+
+        let msg = `📊 *回贈哥月結單 (${monthInput})*\n`;
+        msg += `──────────────\n`;
+        msg += `💸 *總支出*: $${totalSpent.toLocaleString()}\n`;
+        msg += `💰 *總收入*: $${totalIncome.toLocaleString()}\n`;
+        msg += `💳 *已還款*: $${totalRepaid.toLocaleString()}\n`;
+        msg += `🎁 *預計回贈*: $${totalCashback.toFixed(1)}`;
+        if(totalMiles > 0) msg += ` + ${totalMiles.toLocaleString()} AM`;
+        msg += `\n──────────────\n`;
+        msg += `生成時間: ${new Date().toLocaleString()}`;
+        
+        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
     }
 
     // Export/Import (Restored)
@@ -723,6 +897,7 @@ function renderCards() {
         const names = new Set();
         state.cards = state.cards.filter(c => !names.has(c.name) && names.add(c.name));
         saveData(); render();
+        alert('重複卡片已清理');
     }
 
     // Init
