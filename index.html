@@ -36,8 +36,16 @@
         .item-sub { font-size: 0.8rem; color: var(--text-muted); }
         .item-amount { font-weight: bold; font-size: 1.1rem; text-align: right; margin-left: 10px; }
         .item-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-        .cat-tag, .shop-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: var(--surface-hover); border: 1px solid var(--border); color: var(--text-muted); }
+        .cat-tag, .shop-tag, .source-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: var(--surface-hover); border: 1px solid var(--border); color: var(--text-muted); }
         .shop-tag { background: var(--trade); color: #000; font-weight: bold; }
+        .source-tag { background: rgba(255, 255, 255, 0.1); border: 1px solid var(--text-muted); margin-right: 4px;}
+        
+        .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 5px; }
+        .status-ordered { background: #f39c12; color: #000; } 
+        .status-stock { background: #3498db; color: #fff; } 
+        .status-sold { background: var(--primary); color: #fff; } 
+        .status-cut { background: var(--danger); color: #fff; text-decoration: line-through; } 
+
         .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; }
         .miles-tag { font-size: 0.75rem; color: var(--miles); background: rgba(162, 155, 254, 0.15); padding: 2px 6px; border-radius: 4px; display: inline-block; }
         .due-tag { font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 2px; }
@@ -50,24 +58,45 @@
         .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); }
         .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); border: 1px solid var(--repay); }
         .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
-        .grid-btn { padding: 10px 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.85rem; text-align: center; display:flex; align-items:center; justify-content:center; flex-direction:column; min-height:45px;}
+        .grid-btn { padding: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-align: center; display:flex; align-items:center; justify-content:center; flex-direction:column; min-height:55px; line-height: 1.2; overflow-wrap: break-word;}
         .grid-btn.selected { background: var(--trade); color: #000; border-color: var(--trade); font-weight: bold; }
+        
         .analysis-controls { display: flex; gap: 5px; background: var(--bg); padding: 5px; border-radius: 8px; margin-bottom: 15px; overflow-x: auto; }
         .analysis-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 6px; font-size: 0.85rem; white-space: nowrap; }
         .analysis-btn.active { background: var(--surface-hover); color: var(--text); font-weight: bold; }
         .btn { background: var(--primary); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-small { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
         .btn-text { background: none; border: none; color: var(--text-muted); padding: 5px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 0.8rem; }
+        .btn-repay { color: var(--repay); border-color: var(--repay); background: rgba(255, 159, 67, 0.1); }
+        .btn-telegram { background: var(--telegram); border-color: var(--telegram); color: #fff; }
+        
+        /* Credit Card Visual */
         .credit-card { background: var(--card-gradient); padding: 15px; border-radius: 10px; margin-bottom: 10px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
         .card-name { font-weight: bold; font-size: 1.1rem; color: #fff; }
         .card-info { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-top: 5px; display: flex; justify-content: space-between; align-items: center; }
         .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
         .fab { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: #fff; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4); cursor: pointer; border: none; z-index: 90; }
+        
+        /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 200; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; padding: 25px; border-radius: 16px; padding-bottom: 50px; }
-        .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
+        .modal-content { background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; padding: 25px; border-radius: 16px; padding-bottom: 50px; position: relative; }
+        
+        /* Improved Close Button (Requested) */
+        .close-modal { 
+            position: absolute; top: 10px; right: 10px; 
+            background: #cc4444; /* Red Background */
+            border: 2px solid #fff; color: #fff; 
+            width: 36px; height: 36px; /* Larger */
+            border-radius: 50%; 
+            font-size: 1.4rem; font-weight: bold;
+            cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .close-modal:active { transform: scale(0.9); }
+        
         .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 15px; overflow-x: auto; white-space: nowrap; }
         .tab { flex: 1; padding: 10px; text-align: center; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; min-width: 80px; }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; }
@@ -77,6 +106,7 @@
         #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
         @keyframes fadein { from {bottom: 60px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 60px; opacity: 0;} }
+        
         .checkbox-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); }
         .recur-item, .welcome-item { background: var(--surface-hover); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
         .recur-item.completed { border-color: var(--primary); background: rgba(0, 210, 106, 0.05); }
@@ -86,23 +116,25 @@
         
         /* CSS Phone Icons */
         .phone-icon {
-            width: 28px; height: 50px;
-            border-radius: 6px;
+            width: 22px; height: 40px;
+            border-radius: 4px;
             border: 1px solid rgba(255,255,255,0.2);
             position: relative;
-            margin-bottom: 5px;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            margin-bottom: 3px;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        .phone-icon::before { /* Camera */
-            content: ''; position: absolute;
-            top: 5px; left: 4px;
-            width: 14px; height: 14px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 4px;
-        }
+        .phone-icon::before { content: ''; position: absolute; top: 5px; left: 4px; width: 10px; height: 10px; background: rgba(0,0,0,0.4); border-radius: 3px; }
         .phone-icon.silver { background: linear-gradient(135deg, #e3e4e5 0%, #999 100%); }
-        .phone-icon.orange { background: linear-gradient(135deg, #e0cda7 0%, #a68c6d 100%); }
-        .phone-icon.blue { background: linear-gradient(135deg, #8faecf 0%, #324a5e 100%); }
+        .phone-icon.orange { background: linear-gradient(135deg, #C5B4A3 0%, #8C7C6D 100%); }
+        .phone-icon.blue { background: linear-gradient(135deg, #3B4C58 0%, #202b36 100%); }
+        .section-title { font-size: 0.85rem; color: var(--text-muted); margin: 15px 0 5px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
+        
+        .log-list { max-height: 300px; overflow-y: auto; text-align: left; }
+        .log-item { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .log-date { font-size: 0.75rem; color: var(--primary); font-weight: bold; }
+        .log-content { font-size: 0.85rem; color: var(--text); line-height: 1.4; white-space: pre-line; }
+        
+        #error-console { display:none; background:#300; color:#fff; padding:10px; font-size:0.8rem; position:fixed; bottom:0; left:0; right:0; z-index:1000; text-align:left; max-height:100px; overflow:auto; }
     </style>
 </head>
 <body>
@@ -205,9 +237,11 @@
     </div>
     
     <div class="footer">
-        Copyright © Redezero | v1.60 <br>
+        Copyright © Redezero | v1.65 <br>
         <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem;">⛑️ 下載備份</button>
     </div>
+    
+    <div id="error-console"></div>
 </div>
 
 <div id="main-fab"><button class="fab" onclick="openModal('transaction')">+</button></div>
@@ -215,7 +249,7 @@
 <!-- Modals -->
 <div id="modal-menu" class="modal-overlay">
     <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <button class="close-modal" onclick="closeModals()">×</button>
         <h2>功能選單</h2>
         <div class="menu-grid">
             <div class="menu-item" onclick="openMenuTarget('mission')"><div class="menu-icon">➕</div><div class="menu-label">新增限時任務</div></div>
@@ -227,12 +261,15 @@
             <div class="menu-item" onclick="openMenuTarget('settings')"><div class="menu-icon">⚙️</div><div class="menu-label">設定</div></div>
             <div class="menu-item" onclick="toggleTheme(); closeModals();"><div class="menu-icon">🌗</div><div class="menu-label">切換模式</div></div>
         </div>
+        <div style="margin-top:15px; text-align:center;">
+            <button class="btn-text" onclick="openMenuTarget('log')">📋 查看更新日誌</button>
+        </div>
     </div>
 </div>
 
 <div id="modal-transaction" class="modal-overlay">
     <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <button class="close-modal" onclick="closeModals()">×</button>
         <h2 id="tx-modal-title">新增紀錄</h2>
         <div class="type-toggle">
             <div class="type-option active expense" id="type-expense" onclick="setTxType('expense')">💸 支出</div>
@@ -261,11 +298,36 @@
 
 <div id="modal-trade" class="modal-overlay">
     <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">&times;</button>
-        <h2 id="trade-modal-title">📱 新增 iPhone 17 交易</h2>
+        <button class="close-modal" onclick="closeModals()">×</button>
+        <h2>📱 新增 iPhone 17 交易</h2>
         <form id="trade-form" onsubmit="addTrade(event)">
             <input type="hidden" id="trade-id">
-            <div class="form-group"><label>店舖</label><div class="btn-grid" id="trade-shop-grid"></div><input type="hidden" id="trade-shop" required></div>
+            
+            <div class="section-title">1. 購入來源 (Source)</div>
+            <div class="form-group">
+                <div class="btn-grid" id="trade-source-grid" style="grid-template-columns: repeat(4, 1fr);"></div>
+                <input type="hidden" id="trade-source" required>
+            </div>
+            
+            <div class="section-title">2. 交易狀態 (Status)</div>
+            <div class="form-group">
+                <div class="btn-grid" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="grid-btn" onclick="selectTradeOption('status', 'pending', this)">🛒 已訂<br>(未取)</div>
+                    <div class="grid-btn" onclick="selectTradeOption('status', 'stock', this)">📦 現貨<br>(在手)</div>
+                    <div class="grid-btn" onclick="selectTradeOption('status', 'sold', this)">💰 已賣<br>(完成)</div>
+                    <div class="grid-btn" onclick="selectTradeOption('status', 'cut', this)">❌ Cut單<br>(佔額)</div>
+                </div>
+                <input type="hidden" id="trade-status" required>
+            </div>
+
+            <!-- Only shown if status is SOLD in logic, but for simplicity always show or JS toggle? Keeping it simple always show but optional -->
+            <div class="section-title">3. 回收店舖 (如已賣出)</div>
+            <div class="form-group">
+                <div class="btn-grid" id="trade-shop-grid" style="grid-template-columns: repeat(4, 1fr);"></div>
+                <input type="hidden" id="trade-shop">
+            </div>
+
+            <div class="section-title">4. 規格 & 財務</div>
             <div class="form-group"><label>型號</label><div class="btn-grid" style="grid-template-columns: 1fr 1fr;"><div class="grid-btn" onclick="selectTradeOption('model', 'Pro', this)">Pro</div><div class="grid-btn" onclick="selectTradeOption('model', 'Pro Max', this)">Pro Max</div></div><input type="hidden" id="trade-model" required></div>
             <div class="form-group"><label>容量</label><div class="btn-grid" style="grid-template-columns: repeat(3, 1fr);"><div class="grid-btn" onclick="selectTradeOption('cap', '256GB', this)">256GB</div><div class="grid-btn" onclick="selectTradeOption('cap', '512GB', this)">512GB</div><div class="grid-btn" onclick="selectTradeOption('cap', '1TB', this)">1TB</div><div class="grid-btn" onclick="selectTradeOption('cap', '2TB', this)">2TB</div><div class="grid-btn" onclick="selectTradeOption('cap', '其他', this)">其他</div></div><input type="hidden" id="trade-cap" required></div>
             <div class="form-group"><label>顏色</label>
@@ -277,17 +339,18 @@
                 <input type="hidden" id="trade-color" required>
             </div>
             
-            <div class="form-group"><label>狀態</label>
-                <div class="btn-grid" style="grid-template-columns: 1fr 1fr;">
-                    <div class="grid-btn selected" onclick="selectTradeOption('status', 'sealed', this)">🔒 原封</div>
-                    <div class="grid-btn" onclick="selectTradeOption('status', 'opened', this)">🔪 開封</div>
+            <div class="form-group" style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+                <label>狀態:</label>
+                <div class="btn-grid" style="grid-template-columns: 1fr 1fr; width:100%; margin:0;">
+                    <div class="grid-btn selected" onclick="selectTradeOption('condition', 'sealed', this)">🔒 原封</div>
+                    <div class="grid-btn" onclick="selectTradeOption('condition', 'opened', this)">🔪 開封</div>
                 </div>
-                <input type="hidden" id="trade-status" value="sealed">
+                <input type="hidden" id="trade-condition" value="sealed">
             </div>
 
-            <div class="row-group"><div class="form-group"><label>原價 (可修改)</label><input type="number" id="trade-cost" required></div><div class="form-group"><label>放售</label><input type="number" id="trade-price" required></div></div>
+            <div class="row-group"><div class="form-group"><label>原價 (Cost)</label><input type="number" id="trade-cost" required></div><div class="form-group"><label>放售 (Price)</label><input type="number" id="trade-price" required></div></div>
             <div class="form-group"><label>數量</label><div style="display:flex;gap:10px;"><button type="button" class="btn-small" onclick="adjustTradeQty(-1)">-</button><input type="number" id="trade-qty" value="1" style="text-align:center;"><button type="button" class="btn-small" onclick="adjustTradeQty(1)">+</button></div></div>
-            <div class="form-group"><label>付款信用卡</label><select id="trade-card"><option value="">不使用 (只計利潤)</option></select><div style="font-size:0.75rem; color:var(--text-muted);">*自動計入該卡簽賬額</div></div>
+            <div class="form-group"><label>付款信用卡</label><select id="trade-card"><option value="">不使用 (只計利潤)</option></select><div style="font-size:0.75rem; color:var(--text-muted);">*選取後，成本將計入該卡簽賬。</div></div>
             <div class="form-group"><label>日期時間</label><input type="datetime-local" id="trade-date" required></div>
             <button type="submit" id="btn-trade-submit" class="btn" style="background:var(--trade); color:#000;">記錄交易</button>
         </form>
@@ -295,27 +358,51 @@
 </div>
 
 <div id="modal-split" class="modal-overlay">
-    <div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>✂️ 分單</h2><div class="form-group"><input type="number" id="split-total" placeholder="總額" oninput="calcSplit()"></div><div class="row-group"><label><input type="checkbox" id="split-service" onchange="calcSplit()" style="width:auto;"> +10%</label><input type="number" id="split-discount" placeholder="折扣%" oninput="calcSplit()"></div><div class="form-group"><div style="display:flex;gap:10px;"><button type="button" class="btn-small" onclick="adjustPeople(-1)">-</button><input type="number" id="split-people" value="2" style="text-align:center;" oninput="calcSplit()"><button type="button" class="btn-small" onclick="adjustPeople(1)">+</button></div></div><div style="text-align:center; margin:15px;"><div id="split-result" style="font-size:2rem; font-weight:bold;">$0.00</div></div><button type="button" class="btn" onclick="applySplit()">填入</button></div>
+    <div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>✂️ 分單</h2><div class="form-group"><input type="number" id="split-total" placeholder="總額" oninput="calcSplit()"></div><div class="row-group"><label><input type="checkbox" id="split-service" onchange="calcSplit()" style="width:auto;"> +10%</label><input type="number" id="split-discount" placeholder="折扣%" oninput="calcSplit()"></div><div class="form-group"><div style="display:flex;gap:10px;"><button type="button" class="btn-small" onclick="adjustPeople(-1)">-</button><input type="number" id="split-people" value="2" style="text-align:center;" oninput="calcSplit()"><button type="button" class="btn-small" onclick="adjustPeople(1)">+</button></div></div><div style="text-align:center; margin:15px;"><div id="split-result" style="font-size:2rem; font-weight:bold;">$0.00</div></div><button type="button" class="btn" onclick="applySplit()">填入</button></div>
 </div>
 
 <!-- Other Modals -->
-<div id="modal-card" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>新增卡片</h2><form id="card-form" onsubmit="addCard(event)"><div class="form-group"><input type="text" id="card-name" required placeholder="名稱"></div><div class="form-group"><select id="card-type" onchange="toggleCardRateInput()"><option value="cashback">現金回贈</option><option value="miles">里數</option></select></div><div class="row-group"><input type="number" id="card-rate" placeholder="Rate"><input type="number" id="card-rate-fx" placeholder="FX Rate"></div><div class="row-group"><input type="number" id="card-stmt-day" placeholder="截數日"><input type="number" id="card-pay-gap" placeholder="還款期"></div><div class="form-group"><input type="number" id="card-cap" placeholder="上限"></div><div class="form-group"><input type="text" id="card-note" placeholder="備註"></div><button type="submit" class="btn">新增</button></form></div></div>
-<div id="modal-recur-mission" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>每月任務</h2><div id="recur-list"></div><form onsubmit="addRecurMission(event)"><input type="text" id="recur-name" required placeholder="任務名"><div class="row-group"><input type="number" id="recur-target" required placeholder="目標"><select id="recur-card" required></select></div><select id="recur-reset-day"><option value="1">1號重置</option><option value="12">12號重置</option></select><button type="submit" class="btn-small">+ 加入</button></form></div></div>
-<div id="modal-welcome" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>迎新監察</h2><div id="welcome-list"></div><form onsubmit="addWelcome(event)"><input type="text" id="welcome-name" required placeholder="迎新名"><div class="row-group"><select id="welcome-card" required></select><input type="number" id="welcome-target" required placeholder="目標"></div><input type="date" id="welcome-deadline" required><input type="date" id="welcome-start" required><button type="submit" class="btn-small">+ 加入</button></form></div></div>
-<div id="modal-subs" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>固定開支</h2><div id="subs-list"></div><form onsubmit="addSubscription(event)"><input type="text" id="sub-name" required placeholder="項目"><div class="row-group"><input type="number" id="sub-amount" required placeholder="金額"><select id="sub-card" required></select></div><button type="submit" class="btn-small">+ 加入</button></form></div></div>
-<div id="modal-bank-info" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>銀行資訊</h2><div id="bank-list"></div></div></div>
-<div id="modal-data" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>備份</h2><button class="btn" onclick="exportData('json')">下載 JSON</button><button class="btn" onclick="exportData('csv')">下載 CSV</button><input type="file" id="file-input" onchange="importData(this)" style="display:none;"><button class="btn" onclick="triggerImport()">還原 JSON</button><button class="btn-small" onclick="cleanDuplicateCards()">清理重複卡</button><button class="btn-small" onclick="resetData()" style="color:var(--danger)">重置資料</button></div></div>
-<div id="modal-settings" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>設定</h2><select id="setting-start-day" onchange="saveSettings()"></select><hr><input type="password" id="tg-token" placeholder="TG Token" onchange="saveTGSettings()"><input type="text" id="tg-chatid" placeholder="TG Chat ID" onchange="saveTGSettings()"><a href="#" onclick="testTG()">測試發送</a><br><label><input type="checkbox" id="setting-tg-auto" onchange="saveSettings()" style="width:auto;"> 自動發送</label><br><button class="btn-text" onclick="openModal('log')">更新日誌</button></div></div>
-<div id="modal-mission" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>限時任務</h2><form onsubmit="addMission(event)"><input type="text" id="mission-name" required placeholder="任務名"><input type="number" id="mission-target" required placeholder="目標"><div class="row-group"><input type="date" id="mission-start"><input type="date" id="mission-end"></div><div id="mission-cards" class="checkbox-group"></div><button type="submit" class="btn">建立</button></form></div></div>
-<div id="modal-log" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>更新日誌</h2><p>v1.60 完整炒賣版</p></div></div>
+<div id="modal-card" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>新增卡片</h2><form id="card-form" onsubmit="addCard(event)"><div class="form-group"><input type="text" id="card-name" required placeholder="名稱"></div><div class="form-group"><select id="card-type" onchange="toggleCardRateInput()"><option value="cashback">現金回贈</option><option value="miles">里數</option></select></div><div class="row-group"><input type="number" id="card-rate" placeholder="Rate"><input type="number" id="card-rate-fx" placeholder="FX Rate"></div><div class="row-group"><input type="number" id="card-stmt-day" placeholder="截數日"><input type="number" id="card-pay-gap" placeholder="還款期"></div><div class="form-group"><input type="number" id="card-cap" placeholder="上限"></div><div class="form-group"><input type="text" id="card-note" placeholder="備註"></div><button type="submit" class="btn">新增</button></form></div></div>
+<div id="modal-recur-mission" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>每月任務</h2><div id="recur-list"></div><form onsubmit="addRecurMission(event)"><input type="text" id="recur-name" required placeholder="任務名"><div class="row-group"><input type="number" id="recur-target" required placeholder="目標"><select id="recur-card" required></select></div><select id="recur-reset-day"><option value="1">1號重置</option><option value="12">12號重置</option></select><button type="submit" class="btn-small">+ 加入</button></form></div></div>
+<div id="modal-welcome" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>迎新監察</h2><div id="welcome-list"></div><form onsubmit="addWelcome(event)"><input type="text" id="welcome-name" required placeholder="迎新名"><div class="row-group"><select id="welcome-card" required></select><input type="number" id="welcome-target" required placeholder="目標"></div><input type="date" id="welcome-deadline" required><input type="date" id="welcome-start" required><button type="submit" class="btn-small">+ 加入</button></form></div></div>
+<div id="modal-subs" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>固定開支</h2><div id="subs-list"></div><form onsubmit="addSubscription(event)"><input type="text" id="sub-name" required placeholder="項目"><div class="row-group"><input type="number" id="sub-amount" required placeholder="金額"><select id="sub-card" required></select></div><button type="submit" class="btn-small">+ 加入</button></form></div></div>
+<div id="modal-bank-info" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>銀行資訊</h2><div id="bank-list"></div></div></div>
+<div id="modal-data" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>備份</h2><button class="btn" onclick="exportData('json')">下載 JSON</button><button class="btn" onclick="exportData('csv')">下載 CSV</button><input type="file" id="file-input" onchange="importData(this)" style="display:none;"><button class="btn" onclick="triggerImport()">還原 JSON</button><button class="btn-small" onclick="cleanDuplicateCards()">清理重複卡</button><button class="btn-small" onclick="resetData()" style="color:var(--danger)">重置資料</button></div></div>
+<div id="modal-settings" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>設定</h2><select id="setting-start-day" onchange="saveSettings()"></select><hr><input type="password" id="tg-token" placeholder="TG Token" onchange="saveTGSettings()"><input type="text" id="tg-chatid" placeholder="TG Chat ID" onchange="saveTGSettings()"><a href="#" onclick="testTG()">測試發送</a><br><label><input type="checkbox" id="setting-tg-auto" onchange="saveSettings()" style="width:auto;"> 自動發送</label><br><button class="btn-text" onclick="openModal('log')">更新日誌</button></div></div>
+<div id="modal-mission" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>限時任務</h2><form onsubmit="addMission(event)"><input type="text" id="mission-name" required placeholder="任務名"><input type="number" id="mission-target" required placeholder="目標"><div class="row-group"><input type="date" id="mission-start"><input type="date" id="mission-end"></div><div id="mission-cards" class="checkbox-group"></div><button type="submit" class="btn">建立</button></form></div></div>
+<div id="modal-log" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">×</button>
+        <h2>更新日誌</h2>
+        <div class="log-list">
+            <div class="log-item"><div class="log-date">v1.65 (Debug & Fix)</div><div class="log-content">- 修復：TG 報告語法錯誤。<br>- 優化：來源/回收店分流。<br>- 新增：錯誤偵測模式。</div></div>
+        </div>
+    </div>
+</div>
 
 <div id="toast"></div>
 
 <script>
+    // Global Error Handler
+    window.onerror = function(msg, url, line, col, error) {
+        const div = document.getElementById('error-console');
+        if(div) {
+            div.style.display = 'block';
+            div.innerHTML += `🔴 Error: ${msg} <br>Line: ${line}<br>`;
+        }
+        console.error(error);
+        return false;
+    };
+
     // Config
     const DB_KEY='rebate_bro_data_v2', BACKUP_TIME_KEY='rebate_bro_backup_time';
     const CURRENCIES = ['HKD', 'CNY', 'USD', 'JPY', 'TWD', 'GBP', 'EUR', 'KRW', 'AUD', 'SGD'];
+    
+    // SOURCES (Where bought)
+    const TRADE_SOURCES = ['AOS (官網)', 'APU (店取)', '百老匯', '豐澤', '友和', '蘇寧', '電器幫', 'CMHK', 'CSL', 'Smartone', '3HK', 'HKTVMall', '京東', '免稅店'];
+    // SHOPS (Where sold)
     const TRADE_SHOPS = ['雪球', '萬通', '日韓', '誠信', 'bobo', 'YY', 'G79', 'F9', 'DIY', '新宇宙', '溫記', '鵬程', 'iTrade', '星耀', 'Carousell'];
+    
     const IPHONE_PRICES = { 'Pro': { '256GB': 9399, '512GB': 11099, '1TB': 12799 }, 'Pro Max': { '256GB': 10199, '512GB': 11899, '1TB': 13599, '2TB': 16999 } };
     const CATEGORIES = { expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他', '固定開支'], income: ['薪金', '賣野', '投資', '其他'], repayment: ['信用卡還款'] };
     const PRESET_CARDS = [ { name: '現金', type: 'cashback', rate: 0 }, { name: 'WeWa', type: 'cashback', rate: 10 } ];
@@ -339,8 +426,29 @@
             const cS = document.getElementById('tx-currency');
             if(cS) { cS.innerHTML=''; CURRENCIES.forEach(c=>{ let o=document.createElement('option'); o.value=c; o.text=c; cS.add(o); }); }
             
+            // Build Source Grid
+            const sourceG = document.getElementById('trade-source-grid');
+            if(sourceG) { 
+                sourceG.innerHTML=''; 
+                TRADE_SOURCES.forEach(src=>{ 
+                    let d=document.createElement('div'); d.className='grid-btn'; 
+                    d.innerText=src; 
+                    d.onclick=()=>selectTradeOption('source', src, d); 
+                    sourceG.appendChild(d); 
+                }); 
+            }
+
+            // Build Shop Grid
             const shopG = document.getElementById('trade-shop-grid');
-            if(shopG) { shopG.innerHTML=''; TRADE_SHOPS.forEach(sh=>{ let d=document.createElement('div'); d.className='grid-btn'; d.innerText=sh; d.onclick=()=>selectTradeOption('shop', sh, d); shopG.appendChild(d); }); }
+            if(shopG) { 
+                shopG.innerHTML=''; 
+                TRADE_SHOPS.forEach(sh=>{ 
+                    let d=document.createElement('div'); d.className='grid-btn'; 
+                    d.innerText=sh; 
+                    d.onclick=()=>selectTradeOption('shop', sh, d); 
+                    shopG.appendChild(d); 
+                }); 
+            }
 
             if(state.settings.tgToken) document.getElementById('tg-token').value = state.settings.tgToken;
             if(state.settings.tgChatId) document.getElementById('tg-chatid').value = state.settings.tgChatId;
@@ -354,7 +462,7 @@
             const url = new URLSearchParams(window.location.search);
             if(url.get('new_tx')==='true') openModal('transaction');
             
-        } catch(e) { console.error(e); alert("Init Error"); }
+        } catch(e) { console.error(e); alert("Init Error: " + e.message); }
     }
     
     function saveData() { localStorage.setItem(DB_KEY, JSON.stringify(state)); }
@@ -407,11 +515,44 @@
         if(state.trades.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">暫無交易</div>';
         const sortedTrades = [...state.trades].sort((a,b) => new Date(b.date) - new Date(a.date));
         sortedTrades.forEach(t => {
-            const p = t.profit >= 0 ? 'profit-pos' : 'profit-neg';
+            // Status Logic
+            let statusBadge = '';
+            let profitDisplay = '';
+            let locationDisplay = '';
+
+            if (t.status === 'pending') statusBadge = '<span class="status-badge status-ordered">🛒 已訂</span>';
+            else if (t.status === 'stock') statusBadge = '<span class="status-badge status-stock">📦 現貨</span>';
+            else if (t.status === 'cut') statusBadge = '<span class="status-badge status-cut">❌ Cut單</span>';
+            else {
+                // Sold
+                statusBadge = '<span class="status-badge status-sold">💰 已賣</span>';
+                if(t.condition === 'opened') statusBadge += '<span class="status-badge status-cut" style="text-decoration:none;">🔪</span>';
+                const pClass = t.profit >= 0 ? 'profit-pos' : 'profit-neg';
+                profitDisplay = `<span class="${pClass}">$${t.profit}</span>`;
+            }
+            
+            // Logic for showing location
+            const source = t.source || '未知';
+            if (t.status === 'sold' && t.shop) locationDisplay = `${source} ➔ ${t.shop}`;
+            else locationDisplay = source;
+
             const card = state.cards.find(c => c.id == t.cardId);
             const cName = card ? `<span class="cat-tag" style="font-size:0.6rem">💳 ${card.name}</span>` : '';
-            const statusBadge = t.status === 'opened' ? `<span class="cat-tag" style="background:#ff4d4d; color:white; margin-right:5px;">🔪 開封</span>` : '';
-            l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title">${statusBadge}<span class="shop-tag">${t.shop}</span> ${t.model} ${t.cap}</div><div class="item-sub">${t.date.slice(0,10)} • 收:$${t.price} ${cName}</div></div><div><div class="item-amount">x${t.qty} <span class="${p}">$${t.profit}</span></div><div style="display:flex; justify-content:flex-end;"><button class="btn-text" onclick="editTrade(${t.id})">✎</button><button class="btn-text" onclick="deleteTrade(${t.id})">X</button></div></div></div>`;
+            
+            l.innerHTML += `
+                <div class="list-item">
+                    <div class="item-main">
+                        <div class="item-title">${statusBadge} ${t.model} ${t.cap}</div>
+                        <div class="item-sub">${locationDisplay} • ${t.date.slice(0,10)} ${cName}</div>
+                    </div>
+                    <div>
+                        <div class="item-amount" style="font-size:0.9rem;">x${t.qty} ${profitDisplay}</div>
+                        <div style="display:flex; justify-content:flex-end;">
+                            <button class="btn-text" onclick="editTrade(${t.id})">✎</button>
+                            <button class="btn-text" onclick="deleteTrade(${t.id})">X</button>
+                        </div>
+                    </div>
+                </div>`;
         });
     }
 
@@ -424,6 +565,7 @@
         const cycle = document.getElementById('billing-cycle-text');
         if(cycle) cycle.innerText = `(${start.getMonth()+1}/${start.getDate()} - ${end.getMonth()+1}/${end.getDate()})`;
         
+        // 1. Transactions
         state.transactions.forEach(tx => {
             const d = new Date(tx.date);
             if(d>=start && d<=end) {
@@ -444,11 +586,14 @@
             }
         });
 
+        // 2. Trades (Integrated Logic - Count all non-sold status as Cost used on card)
         state.trades.forEach(t => {
             const d = new Date(t.date);
             if(t.cardId && d>=start && d<=end) {
                 const totalCost = t.cost * t.qty;
                 cardSpent[t.cardId] += totalCost;
+                
+                // Rewards logic
                 const c = state.cards.find(x=>x.id==t.cardId);
                 if(c) {
                      const r = c.rate || 0; 
@@ -463,6 +608,7 @@
         document.getElementById('total-repaid').innerText = '$'+repay.toLocaleString();
         document.getElementById('total-cashback').innerText = '$'+cash.toFixed(1) + (miles>0 ? ` + ${miles} AM` : '');
 
+        // Update Cards
         state.cards.forEach(c => {
              const s = cardSpent[c.id] || 0;
              const p = cardPaid[c.id] || 0;
@@ -525,7 +671,7 @@
              const d2 = cats.map(c => tx2.filter(t => t.category === c).reduce((sum, t) => sum + t.amount, 0));
              labelX = cats; dataSets = [ { label: m1, data: d1, backgroundColor: '#4facfe' }, { label: m2, data: d2, backgroundColor: '#ff4d4d' } ];
              if(barChart) barChart.destroy();
-             barChart = new Chart(document.getElementById('chart-daily').getContext('2d'), { type: 'bar', data: { labels: labelX, datasets: dataSets }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: '#333' } } } } });
+             barChart = new Chart(document.getElementById('chart-daily').getContext('2d'), { type: 'bar', data: { labels: labelX, datasets: dataSets }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: '#333' } } }, plugins: { legend: { display: false } } } });
              return;
         }
 
@@ -582,7 +728,9 @@
                 document.getElementById('trade-form').reset();
                 document.getElementById('trade-id').value = '';
                 document.getElementById('trade-qty').value = 1;
-                document.getElementById('trade-status').value = 'sealed';
+                document.getElementById('trade-status').value = 'pending';
+                document.getElementById('trade-condition').value = 'sealed';
+                // Clean visuals
                 document.querySelectorAll('.grid-btn.selected').forEach(b => b.classList.remove('selected'));
                 setDefaultTime();
              }
@@ -669,7 +817,6 @@
         document.getElementById('tx-date').value=tx.date;
         if(tx.cardId) document.getElementById('tx-card').value=tx.cardId;
         document.getElementById('tx-modal-title').innerText="編輯";
-        document.getElementById('btn-transfer').style.display='block';
     }
     
     function deleteTransaction(id) { if(confirm('Del?')) { state.transactions=state.transactions.filter(t=>t.id!==id); saveData(); render(); } }
@@ -696,17 +843,20 @@
         const qty = parseInt(document.getElementById('trade-qty').value);
         const cid = document.getElementById('trade-card').value;
         const dateVal = document.getElementById('trade-date').value;
-        const status = document.getElementById('trade-status').value;
+        const status = document.getElementById('trade-status').value || 'pending';
+        const condition = document.getElementById('trade-condition').value || 'sealed';
+        const source = document.getElementById('trade-source').value || 'N/A';
+        const shop = document.getElementById('trade-shop').value || '';
 
         const tradeData = {
-            shop: document.getElementById('trade-shop').value,
+            source, shop,
             model: document.getElementById('trade-model').value,
             cap: document.getElementById('trade-cap').value,
             color: document.getElementById('trade-color').value,
             cost, price, qty, profit: (price-cost)*qty,
             date: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString(),
             cardId: cid,
-            status: status
+            status, condition
         };
 
         if (idStr) {
@@ -715,9 +865,7 @@
             if (idx !== -1) state.trades[idx] = { ...state.trades[idx], ...tradeData };
         } else {
             state.trades.unshift({ id: Date.now(), ...tradeData });
-            if(transferringTxId) { state.transactions=state.transactions.filter(t=>t.id!==transferringTxId); transferringTxId=null; }
         }
-
         saveData(); render(); closeModals();
     }
     
@@ -727,7 +875,8 @@
         
         openModal('trade');
         document.getElementById('trade-id').value = t.id;
-        document.getElementById('trade-shop').value = t.shop;
+        document.getElementById('trade-source').value = t.source || "";
+        document.getElementById('trade-shop').value = t.shop || "";
         document.getElementById('trade-model').value = t.model;
         document.getElementById('trade-cap').value = t.cap;
         document.getElementById('trade-color').value = t.color;
@@ -736,24 +885,28 @@
         document.getElementById('trade-qty').value = t.qty;
         document.getElementById('trade-card').value = t.cardId || "";
         document.getElementById('trade-date').value = t.date.slice(0,16);
-        document.getElementById('trade-status').value = t.status || 'sealed';
+        document.getElementById('trade-status').value = t.status || 'pending';
+        document.getElementById('trade-condition').value = t.condition || 'sealed';
 
         // Update Visual Selection
-        ['shop', 'model', 'cap', 'color', 'status'].forEach(type => {
-            const val = t[type] || (type==='status'?'sealed':null);
+        ['source', 'shop', 'model', 'cap', 'color', 'status', 'condition'].forEach(type => {
+            const val = t[type];
             let grid;
-            if(type==='shop') grid = document.getElementById('trade-shop-grid');
-            else if(type==='status') grid = document.getElementById('trade-status').parentElement.querySelector('.btn-grid');
+            if(type==='source') grid = document.getElementById('trade-source-grid');
+            else if(type==='shop') grid = document.getElementById('trade-shop-grid');
+            else if(type==='status' || type==='condition') {
+                 const input = document.getElementById('trade-'+type);
+                 if(input) grid = input.parentElement.querySelector('.btn-grid');
+            }
             else {
                 const hiddenInput = document.getElementById('trade-'+type);
                 if(hiddenInput) grid = hiddenInput.parentElement.querySelector('.btn-grid');
             }
             
-            if (grid) {
+            if (grid && val) {
                 Array.from(grid.children).forEach(btn => {
                     btn.classList.remove('selected');
-                    // Check text content matches or value matches
-                    if (btn.innerText.includes(val) || (type==='status' && ((val==='sealed' && btn.innerText.includes('原封')) || (val==='opened' && btn.innerText.includes('開封'))))) {
+                    if (btn.innerText.includes(val) || btn.innerText === val) {
                         btn.classList.add('selected');
                     }
                 });
@@ -761,17 +914,6 @@
         });
     }
 
-    function transferToTrade() {
-        const id = document.getElementById('tx-id').value;
-        const amt = document.getElementById('tx-amount').value;
-        const type = document.getElementById('tx-type').value;
-        if(!id) return;
-        transferringTxId = parseFloat(id);
-        closeModals(); openModal('trade');
-        if(type==='expense') { document.getElementById('trade-cost').value=amt; }
-        else { document.getElementById('trade-price').value=amt; }
-    }
-    
     function quickRepay(cid) {
         openModal('transaction'); setTxType('repayment');
         document.getElementById('tx-card').value = cid;
@@ -873,14 +1015,19 @@
     function testTG() { sendTGMessage(state.settings.tgToken, state.settings.tgChatId, 'Test'); }
     
     async function sendTGMessage(t, cid, msg) {
+        if (!t || !cid) { alert('請先設定 TG Token & Chat ID'); return; }
         try { 
             const res = await fetch(`https://api.telegram.org/bot${t}/sendMessage`, {
                 method:'POST', 
                 headers:{'Content-Type':'application/json'}, 
                 body:JSON.stringify({chat_id:cid, text:msg, parse_mode:'Markdown'})
             });
-            if(res.ok) showToast('✅ TG 發送成功');
-            else { console.error('TG Error'); alert('TG 失敗，請檢查 Token'); }
+            if(res.status === 200) showToast('✅ TG 發送成功');
+            else { 
+                const err = await res.json();
+                console.error('TG API Error:', err);
+                alert(`TG 發送失敗: ${err.description}`); 
+            }
         } catch(e){ 
             console.error(e); 
         }
@@ -891,7 +1038,7 @@
         const card = state.cards.find(c => c.id == tx.cardId);
         const cardName = card ? card.name : 'N/A';
         const dateObj = new Date(tx.date);
-        const dateStr = dateObj.toLocaleString();
+        const dateStr = `${dateObj.getFullYear()}-${(dateObj.getMonth()+1).toString().padStart(2,'0')}-${dateObj.getDate().toString().padStart(2,'0')} ${dateObj.getHours().toString().padStart(2,'0')}:${dateObj.getMinutes().toString().padStart(2,'0')}`;
         
         let msg = `🔔 *新增記賬*\n`;
         msg += `💰 *金額*: HKD ${tx.amount.toLocaleString()}\n`;
@@ -909,7 +1056,6 @@
         if(!confirm('發送月結單？')) return;
         const monthInput = document.getElementById('analysis-month') ? document.getElementById('analysis-month').value : new Date().toISOString().slice(0, 7);
         // ... calculation logic similar to calculateStats ...
-        // Simplified for brevity, in real app calculate real totals
         let msg = `📊 *月結單 (${monthInput})* \n(詳細數據請見 App)`;
         sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
     }
@@ -918,30 +1064,36 @@
         if (!state.settings.tgToken) { alert('請設定 TG'); return; }
         if(!confirm('發送炒賣報告？')) return;
         
-        let totalVol = 0;
-        let totalProfit = 0;
-        let totalCost = 0;
-        const modelStats = {};
-        const shopStats = {};
+        let totalVol = 0, totalProfit = 0, totalCost = 0;
+        const modelStats = {}, shopStats = {};
 
         state.trades.forEach(t => {
-            totalVol += t.qty;
-            totalProfit += t.profit;
-            totalCost += (t.cost * t.qty);
-            const key = `${t.model} ${t.cap} ${t.color}`;
-            if(!modelStats[key]) modelStats[key] = { qty: 0, profit: 0 };
-            modelStats[key].qty += t.qty;
-            modelStats[key].profit += t.profit;
-            if(!shopStats[t.shop]) shopStats[t.shop] = 0;
-            shopStats[t.shop] += t.qty;
+            if (t.status !== 'cut') {
+                totalVol += t.qty;
+                if(t.status === 'sold') totalProfit += t.profit;
+                totalCost += (t.cost * t.qty);
+
+                const key = `${t.model} ${t.cap} ${t.color}`;
+                if(!modelStats[key]) modelStats[key] = { qty: 0, profit: 0 };
+                modelStats[key].qty += t.qty;
+                if(t.status === 'sold') modelStats[key].profit += t.profit;
+
+                const shopName = t.shop || 'Unknown';
+                if(!shopStats[shopName]) shopStats[shopName] = 0;
+                shopStats[shopName] += t.qty;
+            }
         });
 
-        let msg = `📱 *炒賣報告*\n`;
-        msg += `📦 總貨量: ${totalVol} | 💰 總成本: $${totalCost.toLocaleString()} | 📈 利潤: $${totalProfit.toLocaleString()}\n`;
-        msg += `\n🏢 *店舖*: \n`;
+        let msg = `📱 *炒賣報告 (Active)*\n──────────────\n`;
+        msg += `📦 總貨量: ${totalVol} 部\n`;
+        msg += `💰 總成本: $${totalCost.toLocaleString()}\n`;
+        msg += `📈 總利潤 (已賣): $${totalProfit.toLocaleString()}\n\n`;
+        
+        msg += `🏢 *店舖*: \n`;
         for (const [shop, count] of Object.entries(shopStats)) msg += `- ${shop}: ${count}\n`;
+        
         msg += `\n📱 *機型*: \n`;
-        for (const [name, s] of Object.entries(modelStats)) msg += `- ${name}: ${s.qty}\n`;
+        for (const [name, s] of Object.entries(modelStats)) msg += `- ${name}: ${s.qty} (賺$${s.profit})\n`;
 
         sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
     }
