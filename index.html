@@ -41,10 +41,10 @@
         .source-tag { background: rgba(255, 255, 255, 0.1); border: 1px solid var(--text-muted); margin-right: 4px;}
         
         .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 5px; }
-        .status-ordered { background: #f39c12; color: #000; } 
-        .status-stock { background: #3498db; color: #fff; } 
-        .status-sold { background: var(--primary); color: #fff; } 
-        .status-cut { background: var(--danger); color: #fff; text-decoration: line-through; } 
+        .status-ordered { background: #f39c12; color: #000; } /* Pending */
+        .status-stock { background: #3498db; color: #fff; } /* In Stock */
+        .status-sold { background: var(--primary); color: #fff; } /* Sold */
+        .status-cut { background: var(--danger); color: #fff; text-decoration: line-through; } /* Cancelled */
 
         .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; }
         .miles-tag { font-size: 0.75rem; color: var(--miles); background: rgba(162, 155, 254, 0.15); padding: 2px 6px; border-radius: 4px; display: inline-block; }
@@ -83,16 +83,13 @@
         .modal-overlay.active { display: flex; }
         .modal-content { background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; padding: 25px; border-radius: 16px; padding-bottom: 50px; position: relative; }
         
-        /* Improved Close Button (Requested) */
+        /* Improved Close Button */
         .close-modal { 
             position: absolute; top: 10px; right: 10px; 
-            background: #cc4444; /* Red Background */
-            border: 2px solid #fff; color: #fff; 
-            width: 36px; height: 36px; /* Larger */
-            border-radius: 50%; 
+            background: #cc4444; border: 2px solid #fff; color: #fff; 
+            width: 36px; height: 36px; border-radius: 50%; 
             font-size: 1.4rem; font-weight: bold;
-            cursor: pointer; 
-            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
             z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
         .close-modal:active { transform: scale(0.9); }
@@ -106,7 +103,6 @@
         #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
         @keyframes fadein { from {bottom: 60px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 60px; opacity: 0;} }
-        
         .checkbox-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); }
         .recur-item, .welcome-item { background: var(--surface-hover); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
         .recur-item.completed { border-color: var(--primary); background: rgba(0, 210, 106, 0.05); }
@@ -237,7 +233,7 @@
     </div>
     
     <div class="footer">
-        Copyright © Redezero | v1.65 <br>
+        Copyright © Redezero | v1.67 <br>
         <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem;">⛑️ 下載備份</button>
     </div>
     
@@ -357,11 +353,7 @@
     </div>
 </div>
 
-<div id="modal-split" class="modal-overlay">
-    <div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>✂️ 分單</h2><div class="form-group"><input type="number" id="split-total" placeholder="總額" oninput="calcSplit()"></div><div class="row-group"><label><input type="checkbox" id="split-service" onchange="calcSplit()" style="width:auto;"> +10%</label><input type="number" id="split-discount" placeholder="折扣%" oninput="calcSplit()"></div><div class="form-group"><div style="display:flex;gap:10px;"><button type="button" class="btn-small" onclick="adjustPeople(-1)">-</button><input type="number" id="split-people" value="2" style="text-align:center;" oninput="calcSplit()"><button type="button" class="btn-small" onclick="adjustPeople(1)">+</button></div></div><div style="text-align:center; margin:15px;"><div id="split-result" style="font-size:2rem; font-weight:bold;">$0.00</div></div><button type="button" class="btn" onclick="applySplit()">填入</button></div>
-</div>
-
-<!-- Other Modals -->
+<div id="modal-split" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>✂️ 分單</h2><div class="form-group"><input type="number" id="split-total" placeholder="總額" oninput="calcSplit()"></div><div class="row-group"><label><input type="checkbox" id="split-service" onchange="calcSplit()" style="width:auto;"> +10%</label><input type="number" id="split-discount" placeholder="折扣%" oninput="calcSplit()"></div><div class="form-group"><div style="display:flex;gap:10px;"><button type="button" class="btn-small" onclick="adjustPeople(-1)">-</button><input type="number" id="split-people" value="2" style="text-align:center;" oninput="calcSplit()"><button type="button" class="btn-small" onclick="adjustPeople(1)">+</button></div></div><div style="text-align:center; margin:15px;"><div id="split-result" style="font-size:2rem; font-weight:bold;">$0.00</div></div><button type="button" class="btn" onclick="applySplit()">填入</button></div></div>
 <div id="modal-card" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>新增卡片</h2><form id="card-form" onsubmit="addCard(event)"><div class="form-group"><input type="text" id="card-name" required placeholder="名稱"></div><div class="form-group"><select id="card-type" onchange="toggleCardRateInput()"><option value="cashback">現金回贈</option><option value="miles">里數</option></select></div><div class="row-group"><input type="number" id="card-rate" placeholder="Rate"><input type="number" id="card-rate-fx" placeholder="FX Rate"></div><div class="row-group"><input type="number" id="card-stmt-day" placeholder="截數日"><input type="number" id="card-pay-gap" placeholder="還款期"></div><div class="form-group"><input type="number" id="card-cap" placeholder="上限"></div><div class="form-group"><input type="text" id="card-note" placeholder="備註"></div><button type="submit" class="btn">新增</button></form></div></div>
 <div id="modal-recur-mission" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>每月任務</h2><div id="recur-list"></div><form onsubmit="addRecurMission(event)"><input type="text" id="recur-name" required placeholder="任務名"><div class="row-group"><input type="number" id="recur-target" required placeholder="目標"><select id="recur-card" required></select></div><select id="recur-reset-day"><option value="1">1號重置</option><option value="12">12號重置</option></select><button type="submit" class="btn-small">+ 加入</button></form></div></div>
 <div id="modal-welcome" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>迎新監察</h2><div id="welcome-list"></div><form onsubmit="addWelcome(event)"><input type="text" id="welcome-name" required placeholder="迎新名"><div class="row-group"><select id="welcome-card" required></select><input type="number" id="welcome-target" required placeholder="目標"></div><input type="date" id="welcome-deadline" required><input type="date" id="welcome-start" required><button type="submit" class="btn-small">+ 加入</button></form></div></div>
@@ -375,7 +367,7 @@
         <button class="close-modal" onclick="closeModals()">×</button>
         <h2>更新日誌</h2>
         <div class="log-list">
-            <div class="log-item"><div class="log-date">v1.65 (Debug & Fix)</div><div class="log-content">- 修復：TG 報告語法錯誤。<br>- 優化：來源/回收店分流。<br>- 新增：錯誤偵測模式。</div></div>
+            <div class="log-item"><div class="log-date">v1.67 (Full Bank Info)</div><div class="log-content">- 修復：銀行資料庫完整回歸 (HSBC, 渣打, 恒生...)。<br>- 繼承：所有 v1.66 的功能。</div></div>
         </div>
     </div>
 </div>
@@ -406,7 +398,18 @@
     const IPHONE_PRICES = { 'Pro': { '256GB': 9399, '512GB': 11099, '1TB': 12799 }, 'Pro Max': { '256GB': 10199, '512GB': 11899, '1TB': 13599, '2TB': 16999 } };
     const CATEGORIES = { expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他', '固定開支'], income: ['薪金', '賣野', '投資', '其他'], repayment: ['信用卡還款'] };
     const PRESET_CARDS = [ { name: '現金', type: 'cashback', rate: 0 }, { name: 'WeWa', type: 'cashback', rate: 10 } ];
-    const BANK_INFO = [ { name: 'HSBC', promoUrl: '', rewardUrl: '', csPhone: '2233 3000', csTrick: '1>0' } ];
+    
+    // FULL BANK INFO RESTORED
+    const BANK_INFO = [
+        { name: 'HSBC 匯豐', promoUrl: 'https://www.redhotoffers.hsbc.com.hk/', rewardUrl: 'https://www.hsbc.com.hk/zh-hk/credit-cards/rewards/reward-cash/', csPhone: '2233 3000', csTrick: '選語言 > 1 > 0' },
+        { name: 'Standard Chartered 渣打', promoUrl: 'https://www.sc.com/hk/zh/credit-cards/promotion/', rewardUrl: 'https://www.sc.com/hk/zh/credit-cards/360-rewards/', csPhone: '2886 4111', csTrick: '選語言 > 2 > 0' },
+        { name: 'Hang Seng 恒生', promoUrl: 'https://www.hangseng.com/zh-hk/personal/cards/', rewardUrl: 'https://www.hangseng.com/zh-hk/personal/cards/cash-dollars/', csPhone: '2998 9188', csTrick: '選語言 > 1 > 0' },
+        { name: 'BOC 中銀香港', promoUrl: 'https://www.bochk.com/tc/creditcard/promotions.html', rewardUrl: 'https://www.bochk.com/tc/creditcard/reward.html', csPhone: '2853 8828', csTrick: '選語言 > 1 > 0' },
+        { name: 'DBS 星展', promoUrl: 'https://www.dbs.com.hk/personal-zh/credit-cards/promotions/default.page', rewardUrl: 'https://www.dbs.com.hk/personal-zh/credit-cards/rewards.page', csPhone: '2290 8888', csTrick: '選語言 > 1 > 0' },
+        { name: 'Citi 花旗', promoUrl: 'https://www1.citibank.com.hk/chinese/credit-cards/promotions', rewardUrl: 'https://www1.citibank.com.hk/chinese/credit-cards/rewards', csPhone: '2860 0333', csTrick: '選語言 > *0' },
+        { name: 'BEA 東亞', promoUrl: 'https://www.hkbea.com/html/tc/bea-credit-card-spending-offer.html', rewardUrl: '', csPhone: '3608 6628', csTrick: '選語言 > 1 > 9' },
+        { name: 'EarnMORE / WeWa', promoUrl: 'https://www.primecredit.com/credit-card/latest-offer/', rewardUrl: 'https://www.primecredit.com/credit-card/wewa-club/', csPhone: '2269 8888', csTrick: '選語言 > 0' }
+    ];
 
     // State
     let state = { transactions: [], cards: [], missions: [], recurringMissions: [], subscriptions: [], trades: [], welcomeOffers: [], settings: { startDay: 1 } };
@@ -1064,36 +1067,59 @@
         if (!state.settings.tgToken) { alert('請設定 TG'); return; }
         if(!confirm('發送炒賣報告？')) return;
         
-        let totalVol = 0, totalProfit = 0, totalCost = 0;
-        const modelStats = {}, shopStats = {};
+        const monthInput = document.getElementById('analysis-month') ? document.getElementById('analysis-month').value : new Date().toISOString().slice(0, 7);
+        
+        // Group trades by Date -> Shop
+        const reportData = {};
+        let totalProfit = 0;
+        
+        const filterMonth = analysisMode === 'month' && document.getElementById('analysis-month') ? document.getElementById('analysis-month').value : new Date().toISOString().slice(0, 7);
+        
+        const soldTrades = state.trades.filter(t => t.status === 'sold' && t.date.startsWith(filterMonth));
 
-        state.trades.forEach(t => {
-            if (t.status !== 'cut') {
-                totalVol += t.qty;
-                if(t.status === 'sold') totalProfit += t.profit;
-                totalCost += (t.cost * t.qty);
+        if (soldTrades.length === 0) { alert('本月暫無已賣出的交易'); return; }
 
-                const key = `${t.model} ${t.cap} ${t.color}`;
-                if(!modelStats[key]) modelStats[key] = { qty: 0, profit: 0 };
-                modelStats[key].qty += t.qty;
-                if(t.status === 'sold') modelStats[key].profit += t.profit;
+        // Sort by Date Desc
+        soldTrades.sort((a,b) => new Date(b.date) - new Date(a.date));
 
-                const shopName = t.shop || 'Unknown';
-                if(!shopStats[shopName]) shopStats[shopName] = 0;
-                shopStats[shopName] += t.qty;
-            }
+        soldTrades.forEach(t => {
+            const dateStr = t.date.slice(0, 10);
+            if (!reportData[dateStr]) reportData[dateStr] = {};
+            
+            const shop = t.shop || '其他';
+            if (!reportData[dateStr][shop]) reportData[dateStr][shop] = [];
+            
+            reportData[dateStr][shop].push(t);
+            totalProfit += t.profit;
         });
 
-        let msg = `📱 *炒賣報告 (Active)*\n──────────────\n`;
-        msg += `📦 總貨量: ${totalVol} 部\n`;
-        msg += `💰 總成本: $${totalCost.toLocaleString()}\n`;
-        msg += `📈 總利潤 (已賣): $${totalProfit.toLocaleString()}\n\n`;
-        
-        msg += `🏢 *店舖*: \n`;
-        for (const [shop, count] of Object.entries(shopStats)) msg += `- ${shop}: ${count}\n`;
-        
-        msg += `\n📱 *機型*: \n`;
-        for (const [name, s] of Object.entries(modelStats)) msg += `- ${name}: ${s.qty} (賺$${s.profit})\n`;
+        let msg = `📊 *炒賣報告 (${filterMonth})*\n`;
+        msg += `💰 總利潤: $${totalProfit.toLocaleString()}\n`;
+        msg += `------------------\n`;
+
+        for (const [date, shops] of Object.entries(reportData)) {
+            msg += `📅 *${date}*\n`;
+            for (const [shop, items] of Object.entries(shops)) {
+                msg += `🏢 ${shop}\n`;
+                
+                // Aggregate items
+                const itemSummary = {};
+                items.forEach(t => {
+                    const cond = t.condition === 'opened' ? '開封' : '原封';
+                    const model = t.model === 'Pro Max' ? '大' : (t.model === 'Pro' ? '細' : t.model);
+                    const key = `${cond}${model}${t.color}${t.cap}`; // e.g. 原封大橙256GB
+                    
+                    if (!itemSummary[key]) itemSummary[key] = { qty: 0, profit: 0 };
+                    itemSummary[key].qty += t.qty;
+                    itemSummary[key].profit += t.profit;
+                });
+
+                for (const [key, val] of Object.entries(itemSummary)) {
+                    msg += `- ${key}: ${val.qty} (賺$${val.profit})\n`;
+                }
+            }
+            msg += `\n`;
+        }
 
         sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
     }
