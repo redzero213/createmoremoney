@@ -41,10 +41,10 @@
         .source-tag { background: rgba(255, 255, 255, 0.1); border: 1px solid var(--text-muted); margin-right: 4px;}
         
         .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 5px; }
-        .status-ordered { background: #f39c12; color: #000; } /* Pending */
-        .status-stock { background: #3498db; color: #fff; } /* In Stock */
-        .status-sold { background: var(--primary); color: #fff; } /* Sold */
-        .status-cut { background: var(--danger); color: #fff; text-decoration: line-through; } /* Cancelled */
+        .status-ordered { background: #f39c12; color: #000; } 
+        .status-stock { background: #3498db; color: #fff; } 
+        .status-sold { background: var(--primary); color: #fff; } 
+        .status-cut { background: var(--danger); color: #fff; text-decoration: line-through; } 
 
         .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; }
         .miles-tag { font-size: 0.75rem; color: var(--miles); background: rgba(162, 155, 254, 0.15); padding: 2px 6px; border-radius: 4px; display: inline-block; }
@@ -58,7 +58,8 @@
         .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); }
         .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); border: 1px solid var(--repay); }
         .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
-        .grid-btn { padding: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-align: center; display:flex; align-items:center; justify-content:center; flex-direction:column; min-height:55px; line-height: 1.2; overflow-wrap: break-word;}
+        .grid-btn { padding: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-align: center; display:flex; align-items:center; justify-content:center; flex-direction:column; min-height:55px; line-height: 1.2; overflow-wrap: break-word; -webkit-tap-highlight-color: transparent;}
+        .grid-btn:active { background: var(--surface); transform: scale(0.98); }
         .grid-btn.selected { background: var(--trade); color: #000; border-color: var(--trade); font-weight: bold; }
         
         .analysis-controls { display: flex; gap: 5px; background: var(--bg); padding: 5px; border-radius: 8px; margin-bottom: 15px; overflow-x: auto; }
@@ -111,14 +112,7 @@
         .toggle-switch input { width: auto; margin: 0; }
         
         /* CSS Phone Icons */
-        .phone-icon {
-            width: 22px; height: 40px;
-            border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.2);
-            position: relative;
-            margin-bottom: 3px;
-            box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
+        .phone-icon { width: 22px; height: 40px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); position: relative; margin-bottom: 3px; box-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .phone-icon::before { content: ''; position: absolute; top: 5px; left: 4px; width: 10px; height: 10px; background: rgba(0,0,0,0.4); border-radius: 3px; }
         .phone-icon.silver { background: linear-gradient(135deg, #e3e4e5 0%, #999 100%); }
         .phone-icon.orange { background: linear-gradient(135deg, #C5B4A3 0%, #8C7C6D 100%); }
@@ -233,7 +227,7 @@
     </div>
     
     <div class="footer">
-        Copyright © Redezero | v1.67 <br>
+        Copyright © Redezero | v1.69 <br>
         <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem;">⛑️ 下載備份</button>
     </div>
     
@@ -299,10 +293,16 @@
         <form id="trade-form" onsubmit="addTrade(event)">
             <input type="hidden" id="trade-id">
             
-            <div class="section-title">1. 購入來源 (Source)</div>
-            <div class="form-group">
-                <div class="btn-grid" id="trade-source-grid" style="grid-template-columns: repeat(4, 1fr);"></div>
-                <input type="hidden" id="trade-source" required>
+            <div class="section-title">1. 訂單資料</div>
+            <div class="row-group">
+                 <div class="form-group">
+                    <label>購入來源</label>
+                    <select id="trade-source" required></select>
+                </div>
+                <div class="form-group">
+                    <label>訂單編號 (選填)</label>
+                    <input type="text" id="trade-oid" placeholder="例如: W538...">
+                </div>
             </div>
             
             <div class="section-title">2. 交易狀態 (Status)</div>
@@ -316,11 +316,12 @@
                 <input type="hidden" id="trade-status" required>
             </div>
 
-            <!-- Only shown if status is SOLD in logic, but for simplicity always show or JS toggle? Keeping it simple always show but optional -->
             <div class="section-title">3. 回收店舖 (如已賣出)</div>
             <div class="form-group">
-                <div class="btn-grid" id="trade-shop-grid" style="grid-template-columns: repeat(4, 1fr);"></div>
-                <input type="hidden" id="trade-shop">
+                <select id="trade-shop">
+                    <option value="">-- 請選擇 (未賣出可不填) --</option>
+                    <!-- Options populated by JS -->
+                </select>
             </div>
 
             <div class="section-title">4. 規格 & 財務</div>
@@ -367,7 +368,7 @@
         <button class="close-modal" onclick="closeModals()">×</button>
         <h2>更新日誌</h2>
         <div class="log-list">
-            <div class="log-item"><div class="log-date">v1.67 (Full Bank Info)</div><div class="log-content">- 修復：銀行資料庫完整回歸 (HSBC, 渣打, 恒生...)。<br>- 繼承：所有 v1.66 的功能。</div></div>
+            <div class="log-item"><div class="log-date">v1.69 (List Style)</div><div class="log-content">- 新增：購入來源/回收店改為下拉列表。<br>- 新增：訂單編號欄位。<br>- 修復：報告利潤計算。<br>- UI：關閉按鈕優化。</div></div>
         </div>
     </div>
 </div>
@@ -429,27 +430,23 @@
             const cS = document.getElementById('tx-currency');
             if(cS) { cS.innerHTML=''; CURRENCIES.forEach(c=>{ let o=document.createElement('option'); o.value=c; o.text=c; cS.add(o); }); }
             
-            // Build Source Grid
-            const sourceG = document.getElementById('trade-source-grid');
-            if(sourceG) { 
-                sourceG.innerHTML=''; 
+            // Build Source Select
+            const sourceS = document.getElementById('trade-source');
+            if(sourceS) { 
+                sourceS.innerHTML=''; 
                 TRADE_SOURCES.forEach(src=>{ 
-                    let d=document.createElement('div'); d.className='grid-btn'; 
-                    d.innerText=src; 
-                    d.onclick=()=>selectTradeOption('source', src, d); 
-                    sourceG.appendChild(d); 
+                    let o=document.createElement('option'); o.value=src; o.text=src; 
+                    sourceS.add(o); 
                 }); 
             }
 
-            // Build Shop Grid
-            const shopG = document.getElementById('trade-shop-grid');
-            if(shopG) { 
-                shopG.innerHTML=''; 
+            // Build Shop Select
+            const shopS = document.getElementById('trade-shop');
+            if(shopS) { 
+                // shopS.innerHTML='<option value="">-- 請選擇 (未賣出可不填) --</option>'; // Already in HTML
                 TRADE_SHOPS.forEach(sh=>{ 
-                    let d=document.createElement('div'); d.className='grid-btn'; 
-                    d.innerText=sh; 
-                    d.onclick=()=>selectTradeOption('shop', sh, d); 
-                    shopG.appendChild(d); 
+                    let o=document.createElement('option'); o.value=sh; o.text=sh; 
+                    shopS.add(o); 
                 }); 
             }
 
@@ -536,8 +533,11 @@
             
             // Logic for showing location
             const source = t.source || '未知';
-            if (t.status === 'sold' && t.shop) locationDisplay = `${source} ➔ ${t.shop}`;
-            else locationDisplay = source;
+            // Show OID if exists
+            const oidText = t.oid ? `(單號:${t.oid})` : '';
+            
+            if (t.status === 'sold' && t.shop) locationDisplay = `${source} ${oidText} ➔ ${t.shop}`;
+            else locationDisplay = `${source} ${oidText}`;
 
             const card = state.cards.find(c => c.id == t.cardId);
             const cName = card ? `<span class="cat-tag" style="font-size:0.6rem">💳 ${card.name}</span>` : '';
@@ -850,9 +850,10 @@
         const condition = document.getElementById('trade-condition').value || 'sealed';
         const source = document.getElementById('trade-source').value || 'N/A';
         const shop = document.getElementById('trade-shop').value || '';
+        const oid = document.getElementById('trade-oid').value || '';
 
         const tradeData = {
-            source, shop,
+            source, shop, oid,
             model: document.getElementById('trade-model').value,
             cap: document.getElementById('trade-cap').value,
             color: document.getElementById('trade-color').value,
@@ -880,6 +881,7 @@
         document.getElementById('trade-id').value = t.id;
         document.getElementById('trade-source').value = t.source || "";
         document.getElementById('trade-shop').value = t.shop || "";
+        document.getElementById('trade-oid').value = t.oid || "";
         document.getElementById('trade-model').value = t.model;
         document.getElementById('trade-cap').value = t.cap;
         document.getElementById('trade-color').value = t.color;
@@ -891,12 +893,11 @@
         document.getElementById('trade-status').value = t.status || 'pending';
         document.getElementById('trade-condition').value = t.condition || 'sealed';
 
-        // Update Visual Selection
+        // Update Visual Selection (Including Condition)
         ['source', 'shop', 'model', 'cap', 'color', 'status', 'condition'].forEach(type => {
             const val = t[type];
             let grid;
-            if(type==='source') grid = document.getElementById('trade-source-grid');
-            else if(type==='shop') grid = document.getElementById('trade-shop-grid');
+            if(type==='source') grid = document.getElementById('trade-source').parentElement.querySelector('.btn-grid'); // No grid now
             else if(type==='status' || type==='condition') {
                  const input = document.getElementById('trade-'+type);
                  if(input) grid = input.parentElement.querySelector('.btn-grid');
@@ -906,7 +907,8 @@
                 if(hiddenInput) grid = hiddenInput.parentElement.querySelector('.btn-grid');
             }
             
-            if (grid && val) {
+            // Note: Source and Shop are selects now, so no grid update needed for them.
+            if (grid) {
                 Array.from(grid.children).forEach(btn => {
                     btn.classList.remove('selected');
                     if (btn.innerText.includes(val) || btn.innerText === val) {
