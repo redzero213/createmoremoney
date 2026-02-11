@@ -10,15 +10,15 @@
     <title>回贈哥 - 智能簽賬管理</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #00d26a; --primary-dark: #00a855; --bg: #121212; --surface: #1e1e1e; --surface-hover: #2d2d2d; --text: #e0e0e0; --text-muted: #a0a0a0; --danger: #ff4d4d; --income: #4facfe; --repay: #ff9f43; --miles: #a29bfe; --mission: #f39c12; --welcome: #e84393; --sub: #e17055; --trade: #00cec9; --info: #0984e3; --telegram: #229ED9; --border: #333; --card-gradient: linear-gradient(135deg, #2c3e50, #000000); --shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        [data-theme="light"] { --primary: #00b85c; --primary-dark: #008f45; --bg: #f4f6f8; --surface: #ffffff; --surface-hover: #eef2f5; --text: #1a1a1a; --text-muted: #666666; --danger: #d93025; --income: #1a73e8; --repay: #e37400; --miles: #6c5ce7; --mission: #d35400; --welcome: #d63031; --sub: #d63031; --trade: #00b894; --info: #0984e3; --telegram: #229ED9; --border: #e0e0e0; --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af); --shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        :root { --primary: #00d26a; --primary-dark: #00a855; --bg: #121212; --surface: #1e1e1e; --surface-hover: #2d2d2d; --text: #e0e0e0; --text-muted: #a0a0a0; --danger: #ff4d4d; --income: #4facfe; --repay: #ff9f43; --miles: #a29bfe; --mission: #f39c12; --welcome: #e84393; --sub: #e17055; --trade: #00cec9; --info: #0984e3; --telegram: #229ED9; --border: #333; --card-gradient: linear-gradient(135deg, #2c3e50, #000000); --shadow: 0 4px 6px rgba(0,0,0,0.3); --chart-text: #e0e0e0; }
+        [data-theme="light"] { --primary: #00b85c; --primary-dark: #008f45; --bg: #f4f6f8; --surface: #ffffff; --surface-hover: #eef2f5; --text: #1a1a1a; --text-muted: #666666; --danger: #d93025; --income: #1a73e8; --repay: #e37400; --miles: #6c5ce7; --mission: #d35400; --welcome: #d63031; --sub: #d63031; --trade: #00b894; --info: #0984e3; --telegram: #229ED9; --border: #e0e0e0; --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af); --shadow: 0 2px 8px rgba(0,0,0,0.08); --chart-text: #333333; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; transition: background-color 0.3s, color 0.3s; }
-        header { background: var(--surface); padding: 12px 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
+        header { background: var(--surface); padding: 12px 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); padding-top: max(12px, env(safe-area-inset-top)); }
         h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
         .app-logo { width: 28px; height: 28px; object-fit: contain; }
         .menu-btn { font-size: 0.9rem; background: var(--surface-hover); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; padding-bottom: max(80px, env(safe-area-inset-bottom)); }
         .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
@@ -77,7 +77,7 @@
         .card-info { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-top: 5px; display: flex; justify-content: space-between; align-items: center; }
         .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
-        .fab { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: #fff; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4); cursor: pointer; border: none; z-index: 90; }
+        .fab { position: fixed; bottom: max(20px, env(safe-area-inset-bottom) + 20px); right: 20px; background: var(--primary); color: #fff; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4); cursor: pointer; border: none; z-index: 90; }
         
         /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 200; }
@@ -104,10 +104,25 @@
         #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
         @keyframes fadein { from {bottom: 60px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 60px; opacity: 0;} }
-        .checkbox-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); }
+        
+        /* Checkbox Items - Improved */
+        .checkbox-group { 
+            display: flex; flex-direction: column; max-height: 200px; overflow-y: auto; 
+            border: 1px solid var(--border); border-radius: 8px; background: var(--surface); padding: 0; 
+        }
+        .checkbox-item { 
+            display: flex; align-items: center; gap: 12px; font-size: 0.95rem; 
+            padding: 12px 15px; border-bottom: 1px solid var(--border); transition: background 0.2s;
+            cursor: pointer;
+        }
+        .checkbox-item:last-child { border-bottom: none; }
+        .checkbox-item:hover { background: var(--surface-hover); }
+        .checkbox-item input { width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer; margin: 0; }
+        .checkbox-item span { flex: 1; color: var(--text); }
+
         .recur-item, .welcome-item { background: var(--surface-hover); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
         .recur-item.completed { border-color: var(--primary); background: rgba(0, 210, 106, 0.05); }
-        .footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 30px; padding-bottom: 20px; }
+        .footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 30px; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
         .toggle-switch { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; margin-bottom: 10px; }
         .toggle-switch input { width: auto; margin: 0; }
         
@@ -227,7 +242,7 @@
     </div>
     
     <div class="footer">
-        Copyright © Redezero | v1.69 <br>
+        Copyright © Redezero | v1.70 <br>
         <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem;">⛑️ 下載備份</button>
     </div>
     
@@ -293,16 +308,14 @@
         <form id="trade-form" onsubmit="addTrade(event)">
             <input type="hidden" id="trade-id">
             
-            <div class="section-title">1. 訂單資料</div>
-            <div class="row-group">
-                 <div class="form-group">
-                    <label>購入來源</label>
-                    <select id="trade-source" required></select>
-                </div>
-                <div class="form-group">
-                    <label>訂單編號 (選填)</label>
-                    <input type="text" id="trade-oid" placeholder="例如: W538...">
-                </div>
+            <div class="section-title">1. 購入來源 (Source)</div>
+            <div class="form-group">
+                <select id="trade-source" onchange="toggleCustomInput('source')"></select>
+                <input type="text" id="trade-source-custom" placeholder="請輸入來源" style="display:none; margin-top:5px;">
+            </div>
+            <div class="form-group">
+                 <label>訂單編號 (選填)</label>
+                 <input type="text" id="trade-oid" placeholder="例如: W538...">
             </div>
             
             <div class="section-title">2. 交易狀態 (Status)</div>
@@ -316,12 +329,14 @@
                 <input type="hidden" id="trade-status" required>
             </div>
 
+            <!-- Only shown if status is SOLD in logic, but for simplicity always show or JS toggle? Keeping it simple always show but optional -->
             <div class="section-title">3. 回收店舖 (如已賣出)</div>
             <div class="form-group">
-                <select id="trade-shop">
+                <select id="trade-shop" onchange="toggleCustomInput('shop')">
                     <option value="">-- 請選擇 (未賣出可不填) --</option>
                     <!-- Options populated by JS -->
                 </select>
+                <input type="text" id="trade-shop-custom" placeholder="請輸入店舖名稱" style="display:none; margin-top:5px;">
             </div>
 
             <div class="section-title">4. 規格 & 財務</div>
@@ -347,7 +362,7 @@
 
             <div class="row-group"><div class="form-group"><label>原價 (Cost)</label><input type="number" id="trade-cost" required></div><div class="form-group"><label>放售 (Price)</label><input type="number" id="trade-price" required></div></div>
             <div class="form-group"><label>數量</label><div style="display:flex;gap:10px;"><button type="button" class="btn-small" onclick="adjustTradeQty(-1)">-</button><input type="number" id="trade-qty" value="1" style="text-align:center;"><button type="button" class="btn-small" onclick="adjustTradeQty(1)">+</button></div></div>
-            <div class="form-group"><label>付款信用卡</label><select id="trade-card"><option value="">不使用 (只計利潤)</option></select><div style="font-size:0.75rem; color:var(--text-muted);">*選取後，成本將計入該卡簽賬。</div></div>
+            <div class="form-group"><label>付款信用卡</label><select id="trade-card"><option value="">不使用 (只計利潤)</option></select><div style="font-size:0.75rem; color:var(--text-muted);">*自動計入該卡簽賬額</div></div>
             <div class="form-group"><label>日期時間</label><input type="datetime-local" id="trade-date" required></div>
             <button type="submit" id="btn-trade-submit" class="btn" style="background:var(--trade); color:#000;">記錄交易</button>
         </form>
@@ -368,7 +383,8 @@
         <button class="close-modal" onclick="closeModals()">×</button>
         <h2>更新日誌</h2>
         <div class="log-list">
-            <div class="log-item"><div class="log-date">v1.69 (List Style)</div><div class="log-content">- 新增：購入來源/回收店改為下拉列表。<br>- 新增：訂單編號欄位。<br>- 修復：報告利潤計算。<br>- UI：關閉按鈕優化。</div></div>
+            <div class="log-item"><div class="log-date">v1.70 (Trade Pro)</div><div class="log-content">- 新增：炒賣TG提示 (含卡片進度預警)。<br>- 優化：限時任務選卡介面。<br>- 新增：其他 (手動輸入) 店舖功能。<br>- 更新：店舖及來源名單 (中原, 1010...)。</div></div>
+            <div class="log-item"><div class="log-date">v1.69</div><div class="log-content">- 列表式選擇及訂單編號。</div></div>
         </div>
     </div>
 </div>
@@ -392,7 +408,7 @@
     const CURRENCIES = ['HKD', 'CNY', 'USD', 'JPY', 'TWD', 'GBP', 'EUR', 'KRW', 'AUD', 'SGD'];
     
     // SOURCES (Where bought)
-    const TRADE_SOURCES = ['AOS (官網)', 'APU (店取)', '百老匯', '豐澤', '友和', '蘇寧', '電器幫', 'CMHK', 'CSL', 'Smartone', '3HK', 'HKTVMall', '京東', '免稅店'];
+    const TRADE_SOURCES = ['AOS (官網)', 'APU (店取)', '百老匯', '豐澤', '友和', '蘇寧', '電器幫', 'CMHK', 'CSL', 'Smartone', '3HK', '中原', '1010'];
     // SHOPS (Where sold)
     const TRADE_SHOPS = ['雪球', '萬通', '日韓', '誠信', 'bobo', 'YY', 'G79', 'F9', 'DIY', '新宇宙', '溫記', '鵬程', 'iTrade', '星耀', 'Carousell'];
     
@@ -400,7 +416,6 @@
     const CATEGORIES = { expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他', '固定開支'], income: ['薪金', '賣野', '投資', '其他'], repayment: ['信用卡還款'] };
     const PRESET_CARDS = [ { name: '現金', type: 'cashback', rate: 0 }, { name: 'WeWa', type: 'cashback', rate: 10 } ];
     
-    // FULL BANK INFO RESTORED
     const BANK_INFO = [
         { name: 'HSBC 匯豐', promoUrl: 'https://www.redhotoffers.hsbc.com.hk/', rewardUrl: 'https://www.hsbc.com.hk/zh-hk/credit-cards/rewards/reward-cash/', csPhone: '2233 3000', csTrick: '選語言 > 1 > 0' },
         { name: 'Standard Chartered 渣打', promoUrl: 'https://www.sc.com/hk/zh/credit-cards/promotion/', rewardUrl: 'https://www.sc.com/hk/zh/credit-cards/360-rewards/', csPhone: '2886 4111', csTrick: '選語言 > 2 > 0' },
@@ -437,17 +452,19 @@
                 TRADE_SOURCES.forEach(src=>{ 
                     let o=document.createElement('option'); o.value=src; o.text=src; 
                     sourceS.add(o); 
-                }); 
+                });
+                sourceS.add(new Option('其他 (手動輸入)', 'other'));
             }
 
             // Build Shop Select
             const shopS = document.getElementById('trade-shop');
             if(shopS) { 
-                // shopS.innerHTML='<option value="">-- 請選擇 (未賣出可不填) --</option>'; // Already in HTML
+                shopS.innerHTML='<option value="">-- 請選擇 (未賣出可不填) --</option>';
                 TRADE_SHOPS.forEach(sh=>{ 
                     let o=document.createElement('option'); o.value=sh; o.text=sh; 
                     shopS.add(o); 
                 }); 
+                shopS.add(new Option('其他 (手動輸入)', 'other'));
             }
 
             if(state.settings.tgToken) document.getElementById('tg-token').value = state.settings.tgToken;
@@ -557,6 +574,29 @@
                     </div>
                 </div>`;
         });
+    }
+    
+    // Updated Helper to calculate specific card spending for current month
+    function getCardSpending(cardId) {
+        const {start, end} = getFinancialMonthRange();
+        let total = 0;
+        
+        state.transactions.forEach(tx => {
+            const d = new Date(tx.date);
+            if(d>=start && d<=end && tx.cardId == cardId && tx.type === 'expense') {
+                total += tx.amount;
+            }
+        });
+        
+        state.trades.forEach(t => {
+            const d = new Date(t.date);
+            if(d>=start && d<=end && t.cardId == cardId) {
+                 // All trades count towards spending
+                 total += (t.cost * t.qty);
+            }
+        });
+        
+        return total;
     }
 
     function calculateStats() {
@@ -733,9 +773,15 @@
                 document.getElementById('trade-qty').value = 1;
                 document.getElementById('trade-status').value = 'pending';
                 document.getElementById('trade-condition').value = 'sealed';
+                document.getElementById('trade-source').value = ''; 
+                document.getElementById('trade-shop').value = '';
                 // Clean visuals
                 document.querySelectorAll('.grid-btn.selected').forEach(b => b.classList.remove('selected'));
                 setDefaultTime();
+                
+                // Hide custom inputs initially
+                document.getElementById('trade-source-custom').style.display='none';
+                document.getElementById('trade-shop-custom').style.display='none';
              }
              updateFormOptions();
         }
@@ -773,6 +819,7 @@
         const ts = document.getElementById('trade-card'); if(ts) ts.innerHTML='<option value="">不使用 (只計利潤)</option>';
         const ws = document.getElementById('welcome-card'); if(ws) ws.innerHTML='';
         const rs = document.getElementById('recur-card'); if(rs) rs.innerHTML='';
+        const missionCards = document.getElementById('mission-cards'); if(missionCards) missionCards.innerHTML='';
 
         state.cards.forEach(c => {
             let o = document.createElement('option'); o.value=c.id; o.text=c.name;
@@ -780,8 +827,27 @@
             if(ts) { let o2=document.createElement('option'); o2.value=c.id; o2.text=c.name; ts.add(o2); }
             if(ws) { let o3=document.createElement('option'); o3.value=c.id; o3.text=c.name; ws.add(o3); }
             if(rs) { let o4=document.createElement('option'); o4.value=c.id; o4.text=c.name; rs.add(o4); }
+            if(missionCards) {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.innerHTML = `<input type="checkbox" name="m-card" value="${c.id}" id="m-card-${c.id}"><label for="m-card-${c.id}">${c.name}</label>`;
+                missionCards.appendChild(div);
+            }
         });
         updateCardHint();
+    }
+
+    function toggleCustomInput(type) {
+        const select = document.getElementById('trade-'+type);
+        const input = document.getElementById('trade-'+type+'-custom');
+        if (select.value === 'other') {
+            input.style.display = 'block';
+            input.required = true;
+        } else {
+            input.style.display = 'none';
+            input.required = false;
+            input.value = '';
+        }
     }
 
     function handleTransactionSubmit(e) {
@@ -848,8 +914,13 @@
         const dateVal = document.getElementById('trade-date').value;
         const status = document.getElementById('trade-status').value || 'pending';
         const condition = document.getElementById('trade-condition').value || 'sealed';
-        const source = document.getElementById('trade-source').value || 'N/A';
-        const shop = document.getElementById('trade-shop').value || '';
+        
+        let source = document.getElementById('trade-source').value;
+        if (source === 'other') source = document.getElementById('trade-source-custom').value;
+        
+        let shop = document.getElementById('trade-shop').value;
+        if (shop === 'other') shop = document.getElementById('trade-shop-custom').value;
+        
         const oid = document.getElementById('trade-oid').value || '';
 
         const tradeData = {
@@ -869,6 +940,8 @@
             if (idx !== -1) state.trades[idx] = { ...state.trades[idx], ...tradeData };
         } else {
             state.trades.unshift({ id: Date.now(), ...tradeData });
+            // Send TG Alert if Card used
+            if(state.settings.tgAutoSend && cid) sendTelegramTradeAlert(tradeData);
         }
         saveData(); render(); closeModals();
     }
@@ -879,8 +952,31 @@
         
         openModal('trade');
         document.getElementById('trade-id').value = t.id;
-        document.getElementById('trade-source').value = t.source || "";
-        document.getElementById('trade-shop').value = t.shop || "";
+        
+        // Handle Source (check if in standard list or custom)
+        const srcSelect = document.getElementById('trade-source');
+        if ([...srcSelect.options].some(o => o.value === t.source)) {
+            srcSelect.value = t.source;
+            document.getElementById('trade-source-custom').style.display = 'none';
+        } else {
+            srcSelect.value = 'other';
+            const customInput = document.getElementById('trade-source-custom');
+            customInput.style.display = 'block';
+            customInput.value = t.source;
+        }
+
+        // Handle Shop
+        const shopSelect = document.getElementById('trade-shop');
+        if ([...shopSelect.options].some(o => o.value === t.shop) || !t.shop) {
+            shopSelect.value = t.shop || "";
+            document.getElementById('trade-shop-custom').style.display = 'none';
+        } else {
+            shopSelect.value = 'other';
+            const customInput = document.getElementById('trade-shop-custom');
+            customInput.style.display = 'block';
+            customInput.value = t.shop;
+        }
+
         document.getElementById('trade-oid').value = t.oid || "";
         document.getElementById('trade-model').value = t.model;
         document.getElementById('trade-cap').value = t.cap;
@@ -894,11 +990,10 @@
         document.getElementById('trade-condition').value = t.condition || 'sealed';
 
         // Update Visual Selection (Including Condition)
-        ['source', 'shop', 'model', 'cap', 'color', 'status', 'condition'].forEach(type => {
+        ['model', 'cap', 'color', 'status', 'condition'].forEach(type => {
             const val = t[type];
             let grid;
-            if(type==='source') grid = document.getElementById('trade-source').parentElement.querySelector('.btn-grid'); // No grid now
-            else if(type==='status' || type==='condition') {
+            if(type==='status' || type==='condition') {
                  const input = document.getElementById('trade-'+type);
                  if(input) grid = input.parentElement.querySelector('.btn-grid');
             }
@@ -907,8 +1002,7 @@
                 if(hiddenInput) grid = hiddenInput.parentElement.querySelector('.btn-grid');
             }
             
-            // Note: Source and Shop are selects now, so no grid update needed for them.
-            if (grid) {
+            if (grid && val) {
                 Array.from(grid.children).forEach(btn => {
                     btn.classList.remove('selected');
                     if (btn.innerText.includes(val) || btn.innerText === val) {
@@ -933,6 +1027,24 @@
 
     function addSubscription(e) { e.preventDefault(); state.subscriptions.push({id:Date.now(), name:document.getElementById('sub-name').value, amount:parseFloat(document.getElementById('sub-amount').value), cardId:document.getElementById('sub-card').value}); saveData(); renderSubsList(); e.target.reset(); }
     function deleteSub(id) { if(confirm('Del?')) { state.subscriptions=state.subscriptions.filter(s=>s.id!==id); saveData(); renderSubsList(); } }
+    
+    function addMission(e) {
+        e.preventDefault();
+        const name = document.getElementById('mission-name').value;
+        const target = parseFloat(document.getElementById('mission-target').value);
+        const start = document.getElementById('mission-start').value;
+        const end = document.getElementById('mission-end').value;
+        
+        const checkboxes = document.querySelectorAll('input[name="m-card"]:checked');
+        const cardIds = Array.from(checkboxes).map(cb => cb.value);
+        
+        if (cardIds.length === 0) { alert('請至少選擇一張信用卡！'); return; }
+        
+        state.missions.push({ id: Date.now(), name, target, start, end, cardIds });
+        saveData();
+        renderMissions(); // This needs to be defined in render logic
+        closeModals();
+    }
 
     // UI Helpers
     function selectTradeOption(type, val, el) {
@@ -1036,6 +1148,29 @@
         } catch(e){ 
             console.error(e); 
         }
+    }
+    
+    function sendTelegramTradeAlert(t) {
+        const card = state.cards.find(c => c.id == t.cardId);
+        if(!card) return;
+        
+        // Calculate current spending including this trade
+        const spent = getCardSpending(card.id); 
+        const cap = card.cap || 0;
+        
+        let msg = `📱 *新炒賣交易*\n`;
+        msg += `📦 ${t.model} ${t.cap} ${t.color}\n`;
+        msg += `💰 成本: $${(t.cost * t.qty).toLocaleString()}\n`;
+        msg += `💳 卡片: ${card.name}\n`;
+        msg += `──────────────\n`;
+        msg += `📊 *本月累積*: $${spent.toLocaleString()}`;
+        if(cap > 0) {
+            const pct = Math.round((spent/cap)*100);
+            msg += ` / $${cap.toLocaleString()} (${pct}%)\n`;
+            if(spent >= cap) msg += `⚠️ *警告: 已爆額!* 🚨`;
+        }
+        
+        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
     }
 
     function sendTelegramTx(tx) {
