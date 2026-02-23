@@ -16,11 +16,8 @@
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; transition: background-color 0.3s, color 0.3s; }
         header { background: var(--surface); padding: 12px 20px; padding-top: max(12px, env(safe-area-inset-top)); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
         h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
-        .app-logo { font-size: 1.4rem; }
-        .header-actions { display: flex; align-items: center; gap: 8px; }
-        .icon-btn { background: transparent; border: 1px solid transparent; color: var(--text); font-size: 1.1rem; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .icon-btn:hover { background: var(--surface-hover); border-color: var(--border); }
-        .icon-btn:active { transform: scale(0.95); }
+        .app-logo { width: 28px; height: 28px; object-fit: contain; }
+        .menu-btn { font-size: 0.9rem; background: var(--surface-hover); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 5px; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; padding-bottom: max(80px, env(safe-area-inset-bottom)); }
         .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -28,118 +25,129 @@
         .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
         .profit-pos { color: var(--primary); } .profit-neg { color: var(--danger); }
-        
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 10px; }
+        .menu-item { background: var(--surface-hover); border: 1px solid var(--border); border-radius: 12px; padding: 20px 10px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .menu-item:hover { border-color: var(--primary); }
+        .menu-icon { font-size: 2rem; } .menu-label { font-size: 0.9rem; font-weight: bold; } .menu-desc { font-size: 0.75rem; color: var(--text-muted); }
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
         .list-item:last-child { border-bottom: none; }
         .item-main { flex: 1; }
         .item-title { font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
         .item-sub { font-size: 0.8rem; color: var(--text-muted); }
         .item-amount { font-weight: bold; font-size: 1.1rem; text-align: right; margin-left: 10px; }
+        .item-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
         .cat-tag, .shop-tag, .source-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: var(--surface-hover); border: 1px solid var(--border); color: var(--text-muted); }
+        .shop-tag { background: var(--trade); color: #000; font-weight: bold; }
+        .source-tag { background: rgba(255, 255, 255, 0.1); border: 1px solid var(--text-muted); margin-right: 4px;}
         .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 5px; }
         .status-ordered { background: #f39c12; color: #000; } 
         .status-stock { background: #3498db; color: #fff; } 
         .status-sold { background: var(--primary); color: #fff; } 
         .status-cut { background: var(--danger); color: #fff; text-decoration: line-through; } 
-        .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
-        .repay-tag { font-size: 0.75rem; color: var(--repay); border: 1px solid var(--repay); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
-
-        .form-group { margin-bottom: 15px; } 
-        label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
+        .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px;}
+        .form-group { margin-bottom: 15px; } label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
         input, select { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1rem; outline: none; }
-        input:focus, select:focus { border-color: var(--primary); }
         .row-group { display: flex; gap: 10px; } .row-group > div { flex: 1; }
         .type-toggle { display: flex; background: var(--bg); border-radius: 8px; padding: 4px; border: 1px solid var(--border); margin-bottom: 15px; }
         .type-option { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
-        .type-option.active.expense { background: rgba(255, 77, 77, 0.15); color: var(--danger); border: 1px solid var(--danger); }
-        .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); border: 1px solid var(--income); }
+        .type-option.active.expense { background: rgba(255, 77, 77, 0.15); color: var(--danger); }
+        .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); }
         .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); border: 1px solid var(--repay); }
-        
         .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
-        .grid-btn { padding: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-align: center; display:flex; align-items:center; justify-content:center; flex-direction:column; min-height:55px; line-height: 1.2; overflow-wrap: break-word; }
+        .grid-btn { padding: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-align: center; display:flex; align-items:center; justify-content:center; flex-direction:column; min-height:55px; line-height: 1.2; overflow-wrap: break-word; -webkit-tap-highlight-color: transparent;}
         .grid-btn:active { background: var(--surface); transform: scale(0.98); }
         .grid-btn.selected { background: var(--trade); color: #000; border-color: var(--trade); font-weight: bold; }
-
+        .analysis-controls { display: flex; gap: 5px; background: var(--bg); padding: 5px; border-radius: 8px; margin-bottom: 15px; overflow-x: auto; }
+        .analysis-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 6px; font-size: 0.85rem; white-space: nowrap; }
+        .analysis-btn.active { background: var(--surface-hover); color: var(--text); font-weight: bold; }
         .btn { background: var(--primary); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn:active { transform: scale(0.98); }
         .btn-small { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
         .btn-text { background: none; border: none; color: var(--text-muted); padding: 5px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 0.8rem; }
-        
+        .btn-repay { color: var(--repay); border-color: var(--repay); background: rgba(255, 159, 67, 0.1); }
+        .btn-telegram { background: var(--telegram); border-color: var(--telegram); color: #fff; }
         .credit-card { background: var(--card-gradient); padding: 15px; border-radius: 10px; margin-bottom: 10px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
         .card-name { font-weight: bold; font-size: 1.1rem; color: #fff; }
         .card-info { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-top: 5px; display: flex; justify-content: space-between; align-items: center; }
         .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
-        
         .fab { position: fixed; bottom: max(20px, env(safe-area-inset-bottom) + 20px); right: 20px; background: var(--primary); color: #fff; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4); cursor: pointer; border: none; z-index: 90; }
-        
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 200; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; padding: 25px; border-radius: 16px; padding-bottom: 50px; position: relative; }
         .close-modal { position: absolute; top: 10px; right: 10px; background: #cc4444; border: 2px solid #fff; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 1.4rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         .close-modal:active { transform: scale(0.9); }
-        
         .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 15px; overflow-x: auto; white-space: nowrap; }
         .tab { flex: 1; padding: 10px; text-align: center; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; min-width: 80px; }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 80px; transform: translateX(-50%); border: 1px solid var(--primary); }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 60px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 60px; opacity: 0;} }
         
-        .search-bar { width: 100%; padding: 10px; margin-bottom: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none; }
-        .cat-list-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border); }
+        .checkbox-group { display: flex; flex-direction: column; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); padding: 0; }
+        .checkbox-item { display: flex; align-items: center; gap: 12px; font-size: 0.95rem; padding: 12px 15px; border-bottom: 1px solid var(--border); transition: background 0.2s; cursor: pointer; }
+        .checkbox-item:last-child { border-bottom: none; }
+        .checkbox-item:hover { background: var(--surface-hover); }
+        .checkbox-item input { width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer; margin: 0; }
+        .checkbox-item span { flex: 1; color: var(--text); }
         
+        .recur-item, .welcome-item { background: var(--surface-hover); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+        .recur-item.completed { border-color: var(--primary); background: rgba(0, 210, 106, 0.05); }
+        .footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 30px; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+        .toggle-switch { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; margin-bottom: 10px; }
+        .toggle-switch input { width: auto; margin: 0; }
         .phone-icon { width: 22px; height: 40px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); position: relative; margin-bottom: 3px; box-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .phone-icon::before { content: ''; position: absolute; top: 5px; left: 4px; width: 10px; height: 10px; background: rgba(0,0,0,0.4); border-radius: 3px; }
         .phone-icon.silver { background: linear-gradient(135deg, #e3e4e5 0%, #999 100%); }
         .phone-icon.orange { background: linear-gradient(135deg, #C5B4A3 0%, #8C7C6D 100%); }
         .phone-icon.blue { background: linear-gradient(135deg, #3B4C58 0%, #202b36 100%); }
         .section-title { font-size: 0.85rem; color: var(--text-muted); margin: 15px 0 5px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
-
-        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 80px; transform: translateX(-50%); border: 1px solid var(--primary); }
-        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
-        @keyframes fadein { from {bottom: 60px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
-        @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 60px; opacity: 0;} }
+        .log-list { max-height: 300px; overflow-y: auto; text-align: left; }
+        .log-item { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .log-date { font-size: 0.75rem; color: var(--primary); font-weight: bold; }
+        .log-content { font-size: 0.85rem; color: var(--text); line-height: 1.4; white-space: pre-line; }
+        .search-bar { width: 100%; padding: 10px; margin-bottom: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none; }
+        .cat-list-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border); }
+        .chart-container { position: relative; height: 250px; width: 100%; margin-bottom: 20px; }
+        
+        #error-console { display:none; background:#8b0000; color:#fff; padding:15px; font-size:0.85rem; position:fixed; bottom:0; left:0; right:0; z-index:1000; text-align:left; max-height:150px; overflow:auto; box-shadow: 0 -4px 10px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
 <header>
-    <h1><span class="logo-icon">💰</span> 回贈哥</h1>
+    <h1>
+        <img src="https://cdn-icons-png.flaticon.com/512/6963/6963703.png" alt="Logo" class="app-logo"> 
+        回贈哥
+    </h1>
     <div class="header-actions">
-        <button class="icon-btn" onclick="openModal('settings')" title="設定">⚙️</button>
-        <button class="icon-btn" onclick="openModal('category')" title="自訂類別">📂</button>
-        <button class="icon-btn" onclick="openModal('data')" title="備份與同步">☁️</button>
-        <button class="icon-btn" id="btn-theme" onclick="toggleTheme()" title="切換模式">☀️</button>
+        <button class="menu-btn" onclick="openMenuTarget('menu')">☰ 選單</button>
     </div>
 </header>
 
 <div class="container">
-
     <div class="panel">
-        <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr;">
-            <div class="stat-card">
-                <div class="stat-label">本月支出</div>
-                <div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">本月收入</div>
-                <div class="stat-value" id="total-income" style="color:var(--income)">$0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">預計回贈</div>
-                <div class="stat-value" id="total-cashback" style="color:var(--primary)">$0</div>
-            </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-size:0.9rem; color:var(--text-muted);">本月概覽 <span id="billing-cycle-text" style="font-size:0.75rem;"></span></div>
+            <button class="btn-text" onclick="openMenuTarget('subs')" style="font-size:0.8rem;">🔄 固定開支</button>
         </div>
+        <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div class="stat-card"><div class="stat-label">本月支出</div><div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div></div>
+            <div class="stat-card"><div class="stat-label">本月收入</div><div class="stat-value" id="total-income" style="color:var(--income)">$0</div></div>
+            <div class="stat-card"><div class="stat-label">回贈估算</div><div class="stat-value" id="total-cashback" style="color:var(--primary); font-size: 0.9rem;">$0</div></div>
+        </div>
+        <div id="missions-container"></div>
     </div>
 
     <div class="tabs">
         <div class="tab active" onclick="switchTab('transactions')">賬目紀錄</div>
-        <div class="tab" onclick="switchTab('cards')">信用卡</div>
+        <div class="tab" onclick="switchTab('cards')">卡包 / 帳戶</div>
         <div class="tab" onclick="switchTab('trading')">📱 炒賣</div>
-        <div class="tab" onclick="switchTab('analysis')">分析</div>
+        <div class="tab" onclick="switchTab('analysis')">統計分析</div>
     </div>
 
-    <!-- Tab: Transactions -->
     <div id="tab-transactions" class="tab-content active">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -151,7 +159,6 @@
         </div>
     </div>
 
-    <!-- Tab: Cards -->
     <div id="tab-cards" class="tab-content">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -165,53 +172,82 @@
         </div>
     </div>
 
-    <!-- Tab: Trading -->
     <div id="tab-trading" class="tab-content">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h2 style="margin:0; font-size:1.1rem;">📱 iPhone 17 炒賣紀錄</h2>
                 <div style="display:flex; gap:8px;">
                     <button class="btn-small" onclick="sendTradeReport()" style="background:var(--telegram); color:white;">📊 TG報數</button>
-                    <button class="btn-small" onclick="openModal('trade')" style="background:var(--trade); border-color:var(--trade); color:#000;">+ 新增入貨</button>
+                    <button class="btn-small" onclick="openModal('trade')" style="background:var(--trade); border-color:var(--trade); color:#000;">+ 新增交易</button>
                 </div>
             </div>
-            <div class="stats-grid" style="margin-bottom:15px;">
-                <div class="stat-card"><div class="stat-label">今日利潤 (已賣)</div><div class="stat-value" id="trade-today-profit" style="color:var(--primary)">$0</div></div>
-                <div class="stat-card"><div class="stat-label">今日入貨量</div><div class="stat-value" id="trade-today-vol" style="color:var(--text)">0 部</div></div>
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom:15px;">
+                <div class="stat-card"><div class="stat-label">今日利潤</div><div class="stat-value" id="trade-today-profit" style="color:var(--primary)">$0</div></div>
+                <div class="stat-card"><div class="stat-label">今日貨量</div><div class="stat-value" id="trade-today-vol" style="color:var(--text)">0 部</div></div>
             </div>
             <input type="text" id="search-trade" class="search-bar" placeholder="🔍 搜尋店舖、型號或單號..." oninput="renderTrading()">
             <div id="trade-list"></div>
         </div>
     </div>
 
-    <!-- Tab: Analysis -->
     <div id="tab-analysis" class="tab-content">
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; font-size:1.1rem;">月度支出分析</h2>
-                <input type="month" id="analysis-month" style="width:auto; padding:5px;" onchange="renderCharts()">
+                <h2 style="margin:0; font-size:1.1rem;">統計分析</h2>
+                 <button class="btn-small" onclick="sendTelegramReport()" style="background:var(--telegram); color:white;">✈️ 推送</button>
             </div>
-            <div style="margin-bottom:30px;">
-                <div class="chart-container"><canvas id="chart-cards"></canvas></div>
+             
+             <label class="toggle-switch">
+                 <input type="checkbox" id="analysis-include-trade" onchange="renderCharts()">
+                 <span>包含炒賣數據 (Cost)</span>
+             </label>
+
+             <div class="analysis-controls">
+                <button class="analysis-btn active" onclick="setAnalysisMode('month')" id="btn-mode-month">📅 單月</button>
+                <button class="analysis-btn" onclick="setAnalysisMode('range')" id="btn-mode-range">📆 自訂範圍</button>
+                <button class="analysis-btn" onclick="setAnalysisMode('compare')" id="btn-mode-compare">🆚 月度比較</button>
             </div>
-            <div>
-                <div class="chart-container"><canvas id="chart-daily"></canvas></div>
+            <div id="analysis-inputs" style="margin-bottom:15px; display:flex; gap:10px; align-items:center;"></div>
+            <div id="analysis-charts-container">
+                <div style="margin-bottom:30px;"><div class="chart-container"><canvas id="chart-cards"></canvas></div></div>
+                <div><div class="chart-container"><canvas id="chart-daily"></canvas></div></div>
             </div>
         </div>
     </div>
     
     <div class="footer">
-        Copyright © Redezero | v1.80<br>
+        Copyright © Redezero | v1.82 終極修復版 <br>
         <button onclick="rescueData()" style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem; margin-top:10px;">⛑️ 數據急救 / 下載備份</button>
     </div>
 </div>
 
-<button class="fab" onclick="openModal('transaction')">+</button>
+<div id="main-fab"><button class="fab" onclick="openModal('transaction')">+</button></div>
 
-<!-- Modal: Transaction -->
+<!-- Modals -->
+<div id="modal-menu" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">×</button>
+        <h2>功能選單</h2>
+        <div class="menu-grid">
+            <div class="menu-item" onclick="openMenuTarget('mission')"><div class="menu-icon">➕</div><div class="menu-label">新增限時任務</div></div>
+            <div class="menu-item" onclick="openMenuTarget('recur-mission')"><div class="menu-icon">🎯</div><div class="menu-label">每月任務</div></div>
+            <div class="menu-item" onclick="openMenuTarget('welcome')"><div class="menu-icon">🎁</div><div class="menu-label">迎新監察</div></div>
+            <div class="menu-item" onclick="openMenuTarget('subs')"><div class="menu-icon">🔄</div><div class="menu-label">固定開支</div></div>
+            <div class="menu-item" onclick="openMenuTarget('category')"><div class="menu-icon">📂</div><div class="menu-label">自訂類別</div></div>
+            <div class="menu-item" onclick="openMenuTarget('bank-info')"><div class="menu-icon">ℹ️</div><div class="menu-label">銀行資訊</div></div>
+            <div class="menu-item" onclick="openMenuTarget('data')"><div class="menu-icon">☁️</div><div class="menu-label">備份與同步</div></div>
+            <div class="menu-item" onclick="openMenuTarget('settings')"><div class="menu-icon">⚙️</div><div class="menu-label">設定</div></div>
+            <div class="menu-item" onclick="toggleTheme(); closeModals();"><div class="menu-icon">🌗</div><div class="menu-label">切換模式</div></div>
+        </div>
+        <div style="margin-top:15px; text-align:center;">
+            <button class="btn-text" onclick="openMenuTarget('log')">📋 查看更新日誌</button>
+        </div>
+    </div>
+</div>
+
 <div id="modal-transaction" class="modal-overlay">
     <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <button class="close-modal" onclick="closeModals()">×</button>
         <h2 id="tx-modal-title">新增紀錄</h2>
         <div class="type-toggle">
             <div class="type-option active expense" id="type-expense" onclick="setTxType('expense')">💸 支出</div>
@@ -221,24 +257,29 @@
         <form id="tx-form" onsubmit="addTransaction(event)">
             <input type="hidden" id="tx-type" value="expense">
             <input type="hidden" id="tx-id">
-            <div class="form-group"><label>金額 (HKD)</label><input type="number" id="tx-amount" step="0.1" required></div>
+            <div class="form-group" style="display:flex; gap:10px;">
+                <div style="flex:1;"><label>貨幣</label><select id="tx-currency" onchange="handleCurrencyChange()"></select></div>
+                <div style="flex:1; display:none;" id="fx-rate-container"><label>匯率</label><input type="number" id="tx-fx-rate" step="0.0001" oninput="calcHkdAmount()"></div>
+            </div>
+            <input type="checkbox" id="tx-is-foreign" style="display:none;">
+            <div class="form-group" id="fx-amount-container" style="display:none;"><label>外幣金額</label><input type="number" id="tx-fx-amount" step="0.01" oninput="calcHkdAmount()"></div>
+            <div class="form-group"><label id="lbl-amount">金額 (HKD)</label><div style="display:flex; gap:10px;"><input type="number" id="tx-amount" step="0.1" required style="flex:1;"><button type="button" class="btn-small" onclick="openModal('split')">✂️</button></div></div>
             <div class="form-group" id="group-category"><label>類別</label><select id="tx-category" required></select></div>
             <div class="form-group" id="group-card">
-                <label>選擇信用卡</label><select id="tx-card"></select>
-                <div id="card-hint" style="font-size:0.8rem; color:var(--primary); margin-top:5px; display:none;">回贈: <span id="hint-rate"></span>%</div>
+                <label>選擇信用卡</label><select id="tx-card" onchange="updateCardHint()"></select>
+                <div id="card-hint" style="font-size:0.8rem; color:var(--primary); margin-top:5px; display:none;"></div>
             </div>
             <div class="form-group"><label>描述</label><input type="text" id="tx-desc" required></div>
             <div class="form-group"><label>日期時間</label><input type="datetime-local" id="tx-date" required></div>
-            <button type="submit" class="btn">記賬</button>
+            <div style="display:flex; gap:10px;"><button type="submit" class="btn" id="btn-submit" style="flex:2;">記賬</button></div>
         </form>
     </div>
 </div>
 
-<!-- Modal: Trade (Restored) -->
 <div id="modal-trade" class="modal-overlay">
     <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">&times;</button>
-        <h2>📱 炒賣紀錄</h2>
+        <button class="close-modal" onclick="closeModals()">×</button>
+        <h2>📱 新增 iPhone 17 交易</h2>
         <form id="trade-form" onsubmit="addTrade(event)">
             <input type="hidden" id="trade-id">
             
@@ -255,10 +296,10 @@
             <div class="section-title">2. 交易狀態</div>
             <div class="form-group">
                 <div class="btn-grid" style="grid-template-columns: repeat(4, 1fr);">
-                    <div class="grid-btn selected" onclick="selectTradeOption('status', 'pending', this)">🛒 已訂</div>
-                    <div class="grid-btn" onclick="selectTradeOption('status', 'stock', this)">📦 現貨</div>
-                    <div class="grid-btn" onclick="selectTradeOption('status', 'sold', this)">💰 已賣</div>
-                    <div class="grid-btn" onclick="selectTradeOption('status', 'cut', this)">❌ Cut單</div>
+                    <div class="grid-btn selected" onclick="selectTradeOption('status', 'pending', this)">🛒 已訂<br>(未取)</div>
+                    <div class="grid-btn" onclick="selectTradeOption('status', 'stock', this)">📦 現貨<br>(在手)</div>
+                    <div class="grid-btn" onclick="selectTradeOption('status', 'sold', this)">💰 已賣<br>(完成)</div>
+                    <div class="grid-btn" onclick="selectTradeOption('status', 'cut', this)">❌ Cut單<br>(佔額)</div>
                 </div>
                 <input type="hidden" id="trade-status" value="pending" required>
             </div>
@@ -304,7 +345,7 @@
                 <div class="form-group"><label>放售價</label><input type="number" id="trade-price" value="0" required></div>
             </div>
             <div class="row-group">
-                <div class="form-group"><label>數量</label><input type="number" id="trade-qty" value="1" min="1" required></div>
+                <div class="form-group"><label>數量</label><div style="display:flex;gap:10px;"><button type="button" class="btn-small" onclick="adjustTradeQty(-1)">-</button><input type="number" id="trade-qty" value="1" style="text-align:center;"><button type="button" class="btn-small" onclick="adjustTradeQty(1)">+</button></div></div>
                 <div class="form-group">
                     <label>付款信用卡</label>
                     <select id="trade-card"><option value="">無使用信用卡</option></select>
@@ -316,10 +357,9 @@
     </div>
 </div>
 
-<!-- Modal: Category (Custom Categories) -->
 <div id="modal-category" class="modal-overlay">
     <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <button class="close-modal" onclick="closeModals()">×</button>
         <h2 style="margin-top:0;">📂 自訂收支類別</h2>
         <div class="type-toggle">
             <div class="type-option active expense" id="cat-type-expense" onclick="switchCatType('expense')">支出類別</div>
@@ -335,78 +375,39 @@
     </div>
 </div>
 
-<!-- Modal: Settings (TG Notification Setup) -->
-<div id="modal-settings" class="modal-overlay">
-    <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">&times;</button>
-        <h2>⚙️ 系統設定</h2>
-        <div class="form-group">
-            <label>Telegram Bot Token</label>
-            <input type="password" id="tg-token" placeholder="123456:ABC-DEF..." onchange="saveTGSettings()">
-        </div>
-        <div class="form-group">
-            <label>Telegram Chat ID</label>
-            <input type="text" id="tg-chatid" placeholder="123456789" onchange="saveTGSettings()">
-        </div>
-        <div class="form-group" style="display:flex; align-items:center; gap:10px;">
-            <input type="checkbox" id="setting-tg-auto" style="width:20px;height:20px;" onchange="saveTGSettings()">
-            <label style="margin:0;">開啟自動 TG 記帳及爆額通知</label>
-        </div>
-        <button class="btn-small" onclick="testTG()" style="width:100%; margin-top:10px;">測試發送 TG</button>
-    </div>
-</div>
+<div id="modal-split" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>✂️ 分單</h2><div class="form-group"><input type="number" id="split-total" placeholder="總額" oninput="calcSplit()"></div><div class="row-group"><label><input type="checkbox" id="split-service" onchange="calcSplit()" style="width:auto;"> +10%</label><input type="number" id="split-discount" placeholder="折扣%" oninput="calcSplit()"></div><div class="form-group"><div style="display:flex;gap:10px;"><button type="button" class="btn-small" onclick="adjustPeople(-1)">-</button><input type="number" id="split-people" value="2" style="text-align:center;" oninput="calcSplit()"><button type="button" class="btn-small" onclick="adjustPeople(1)">+</button></div></div><div style="text-align:center; margin:15px;"><div id="split-result" style="font-size:2rem; font-weight:bold;">$0.00</div></div><button type="button" class="btn" onclick="applySplit()">填入</button></div></div>
+<div id="modal-card" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>新增卡片</h2><form id="card-form" onsubmit="addCard(event)"><div class="form-group"><label>卡片名稱</label><input type="text" id="card-name" required></div><div class="form-group"><label>回贈比率 (%)</label><input type="number" id="card-percent" step="0.1" required></div><div class="form-group"><label>簽賬上限 (留空為無限)</label><input type="number" id="card-cap"></div><div class="form-group"><label>備註</label><input type="text" id="card-note"></div><button type="submit" class="btn">新增卡片</button></form></div></div>
+<div id="modal-recur-mission" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>每月任務</h2><div id="recur-list" style="margin-bottom:15px;"></div><form onsubmit="addRecurMission(event)"><input type="text" id="recur-name" required placeholder="任務名"><div class="row-group"><input type="number" id="recur-target" required placeholder="目標"><select id="recur-card" required></select></div><select id="recur-reset-day"><option value="1">1號重置</option><option value="12">12號重置</option></select><button type="submit" class="btn-small" style="width:100%; margin-top:10px;">+ 加入</button></form></div></div>
+<div id="modal-welcome" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>迎新監察</h2><div id="welcome-list" style="margin-bottom:15px;"></div><form onsubmit="addWelcome(event)"><input type="text" id="welcome-name" required placeholder="迎新名"><div class="row-group"><select id="welcome-card" required></select><input type="number" id="welcome-target" required placeholder="目標"></div><input type="date" id="welcome-deadline" required><input type="date" id="welcome-start" required><button type="submit" class="btn-small" style="width:100%; margin-top:10px;">+ 加入</button></form></div></div>
+<div id="modal-subs" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>固定開支</h2><div id="subs-list" style="margin-bottom:15px;"></div><form onsubmit="addSubscription(event)"><input type="text" id="sub-name" required placeholder="項目"><div class="row-group"><input type="number" id="sub-amount" required placeholder="金額"><select id="sub-card" required></select></div><button type="submit" class="btn-small" style="width:100%; margin-top:10px;">+ 加入</button></form></div></div>
+<div id="modal-bank-info" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>銀行資訊</h2><div id="bank-list"></div></div></div>
+<div id="modal-data" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>備份與同步</h2><button class="btn" onclick="exportData('json')" style="background:#ff9f43; margin-bottom:10px;">💾 下載備份 (JSON)</button><button class="btn" onclick="exportData('csv')" style="background:#4facfe; margin-bottom:10px;">📊 匯出 Excel (CSV)</button><button class="btn" style="background:#333; border:1px solid #666; margin-bottom:20px;" onclick="triggerImport()">📂 還原備份</button><input type="file" id="file-input" accept=".json" onchange="importData(this)" style="display:none;"><button class="btn-small" onclick="resetData()" style="color:var(--danger); border-color:var(--danger); width:100%;">🔥 重置資料 (清空)</button></div></div>
+<div id="modal-settings" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>⚙️ 設定</h2><select id="setting-start-day" onchange="saveSettings()"></select><hr><div class="form-group"><label>Telegram Bot Token</label><input type="password" id="tg-token" placeholder="Bot Token" onchange="saveTGSettings()"></div><div class="form-group"><label>Telegram Chat ID</label><input type="text" id="tg-chatid" placeholder="Chat ID" onchange="saveTGSettings()"></div><div class="form-group"><label><input type="checkbox" id="setting-tg-auto" onchange="saveTGSettings()" style="width:auto; margin-right:8px;"> 開啟 TG 自動通知 (含爆額預警)</label></div><button class="btn-small" onclick="testTG()" style="width:100%;">測試發送</button></div></div>
+<div id="modal-mission" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>限時任務</h2><form onsubmit="addMission(event)"><input type="text" id="mission-name" required placeholder="任務名"><input type="number" id="mission-target" required placeholder="目標"><div class="row-group"><input type="date" id="mission-start"><input type="date" id="mission-end"></div><div id="mission-cards" class="checkbox-group" style="margin-top:10px; margin-bottom:15px;"></div><button type="submit" class="btn">建立</button></form></div></div>
+<div id="modal-log" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>更新日誌</h2><div class="log-list"><div class="log-item"><div class="log-date">v1.82 (終極安全版)</div><div class="log-content">- 修復：尋回所有舊有功能及隱藏選單 (固定開支/任務等)。<br>- 優化：加入頂級防崩潰機制。<br>- 齊全：炒賣複製、搜尋過濾、TG自動報數完全生效。</div></div></div></div></div>
 
-<!-- Modal: Card -->
-<div id="modal-card" class="modal-overlay">
-    <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">&times;</button>
-        <h2>新增信用卡</h2>
-        <form id="card-form" onsubmit="addCard(event)">
-            <div class="form-group"><label>卡片名稱</label><input type="text" id="card-name" required></div>
-            <div class="form-group"><label>回贈比率 (%)</label><input type="number" id="card-percent" step="0.1" required></div>
-            <div class="form-group"><label>簽賬上限 (留空為無限)</label><input type="number" id="card-cap"></div>
-            <div class="form-group"><label>備註</label><input type="text" id="card-note"></div>
-            <button type="submit" class="btn">新增卡片</button>
-        </form>
-    </div>
-</div>
-
-<!-- Modal: Data Management -->
-<div id="modal-data" class="modal-overlay">
-    <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">&times;</button>
-        <h2 style="margin-top:0;">☁️ 備份與同步</h2>
-        <button class="btn" style="background:#ff9f43; margin-bottom:10px;" onclick="exportData('json')">💾 下載備份檔 (JSON)</button>
-        <button class="btn" style="background:#333; border:1px solid #666; margin-bottom:10px;" onclick="triggerImport()">📂 還原備份檔</button>
-        <input type="file" id="file-input" style="display:none;" accept=".json" onchange="importData(this)">
-        <button class="btn-small" onclick="resetData()" style="color:var(--danger); border-color:var(--danger); width:100%; margin-top:20px;">🔥 清除所有資料 (重置)</button>
-    </div>
-</div>
-
+<div id="error-console"></div>
 <div id="toast"></div>
 
 <script>
-    // --- Global Error Catcher ---
+    // --- 終極防崩潰系統 ---
     window.onerror = function(msg, url, line) {
         const div = document.getElementById('error-console');
-        if(div) { div.style.display = 'block'; div.innerHTML += `🔴 Error: ${msg} <br>Line: ${line}<br>`; }
+        if(div) { div.style.display = 'block'; div.innerHTML += `🔴 Error: ${msg} <br>Line: ${line}<br>請截圖並通知開發者。`; }
         return false;
     };
 
-    // --- Configuration ---
+    // --- 設定及資料庫 ---
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     
     const TRADE_SOURCES = ['AOS (官網)', 'APU (店取)', '百老匯', '豐澤', '友和', '蘇寧', '電器幫', 'CMHK', 'CSL', 'Smartone', '3HK', '中原', '1010'];
     const TRADE_SHOPS = ['雪球', '萬通', '日韓', '誠信', 'bobo', 'YY', 'G79', 'F9', 'DIY', '新宇宙', '溫記', '鵬程', 'iTrade', '星耀', 'Carousell'];
     const IPHONE_PRICES = { 'Pro': { '256GB': 9399, '512GB': 11099, '1TB': 12799 }, 'Pro Max': { '256GB': 10199, '512GB': 11899, '1TB': 13599, '2TB': 16999 } };
+    const CURRENCIES = ['HKD', 'CNY', 'USD', 'JPY', 'TWD', 'GBP', 'EUR', 'KRW', 'AUD', 'SGD'];
     
-    const DEFAULT_CATEGORIES = { 
-        expense: ['食飯', '八達通增值', '購物', '娛樂', '雜費', '其他', '固定開支'], 
-        income: ['薪金', '賣野', '投資', '其他'], 
-        repayment: ['信用卡還款'] 
-    };
-
+    const DEFAULT_CATEGORIES = { expense: ['食飯', '八達通增值', '購物', '娛樂', '雜費', '其他', '固定開支'], income: ['薪金', '賣野', '投資', '其他'], repayment: ['信用卡還款'] };
+    
     const PRESET_CARDS = [ 
         { name: '現金', percent: 0, cap: 0, note: '' }, 
         { name: '信銀 Motion', percent: 6, cap: 3600, note: '餐飲/網購6%' },
@@ -418,24 +419,44 @@
         { name: '安信 EarnMORE', percent: 2, cap: 150000, note: '全城2%' }
     ];
 
-    let state = { transactions: [], cards: [], trades: [], categories: null, settings: {} };
+    const BANK_INFO = [
+        { name: 'HSBC 匯豐', promoUrl: 'https://www.redhotoffers.hsbc.com.hk/', rewardUrl: 'https://www.hsbc.com.hk/zh-hk/credit-cards/rewards/reward-cash/', csPhone: '2233 3000', csTrick: '選語言 > 1 > 0' },
+        { name: 'Standard Chartered 渣打', promoUrl: 'https://www.sc.com/hk/zh/credit-cards/promotion/', rewardUrl: 'https://www.sc.com/hk/zh/credit-cards/360-rewards/', csPhone: '2886 4111', csTrick: '選語言 > 2 > 0' },
+        { name: 'Hang Seng 恒生', promoUrl: 'https://www.hangseng.com/zh-hk/personal/cards/', rewardUrl: 'https://www.hangseng.com/zh-hk/personal/cards/cash-dollars/', csPhone: '2998 9188', csTrick: '選語言 > 1 > 0' },
+        { name: 'BOC 中銀香港', promoUrl: 'https://www.bochk.com/tc/creditcard/promotions.html', rewardUrl: 'https://www.bochk.com/tc/creditcard/reward.html', csPhone: '2853 8828', csTrick: '選語言 > 1 > 0' },
+        { name: 'DBS 星展', promoUrl: 'https://www.dbs.com.hk/personal-zh/credit-cards/promotions/default.page', rewardUrl: 'https://www.dbs.com.hk/personal-zh/credit-cards/rewards.page', csPhone: '2290 8888', csTrick: '選語言 > 1 > 0' },
+        { name: 'Citi 花旗', promoUrl: 'https://www1.citibank.com.hk/chinese/credit-cards/promotions', rewardUrl: 'https://www1.citibank.com.hk/chinese/credit-cards/rewards', csPhone: '2860 0333', csTrick: '選語言 > *0' },
+        { name: 'BEA 東亞', promoUrl: 'https://www.hkbea.com/html/tc/bea-credit-card-spending-offer.html', rewardUrl: '', csPhone: '3608 6628', csTrick: '選語言 > 1 > 9' },
+        { name: 'EarnMORE / WeWa', promoUrl: 'https://www.primecredit.com/credit-card/latest-offer/', rewardUrl: 'https://www.primecredit.com/credit-card/wewa-club/', csPhone: '2269 8888', csTrick: '選語言 > 0' }
+    ];
+
+    let state = { transactions: [], cards: [], trades: [], missions: [], recurringMissions: [], welcomeOffers: [], subscriptions: [], categories: null, settings: {} };
     let pieChart = null, barChart = null, currentCatEditType = 'expense';
 
-    // --- Core Initialization ---
+    // --- 啟動與安全檢查 ---
     function init() {
         try {
             const stored = localStorage.getItem(DB_KEY);
-            if (stored) {
-                state = JSON.parse(stored);
-            }
-            // Defensive setup for missing keys
+            if (stored) state = JSON.parse(stored);
+            
+            // 安全防禦 (補回所有遺失的屬性)
             if(!state.transactions) state.transactions = [];
             if(!state.cards) state.cards = [];
             if(!state.trades) state.trades = [];
-            if(!state.settings) state.settings = { tgAutoSend: false };
+            if(!state.missions) state.missions = [];
+            if(!state.recurringMissions) state.recurringMissions = [];
+            if(!state.welcomeOffers) state.welcomeOffers = [];
+            if(!state.subscriptions) state.subscriptions = [];
+            if(!state.settings) state.settings = { tgAutoSend: false, startDay: 1 };
             if(!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
 
-            // Populate Trade Selects
+            // 初始化選項
+            const dS = document.getElementById('setting-start-day');
+            if(dS) { dS.innerHTML=''; for(let i=1;i<=31;i++) { dS.add(new Option(i+'號', i)); } dS.value=state.settings.startDay || 1; }
+            
+            const cS = document.getElementById('tx-currency');
+            if(cS) { cS.innerHTML=''; CURRENCIES.forEach(c=>cS.add(new Option(c, c))); }
+            
             const sourceS = document.getElementById('trade-source');
             if(sourceS) { 
                 sourceS.innerHTML = '<option value="">-- 選擇來源 --</option>';
@@ -449,59 +470,54 @@
                 shopS.add(new Option('其他 (手動輸入)', 'other'));
             }
 
-            // Restore Settings
             if(document.getElementById('tg-token')) document.getElementById('tg-token').value = state.settings.tgToken || '';
             if(document.getElementById('tg-chatid')) document.getElementById('tg-chatid').value = state.settings.tgChatId || '';
             if(document.getElementById('setting-tg-auto')) document.getElementById('setting-tg-auto').checked = state.settings.tgAutoSend || false;
 
             applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
             setDefaultTime();
-            document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
+            if(document.getElementById('analysis-month')) document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
             
+            setTxType('expense');
             render();
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('new_tx') === 'true') openModal('transaction');
-
-        } catch (err) { alert("啟動錯誤: " + err.message); }
+        } catch (err) { 
+            console.error(err);
+            const errDiv = document.getElementById('error-console');
+            if(errDiv) { errDiv.style.display='block'; errDiv.innerHTML = `⚠️ 系統啟動攔截崩潰。<br>請重新整理或按急救備份。<br>錯誤: ${err.message}`; }
+        }
     }
 
     function saveData() { localStorage.setItem(DB_KEY, JSON.stringify(state)); }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.className = 'show'; setTimeout(()=>t.className='', 2500); }
 
-    // --- Rendering ---
+    // --- 介面渲染 ---
     function render() {
-        renderCards();
-        renderTransactions();
-        renderTrading();
-        updateFormOptions();
-        calculateStats();
-        if (document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
+        try { renderCards(); } catch(e){ console.error(e); }
+        try { renderTransactions(); } catch(e){ console.error(e); }
+        try { renderTrading(); } catch(e){ console.error(e); }
+        try { updateFormOptions(); } catch(e){ console.error(e); }
+        try { calculateStats(); } catch(e){ console.error(e); }
+        try { renderMissions(); } catch(e){ console.error(e); }
+        try { if (document.getElementById('tab-analysis').classList.contains('active')) renderCharts(); } catch(e){ console.error(e); }
     }
 
     function renderCards() {
-        const l = document.getElementById('card-list'); l.innerHTML = '';
+        const l = document.getElementById('card-list'); if(!l) return;
+        l.innerHTML = '';
         state.cards.forEach(card => {
             const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
-            l.innerHTML += `
-                <div class="credit-card">
-                    <div style="display:flex; justify-content:space-between; align-items:start;">
-                        <div><div class="card-name">${card.name}</div><div class="card-info" style="color:var(--primary);">${card.percent}% 回贈</div></div>
-                        <button class="btn-text" onclick="deleteCard(${card.id})" style="color:#fff;">&times;</button>
-                    </div>
-                    <div class="progress-bar"><div id="prog-${card.id}" class="progress-fill"></div></div>
-                    <div class="card-info"><span>本月已簽: <span id="spent-${card.id}">$0</span>${capText}</span></div>
-                </div>`;
+            const rateVal = card.percent !== undefined ? card.percent : (card.rate || 0);
+            l.innerHTML += `<div class="credit-card"><div style="display:flex; justify-content:space-between; align-items:start;"><div><div class="card-name">${card.name}</div><div class="card-info" style="color:var(--primary);">${rateVal}% 回贈</div></div><button class="btn-text" onclick="deleteCard(${card.id})" style="color:#fff; font-size:1.2rem;">&times;</button></div><div class="progress-bar"><div id="prog-${card.id}" class="progress-fill"></div></div><div class="card-info"><span>本月已簽: <span id="spent-${card.id}">$0</span>${capText}</span></div></div>`;
         });
+        if(state.cards.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡</div>';
     }
 
     function renderTransactions() {
-        const l = document.getElementById('transaction-list'); l.innerHTML = '';
-        let sorted = [...state.transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
-        
+        const l = document.getElementById('transaction-list'); if(!l) return;
+        l.innerHTML = '';
+        let sorted = [...(state.transactions || [])].sort((a,b) => { const dA = a.date?new Date(a.date):new Date(0); const dB = b.date?new Date(b.date):new Date(0); return dB - dA; });
         const q = document.getElementById('search-tx') ? document.getElementById('search-tx').value.toLowerCase() : '';
         if(q) sorted = sorted.filter(tx => (tx.desc||'').toLowerCase().includes(q) || (tx.category||'').toLowerCase().includes(q));
-
         if(sorted.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">無紀錄</div>';
         
         sorted.forEach(tx => {
@@ -509,118 +525,73 @@
             const cName = card ? card.name : '未知卡片';
             const color = tx.type === 'income' ? 'var(--income)' : (tx.type === 'repayment' ? 'var(--repay)' : 'var(--text)');
             const sign = tx.type === 'income' ? '+' : (tx.type === 'repayment' ? '-' : '');
-            l.innerHTML += `
-                <div class="list-item">
-                    <div class="item-main">
-                        <div class="item-title"><span class="cat-tag">${tx.category}</span> ${tx.desc}</div>
-                        <div class="item-sub">${tx.date.replace('T', ' ')} • ${cName}</div>
-                    </div>
-                    <div style="text-align:right">
-                        <div class="item-amount" style="color:${color}">${sign}$${tx.amount}</div>
-                        <button class="btn-text" style="font-size:0.75rem;" onclick="deleteTransaction(${tx.id})">刪除</button>
-                    </div>
-                </div>`;
+            const dStr = tx.date ? tx.date.replace('T', ' ') : '';
+            l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title"><span class="cat-tag">${tx.category||'其他'}</span> ${tx.desc||''}</div><div class="item-sub">${dStr} • ${cName}</div></div><div style="text-align:right"><div class="item-amount" style="color:${color}">${sign}$${Number(tx.amount).toLocaleString()}</div><button class="btn-text" style="font-size:0.75rem;" onclick="deleteTransaction(${tx.id})">刪除</button></div></div>`;
         });
     }
 
     function renderTrading() {
-        const l = document.getElementById('trade-list'); l.innerHTML = '';
-        if(!state.trades) state.trades = [];
-        let sortedTrades = [...state.trades].sort((a,b) => new Date(b.date) - new Date(a.date));
-        
+        const l = document.getElementById('trade-list'); if(!l) return;
+        l.innerHTML = '';
+        let sortedTrades = [...(state.trades || [])].sort((a,b) => { const dA = a.date?new Date(a.date):new Date(0); const dB = b.date?new Date(b.date):new Date(0); return dB - dA; });
         const q = document.getElementById('search-trade') ? document.getElementById('search-trade').value.toLowerCase() : '';
         if(q) sortedTrades = sortedTrades.filter(t => (t.model||'').toLowerCase().includes(q) || (t.shop||'').toLowerCase().includes(q) || (t.oid||'').toLowerCase().includes(q));
 
         let todayProfit = 0, todayVol = 0;
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        const todayStr = now.toISOString().slice(0, 10);
+        const nowMonth = new Date().toISOString().slice(0, 10);
 
         sortedTrades.forEach(t => {
-            // Stats calculation for "Today"
-            if (t.date.slice(0, 10) === todayStr) {
-                if (t.status !== 'cut') todayVol += parseInt(t.qty);
-                if (t.status === 'sold') todayProfit += parseFloat(t.profit);
+            if (t.date && t.date.slice(0, 10) === nowMonth) {
+                if (t.status !== 'cut') todayVol += (Number(t.qty) || 1);
+                if (t.status === 'sold') todayProfit += (Number(t.profit) || 0);
             }
-
-            // UI Generation
-            let statusBadge = '';
-            let profitDisplay = '';
-            if (t.status === 'pending') statusBadge = '<span class="status-badge status-ordered">🛒 已訂</span>';
-            else if (t.status === 'stock') statusBadge = '<span class="status-badge status-stock">📦 現貨</span>';
-            else if (t.status === 'cut') statusBadge = '<span class="status-badge status-cut">❌ Cut單</span>';
-            else {
-                statusBadge = '<span class="status-badge status-sold">💰 已賣</span>';
-                if(t.condition === 'opened') statusBadge += '🔪';
-                const pClass = t.profit >= 0 ? 'profit-pos' : 'profit-neg';
-                profitDisplay = `<span class="${pClass}">$${t.profit}</span>`;
-            }
+            let sBadge = '', pDisp = '';
+            if (t.status === 'pending') sBadge = '<span class="status-badge status-ordered">🛒 已訂</span>';
+            else if (t.status === 'stock') sBadge = '<span class="status-badge status-stock">📦 現貨</span>';
+            else if (t.status === 'cut') sBadge = '<span class="status-badge status-cut">❌ Cut單</span>';
+            else { sBadge = '<span class="status-badge status-sold">💰 已賣</span>' + (t.condition==='opened'?'🔪':''); const pC = t.profit>=0?'profit-pos':'profit-neg'; pDisp = `<span class="${pC}">$${(Number(t.profit)||0).toLocaleString()}</span>`; }
             
-            const oidText = t.oid ? `(單號:${t.oid})` : '';
-            const locationDisplay = (t.status === 'sold' && t.shop) ? `${t.source} ${oidText} ➔ ${t.shop}` : `${t.source} ${oidText}`;
-            const card = state.cards.find(c => c.id == t.cardId);
-            const cName = card ? `<span class="cat-tag">💳 ${card.name}</span>` : '';
-            
-            l.innerHTML += `
-                <div class="list-item">
-                    <div class="item-main">
-                        <div class="item-title">${statusBadge} ${t.model} ${t.cap}</div>
-                        <div class="item-sub">${locationDisplay} • ${t.date.slice(0,10)} ${cName}</div>
-                    </div>
-                    <div style="text-align:right">
-                        <div class="item-amount" style="font-size:0.9rem;">x${t.qty} ${profitDisplay}</div>
-                        <div style="display:flex; justify-content:flex-end;">
-                            <button class="btn-text" onclick="cloneTrade(${t.id})" title="複製此單">📋</button>
-                            <button class="btn-text" onclick="editTrade(${t.id})">✎</button>
-                            <button class="btn-text" onclick="deleteTrade(${t.id})">X</button>
-                        </div>
-                    </div>
-                </div>`;
+            const oid = t.oid ? `(${t.oid})` : '';
+            const loc = (t.status === 'sold' && t.shop) ? `${t.source||''} ${oid} ➔ ${t.shop}` : `${t.source||''} ${oid}`;
+            const cName = state.cards.find(c => c.id == t.cardId) ? `<span class="cat-tag">💳 ${state.cards.find(c=>c.id==t.cardId).name}</span>` : '';
+            l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title">${sBadge} ${t.model||''} ${t.cap||''}</div><div class="item-sub">${loc} • ${t.date?t.date.slice(0,10):''} ${cName}</div></div><div style="text-align:right"><div class="item-amount" style="font-size:0.9rem;">x${t.qty||1} ${pDisp}</div><div style="display:flex; justify-content:flex-end;"><button class="btn-text" onclick="cloneTrade(${t.id})" title="複製此單">📋</button><button class="btn-text" onclick="editTrade(${t.id})">✎</button><button class="btn-text" onclick="deleteTrade(${t.id})">X</button></div></div></div>`;
         });
         
-        document.getElementById('trade-today-profit').innerText = '$' + todayProfit.toLocaleString();
-        document.getElementById('trade-today-vol').innerText = todayVol + ' 部';
+        if(document.getElementById('trade-today-profit')) document.getElementById('trade-today-profit').innerText = '$' + todayProfit.toLocaleString();
+        if(document.getElementById('trade-today-vol')) document.getElementById('trade-today-vol').innerText = todayVol + ' 部';
+        if(sortedTrades.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">無交易</div>';
     }
 
     function calculateStats() {
-        let totalSpent=0, totalInc=0, totalRepay=0, totalCash=0;
-        const cardSpent = {};
-        state.cards.forEach(c => cardSpent[c.id]=0);
+        let spent=0, inc=0, repay=0, cash=0;
+        const cardSpent = {}; state.cards.forEach(c => cardSpent[c.id]=0);
         const nowMonth = new Date().toISOString().slice(0, 7);
 
-        state.transactions.forEach(tx => {
-            if(tx.date.startsWith(nowMonth)) {
+        (state.transactions || []).forEach(tx => {
+            if(tx.date && tx.date.startsWith(nowMonth)) {
+                const amt = Number(tx.amount) || 0;
                 if(tx.type==='expense') {
-                    totalSpent += tx.amount;
-                    if(tx.cardId) {
-                        cardSpent[tx.cardId] += tx.amount;
-                        const c = state.cards.find(x=>x.id==tx.cardId);
-                        if(c) totalCash += (tx.amount * c.percent / 100);
-                    }
-                } else if(tx.type==='income') totalInc += tx.amount;
-                else if(tx.type==='repayment') totalRepay += tx.amount;
+                    spent += amt;
+                    if(tx.cardId && cardSpent[tx.cardId] !== undefined) { cardSpent[tx.cardId] += amt; const c = state.cards.find(x=>x.id==tx.cardId); if(c) cash += (amt * (c.percent||c.rate||0) / 100); }
+                } else if(tx.type==='income') inc += amt;
+                else if(tx.type==='repayment') repay += amt;
+            }
+        });
+        (state.trades || []).forEach(t => {
+            if(t.date && t.date.startsWith(nowMonth) && t.cardId && t.status !== 'cut') {
+                const cst = (Number(t.cost)||0) * (Number(t.qty)||1);
+                if(cardSpent[t.cardId] !== undefined) { cardSpent[t.cardId] += cst; const c = state.cards.find(x=>x.id==t.cardId); if(c) cash += (cst * (c.percent||c.rate||0) / 100); }
             }
         });
 
-        // Add Trading costs to card spent calculation
-        state.trades.forEach(t => {
-            if(t.date.startsWith(nowMonth) && t.cardId && t.status !== 'cut') {
-                const cst = (t.cost * t.qty);
-                cardSpent[t.cardId] += cst;
-                const c = state.cards.find(x=>x.id==t.cardId);
-                if(c) totalCash += (cst * c.percent / 100);
-            }
-        });
-
-        document.getElementById('total-spent').innerText = '$'+totalSpent.toLocaleString();
-        document.getElementById('total-income').innerText = '$'+totalInc.toLocaleString();
-        document.getElementById('total-repaid').innerText = '$'+totalRepay.toLocaleString();
-        document.getElementById('total-cashback').innerText = '$'+totalCash.toFixed(1);
-        if(document.getElementById('tx-count')) document.getElementById('tx-count').innerText = state.transactions.length + ' 筆';
+        if(document.getElementById('total-spent')) document.getElementById('total-spent').innerText = '$'+spent.toLocaleString();
+        if(document.getElementById('total-income')) document.getElementById('total-income').innerText = '$'+inc.toLocaleString();
+        if(document.getElementById('total-cashback')) document.getElementById('total-cashback').innerText = '$'+cash.toFixed(1);
+        if(document.getElementById('tx-count')) document.getElementById('tx-count').innerText = (state.transactions || []).length + ' 筆';
 
         state.cards.forEach(c => {
              const s = cardSpent[c.id] || 0;
-             const elS = document.getElementById('spent-'+c.id); if(elS) elS.innerText = '$'+s.toLocaleString();
+             if(document.getElementById('spent-'+c.id)) document.getElementById('spent-'+c.id).innerText = '$'+s.toLocaleString();
              const elBar = document.getElementById('prog-'+c.id); 
              if(elBar && c.cap > 0) {
                  const pct = Math.min((s/c.cap)*100, 100);
@@ -630,219 +601,93 @@
         });
     }
 
-    // --- Trading Logic ---
-    function selectTradeOption(type, val, el) {
-        document.getElementById('trade-'+type).value = val;
-        const grid = el.parentElement;
-        Array.from(grid.children).forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected');
-        
-        // Auto Cost
-        if(type==='model' || type==='cap') {
-            const m = document.getElementById('trade-model').value;
-            const c = document.getElementById('trade-cap').value;
-            if(m && c && IPHONE_PRICES[m] && IPHONE_PRICES[m][c]) document.getElementById('trade-cost').value = IPHONE_PRICES[m][c];
-        }
+    // --- 各類渲染 (任務、銀行等) ---
+    function renderRecurList() {
+        const l = document.getElementById('recur-list'); if(!l) return; l.innerHTML = '';
+        (state.recurringMissions || []).forEach(m => {
+            const c = state.cards.find(x=>x.id==m.cardId);
+            l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title">${m.name}</div><div class="item-sub">$${m.target} | 每月${m.resetDay}號 | ${c?c.name:''}</div></div><button class="btn-text" onclick="deleteRecurMission(${m.id})">刪除</button></div>`;
+        });
     }
-    
-    function toggleCustomInput(type) {
-        const sel = document.getElementById('trade-'+type);
-        const inp = document.getElementById('trade-'+type+'-custom');
-        if(sel.value === 'other') { inp.style.display = 'block'; inp.required = true; } 
-        else { inp.style.display = 'none'; inp.required = false; }
+    function renderWelcomeList() {
+        const l = document.getElementById('welcome-list'); if(!l) return; l.innerHTML = '';
+        (state.welcomeOffers || []).forEach(w => {
+            const c = state.cards.find(x=>x.id==w.cardId);
+            l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title">${w.name}</div><div class="item-sub">目標: $${w.target} | ${c?c.name:''} | 截止: ${w.deadline}</div></div><button class="btn-text" onclick="deleteWelcome(${w.id})">刪除</button></div>`;
+        });
     }
-
-    function addTrade(e) {
-        e.preventDefault();
-        try {
-            const idStr = document.getElementById('trade-id').value;
-            const cost = parseFloat(document.getElementById('trade-cost').value) || 0;
-            const price = parseFloat(document.getElementById('trade-price').value) || 0;
-            const qty = parseInt(document.getElementById('trade-qty').value) || 1;
-            const cid = document.getElementById('trade-card').value;
-            
-            let source = document.getElementById('trade-source').value;
-            if(source === 'other') source = document.getElementById('trade-source-custom').value;
-            
-            let shop = document.getElementById('trade-shop').value;
-            if(shop === 'other') shop = document.getElementById('trade-shop-custom').value;
-
-            const tData = {
-                source, shop, oid: document.getElementById('trade-oid').value || '',
-                model: document.getElementById('trade-model').value,
-                cap: document.getElementById('trade-cap').value,
-                color: document.getElementById('trade-color').value,
-                status: document.getElementById('trade-status').value,
-                condition: document.getElementById('trade-condition').value,
-                cost, price, qty, profit: (price-cost)*qty,
-                cardId: cid, date: document.getElementById('trade-date').value
-            };
-
-            if (idStr) {
-                tData.id = parseFloat(idStr);
-                const idx = state.trades.findIndex(t => t.id === tData.id);
-                if (idx !== -1) state.trades[idx] = tData;
-            } else {
-                tData.id = Date.now();
-                state.trades.unshift(tData);
-                if(state.settings.tgAutoSend) sendTelegramTradeAlert(tData);
-            }
-            saveData(); render(); closeModals(); showToast('✅ 交易已儲存');
-        } catch(err) { alert("儲存失敗: " + err.message); }
+    function renderSubsList() {
+        const l = document.getElementById('subs-list'); if(!l) return; l.innerHTML = '';
+        (state.subscriptions || []).forEach(s => {
+            const c = state.cards.find(x=>x.id==s.cardId);
+            l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title">${s.name}</div><div class="item-sub">${c?c.name:''}</div></div><div style="display:flex;align-items:center;gap:10px;"><div class="item-amount">$${s.amount}</div><button class="btn-text" onclick="deleteSub(${s.id})">刪除</button></div></div>`;
+        });
     }
-
-    function cloneTrade(id) {
-        editTrade(id); 
-        document.getElementById('trade-id').value = '';
-        document.getElementById('trade-oid').value = '';
-        setDefaultTime();
-        showToast('📋 已複製！請修改後按儲存');
+    function renderBankList() {
+        const l = document.getElementById('bank-list'); if(!l) return; l.innerHTML = '';
+        BANK_INFO.forEach(b => { l.innerHTML += `<div class="list-item" style="flex-direction:column; align-items:flex-start; gap:5px;"><div style="font-weight:bold; color:var(--primary);">${b.name}</div><div style="font-size:0.85rem; color:var(--text);">📞 CS: <a href="tel:${b.csPhone.replace(/ /g,'')}" style="color:var(--info); text-decoration:none;">${b.csPhone}</a> (按法: ${b.csTrick})</div><div style="font-size:0.8rem; display:flex; gap:10px;"><a href="${b.promoUrl}" target="_blank" style="color:var(--text-muted);">推廣登記</a> ${b.rewardUrl ? `<a href="${b.rewardUrl}" target="_blank" style="color:var(--text-muted);">換領獎賞</a>` : ''}</div></div>`; });
     }
-
-    function editTrade(id) {
-        const t = state.trades.find(x => x.id === id);
-        if (!t) return;
-        openModal('trade');
-        document.getElementById('trade-id').value = t.id;
-        
-        // Source
-        const srcS = document.getElementById('trade-source');
-        if([...srcS.options].some(o=>o.value===t.source)) { srcS.value=t.source; document.getElementById('trade-source-custom').style.display='none'; }
-        else { srcS.value='other'; document.getElementById('trade-source-custom').style.display='block'; document.getElementById('trade-source-custom').value=t.source; }
-        
-        // Shop
-        const shpS = document.getElementById('trade-shop');
-        if([...shpS.options].some(o=>o.value===t.shop) || !t.shop) { shpS.value=t.shop||""; document.getElementById('trade-shop-custom').style.display='none'; }
-        else { shpS.value='other'; document.getElementById('trade-shop-custom').style.display='block'; document.getElementById('trade-shop-custom').value=t.shop; }
-
-        document.getElementById('trade-oid').value = t.oid || "";
-        document.getElementById('trade-cost').value = t.cost;
-        document.getElementById('trade-price').value = t.price;
-        document.getElementById('trade-qty').value = t.qty;
-        document.getElementById('trade-card').value = t.cardId || "";
-        document.getElementById('trade-date').value = t.date.slice(0,16);
-
-        // Update Grids
-        ['model', 'cap', 'color', 'status', 'condition'].forEach(type => {
-            const val = t[type];
-            const input = document.getElementById('trade-'+type);
-            if(input) {
-                input.value = val;
-                const grid = input.parentElement.querySelector('.btn-grid') || input.parentElement.parentElement.querySelector('.btn-grid');
-                if(grid) {
-                    Array.from(grid.children).forEach(b => {
-                        b.classList.remove('selected');
-                        if(b.innerText.includes(val) || b.innerText===val) b.classList.add('selected');
-                    });
-                }
-            }
+    function renderMissions() {
+        const container = document.getElementById('missions-container'); if(!container) return; container.innerHTML = '';
+        (state.missions || []).forEach(m => {
+            let spent = 0; const start = m.start ? new Date(m.start) : new Date(0); const end = m.end ? new Date(m.end) : new Date(8640000000000000); end.setHours(23, 59, 59);
+            (state.transactions || []).forEach(tx => { const d = new Date(tx.date); if (tx.type === 'expense' && m.cardIds && m.cardIds.includes(tx.cardId?.toString()) && d >= start && d <= end) spent += (Number(tx.amount)||0); });
+            (state.trades || []).forEach(t => { const d = new Date(t.date); if (m.cardIds && m.cardIds.includes(t.cardId?.toString()) && t.status !== 'cut' && d >= start && d <= end) spent += ((Number(t.cost)||0) * (Number(t.qty)||1)); });
+            const pct = Math.min((spent / m.target) * 100, 100); const isCompleted = spent >= m.target;
+            container.innerHTML += `<div class="recur-item ${isCompleted ? 'completed' : ''}" style="margin-top:10px; position:relative;"><button class="btn-text" style="position:absolute; top:5px; right:5px; color:var(--danger);" onclick="deleteMission(${m.id})">&times;</button><div style="font-weight:bold; margin-bottom:5px;">⏳ ${m.name}</div><div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">目標: $${spent.toLocaleString()} / $${m.target.toLocaleString()}</div><div class="progress-bar" style="background:rgba(255,255,255,0.1);"><div class="progress-fill" style="width:${pct}%; background:${isCompleted?'var(--primary)':'#f39c12'}"></div></div></div>`;
         });
     }
 
-    function deleteTrade(id) { if(confirm('刪除交易?')) { state.trades = state.trades.filter(t=>t.id!==id); saveData(); render(); } }
-
-    // --- TG Notifications ---
-    function saveTGSettings() {
-        state.settings.tgToken = document.getElementById('tg-token').value;
-        state.settings.tgChatId = document.getElementById('tg-chatid').value;
-        state.settings.tgAutoSend = document.getElementById('setting-tg-auto').checked;
-        saveData(); showToast('✅ 設定已儲存');
-    }
-
-    async function sendTGMessage(t, cid, msg) {
-        if (!t || !cid) return;
-        try { 
-            await fetch(`https://api.telegram.org/bot${t}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({chat_id:cid, text:msg, parse_mode:'Markdown'}) });
-        } catch(e) { console.error(e); }
-    }
-
-    function sendTelegramTradeAlert(t) {
-        if(!state.settings.tgToken || !state.settings.tgChatId) return;
-        let cText = "無使用信用卡", cLimit = "";
+    // --- 圖表 ---
+    function renderCharts() {
+        const elCards = document.getElementById('chart-cards'); const elDaily = document.getElementById('chart-daily');
+        if(!elCards || !elDaily) return;
+        const style = getComputedStyle(document.body); const textColor = style.getPropertyValue('--chart-text').trim();
+        const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7'];
+        const m = document.getElementById('analysis-month').value; if(!m) return;
         
-        if (t.cardId) {
-            const card = state.cards.find(c => c.id == t.cardId);
-            if (card) {
-                cText = card.name;
-                let spent = 0; const nowMonth = new Date().toISOString().slice(0, 7);
-                state.transactions.forEach(tx => { if(tx.date.startsWith(nowMonth) && tx.cardId == card.id && tx.type === 'expense') spent += tx.amount; });
-                state.trades.forEach(tr => { if(tr.date.startsWith(nowMonth) && tr.cardId == card.id && tr.status!=='cut') spent += (tr.cost * tr.qty); });
-                
-                cLimit = `\n📊 *本月累積*: $${spent.toLocaleString()}`;
-                if (card.cap > 0) {
-                    cLimit += ` / $${card.cap.toLocaleString()} (${Math.round((spent/card.cap)*100)}%)`;
-                    if (spent >= card.cap) cLimit += `\n⚠️ *警告：已爆額！* 🚨`;
-                }
-            }
-        }
-
-        const mStr = t.model === 'Pro Max' ? '大' : (t.model === 'Pro' ? '細' : t.model);
-        const cStr = t.condition === 'opened' ? '開封' : '原封';
-        let msg = `📱 *新炒賣紀錄*\n🛒 來源: ${t.source}${t.oid?` (單號:${t.oid})`:''}\n📦 規格: ${cStr}${mStr}${t.color}${t.cap} x${t.qty}\n💰 總成本: $${(t.cost * t.qty).toLocaleString()}\n`;
-        if (t.status === 'sold') msg += `🤝 回收: ${t.shop} (賣$${t.price})\n📈 利潤: $${t.profit.toLocaleString()}\n`;
-        else msg += `📌 狀態: ${{'pending':'已訂未取','stock':'現貨在手'}[t.status]||t.status}\n`;
-        msg += `💳 卡片: ${cText}${cLimit}`;
+        let txs = (state.transactions || []).filter(tx => tx.date && tx.date.startsWith(m) && tx.type === 'expense');
+        let tradeTxs = (state.trades || []).filter(t => t.date && t.date.startsWith(m) && t.status !== 'cut');
+        const cardTotals = {}; state.cards.forEach(c => cardTotals[c.name] = 0); 
+        txs.forEach(tx => { const card = state.cards.find(c => c.id == tx.cardId); if(card) cardTotals[card.name] += (Number(tx.amount)||0); });
+        tradeTxs.forEach(t => { const card = state.cards.find(c => c.id == t.cardId); if(card) cardTotals[card.name] += ((Number(t.cost)||0)*(Number(t.qty)||1)); });
         
-        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
-    }
-    
-    function sendTradeReport() {
-        if (!state.settings.tgToken) { alert('請先設定 TG Token'); return; }
-        const filterMonth = document.getElementById('analysis-month') ? document.getElementById('analysis-month').value : new Date().toISOString().slice(0, 7);
-        const sold = state.trades.filter(t => t.status === 'sold' && t.date.startsWith(filterMonth));
-        if (sold.length === 0) { alert('本月暫無已賣出的交易'); return; }
+        const pieL = Object.keys(cardTotals).filter(k => cardTotals[k] > 0); const pieD = pieL.map(k => cardTotals[k]);
+        const dateParts = m.split('-'); if(dateParts.length < 2) return;
+        const days = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]), 0).getDate();
+        const daily = new Array(days).fill(0);
+        
+        txs.forEach(tx => { const dIdx = parseInt(tx.date.slice(8, 10)) - 1; if(!isNaN(dIdx) && dIdx >= 0 && dIdx < days) daily[dIdx] += (Number(tx.amount)||0); });
+        tradeTxs.forEach(t => { const dIdx = parseInt(t.date.slice(8, 10)) - 1; if(!isNaN(dIdx) && dIdx >= 0 && dIdx < days) daily[dIdx] += ((Number(t.cost)||0)*(Number(t.qty)||1)); });
+        const barL = Array.from({length: days}, (_, i) => (i + 1).toString());
 
-        sold.sort((a,b) => new Date(b.date) - new Date(a.date));
-        const rep = {}; let tot = 0;
-        sold.forEach(t => {
-            const d = t.date.slice(0, 10);
-            if(!rep[d]) rep[d] = {};
-            if(!rep[d][t.shop||'其他']) rep[d][t.shop||'其他'] = [];
-            rep[d][t.shop||'其他'].push(t);
-            tot += t.profit;
-        });
-
-        let msg = `📊 *炒賣報告 (${filterMonth})*\n💰 總利潤: $${tot.toLocaleString()}\n------------------\n`;
-        for (const [date, shops] of Object.entries(rep)) {
-            msg += `📅 *${date}*\n`;
-            for (const [shop, items] of Object.entries(shops)) {
-                msg += `🏢 ${shop}\n`;
-                const sum = {};
-                items.forEach(t => {
-                    const key = `${t.condition==='opened'?'開封':'原封'}${t.model==='Pro Max'?'大':'細'}${t.color}${t.cap}`;
-                    if(!sum[key]) sum[key] = {q:0, p:0};
-                    sum[key].q += t.qty; sum[key].p += t.profit;
-                });
-                for (const [k, v] of Object.entries(sum)) msg += `- ${k}: ${v.q} (賺$${v.p})\n`;
-            } msg += `\n`;
-        }
-        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
-        showToast('✅ 報告已發送至 TG');
+        if(pieChart) pieChart.destroy(); if(barChart) barChart.destroy();
+        pieChart = new Chart(elCards.getContext('2d'), { type: 'doughnut', data: { labels: pieL, datasets: [{ data: pieD, backgroundColor: colors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor } } } } });
+        barChart = new Chart(elDaily.getContext('2d'), { type: 'bar', data: { labels: barL, datasets: [{ label: '支出', data: daily, backgroundColor: '#ff4d4d', borderRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: '#333' } } }, plugins: { legend: { display: false } } } });
     }
 
-    // --- Other Core Functions (Categories, Tx, etc.) ---
+    // --- 視窗及操作管理 ---
     function openModal(type) {
-        document.getElementById('modal-'+type).classList.add('active');
+        const m = document.getElementById('modal-'+type); if(!m) return; m.classList.add('active');
         if(type==='transaction') { document.getElementById('tx-form').reset(); document.getElementById('tx-id').value=''; setTxType('expense'); setDefaultTime(); }
-        if(type==='trade' && !document.getElementById('trade-id').value) {
-            document.getElementById('trade-form').reset(); document.getElementById('trade-id').value='';
-            document.getElementById('trade-source-custom').style.display='none'; document.getElementById('trade-shop-custom').style.display='none';
-            document.querySelectorAll('.grid-btn.selected').forEach(b=>b.classList.remove('selected'));
-            setDefaultTime(); updateFormOptions();
-        }
-        if(type==='category') renderCategories();
+        else if(type==='trade' && !document.getElementById('trade-id').value) { document.getElementById('trade-form').reset(); document.getElementById('trade-id').value=''; document.getElementById('trade-source-custom').style.display='none'; document.getElementById('trade-shop-custom').style.display='none'; document.querySelectorAll('#modal-trade .grid-btn.selected').forEach(b=>b.classList.remove('selected')); setDefaultTime(); updateFormOptions(); }
+        else if(type==='category') renderCategories();
+        else if(type==='recur-mission') renderRecurList();
+        else if(type==='welcome') renderWelcomeList();
+        else if(type==='subs') renderSubsList();
+        else if(type==='bank-info') renderBankList();
     }
     
-    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); document.getElementById('trade-id').value = ''; }
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); const tid = document.getElementById('trade-id'); if(tid) tid.value = ''; }
     function openMenuTarget(t) { closeModals(); setTimeout(()=>openModal(t), 50); }
 
     function setTxType(t) {
-        document.getElementById('tx-type').value=t;
+        const txType = document.getElementById('tx-type'); if(txType) txType.value = t;
         document.querySelectorAll('.type-option').forEach(e=>e.classList.remove('active','expense','income','repayment'));
-        document.getElementById('type-'+t).classList.add('active', t);
-        const catS = document.getElementById('tx-category'); catS.innerHTML='';
-        (state.categories[t] || DEFAULT_CATEGORIES[t]).forEach(c=>catS.add(new Option(c,c)));
-        document.getElementById('group-card').style.display = t==='income'?'none':'block';
+        const activeBtn = document.getElementById('type-'+t); if(activeBtn) activeBtn.classList.add('active', t);
+        const catS = document.getElementById('tx-category'); 
+        if(catS) { catS.innerHTML=''; const safeCats = (state.categories && state.categories[t]) ? state.categories[t] : DEFAULT_CATEGORIES[t]; safeCats.forEach(c=>catS.add(new Option(c,c))); }
+        const groupCard = document.getElementById('group-card'); if(groupCard) groupCard.style.display = t==='income'?'none':'block';
         updateCardHint();
     }
 
@@ -854,97 +699,235 @@
         renderCategories();
     }
 
-    function renderCategories() {
-        const l = document.getElementById('category-list'); l.innerHTML = '';
-        (state.categories[currentCatEditType]||[]).forEach((c, idx) => {
-            l.innerHTML += `<div class="cat-list-item"><span>${c}</span><button class="btn-text" style="color:var(--danger)" onclick="deleteCategory('${currentCatEditType}', ${idx})">X</button></div>`;
-        });
-    }
-
     function addCategory(e) {
-        e.preventDefault();
-        const v = document.getElementById('new-category-name').value.trim();
-        if(v && !state.categories[currentCatEditType].includes(v)) {
-            state.categories[currentCatEditType].push(v); saveData(); renderCategories();
-            document.getElementById('new-category-name').value = '';
+        e.preventDefault(); const v = document.getElementById('new-category-name').value.trim();
+        if(v && state.categories && state.categories[currentCatEditType] && !state.categories[currentCatEditType].includes(v)) {
+            state.categories[currentCatEditType].push(v); saveData(); renderCategories(); document.getElementById('new-category-name').value = '';
             if(document.getElementById('tx-type').value === currentCatEditType) setTxType(currentCatEditType);
         }
     }
-    function deleteCategory(type, idx) { state.categories[type].splice(idx, 1); saveData(); renderCategories(); if(document.getElementById('tx-type').value === type) setTxType(type); }
+    
+    function deleteCategory(type, idx) { if(state.categories && state.categories[type]) { state.categories[type].splice(idx, 1); saveData(); renderCategories(); if(document.getElementById('tx-type').value === type) setTxType(type); } }
 
     function updateCardHint() {
-        const cid = document.getElementById('tx-card').value;
-        const c = state.cards.find(x=>x.id==cid);
-        const h = document.getElementById('card-hint');
-        if(c && document.getElementById('tx-type').value==='expense') { h.style.display='block'; document.getElementById('hint-rate').innerText = c.percent; } 
-        else h.style.display='none';
+        const select = document.getElementById('tx-card'); const hintBox = document.getElementById('card-hint'); const txType = document.getElementById('tx-type');
+        if(!select || !hintBox || !txType) return;
+        const c = state.cards.find(x=>x.id==select.value);
+        if(c && txType.value === 'expense') { hintBox.style.display = 'block'; const r = c.percent !== undefined ? c.percent : (c.rate || 0); hintBox.innerHTML = `回贈: ${r}%`; } 
+        else { hintBox.style.display = 'none'; }
     }
     
     function updateFormOptions() {
-        const s = document.getElementById('tx-card'); s.innerHTML='';
-        const ts = document.getElementById('trade-card'); if(ts) ts.innerHTML='<option value="">無使用信用卡</option>';
-        state.cards.forEach(c => { s.add(new Option(c.name, c.id)); if(ts) ts.add(new Option(c.name, c.id)); });
+        const s = document.getElementById('tx-card'); if(s) { s.innerHTML=''; state.cards.forEach(c => s.add(new Option(c.name, c.id))); }
+        const ts = document.getElementById('trade-card'); if(ts) { ts.innerHTML='<option value="">無使用信用卡</option>'; state.cards.forEach(c => ts.add(new Option(c.name, c.id))); }
+        const ws = document.getElementById('welcome-card'); if(ws) { ws.innerHTML=''; state.cards.forEach(c => ws.add(new Option(c.name, c.id))); }
+        const rs = document.getElementById('recur-card'); if(rs) { rs.innerHTML=''; state.cards.forEach(c => rs.add(new Option(c.name, c.id))); }
+        const subS = document.getElementById('sub-card'); if(subS) { subS.innerHTML=''; state.cards.forEach(c => subS.add(new Option(c.name, c.id))); }
+        
+        const missionCards = document.getElementById('mission-cards'); 
+        if(missionCards) {
+            missionCards.innerHTML='';
+            state.cards.forEach(c => {
+                const div = document.createElement('div'); div.className = 'checkbox-item';
+                div.innerHTML = `<input type="checkbox" name="m-card" value="${c.id}" id="m-card-${c.id}"><label style="margin:0; padding-left:8px; width:100%; cursor:pointer;" for="m-card-${c.id}">${c.name}</label>`;
+                missionCards.appendChild(div);
+            });
+        }
         updateCardHint();
     }
 
     function switchTab(name) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        if(name==='transactions') { document.querySelectorAll('.tab')[0].classList.add('active'); document.getElementById('tab-transactions').classList.add('active'); }
-        else if(name==='cards') { document.querySelectorAll('.tab')[1].classList.add('active'); document.getElementById('tab-cards').classList.add('active'); }
-        else if(name==='trading') { document.querySelectorAll('.tab')[2].classList.add('active'); document.getElementById('tab-trading').classList.add('active'); renderTrading(); }
-        else if(name==='analysis') { document.querySelectorAll('.tab')[3].classList.add('active'); document.getElementById('tab-analysis').classList.add('active'); renderCharts(); }
+        const tabBtns = document.querySelectorAll('.tab');
+        if(name==='transactions' && tabBtns[0]) { tabBtns[0].classList.add('active'); document.getElementById('tab-transactions').classList.add('active'); }
+        else if(name==='cards' && tabBtns[1]) { tabBtns[1].classList.add('active'); document.getElementById('tab-cards').classList.add('active'); }
+        else if(name==='trading' && tabBtns[2]) { tabBtns[2].classList.add('active'); document.getElementById('tab-trading').classList.add('active'); renderTrading(); }
+        else if(name==='analysis' && tabBtns[3]) { tabBtns[3].classList.add('active'); document.getElementById('tab-analysis').classList.add('active'); renderCharts(); }
     }
 
-    // --- Charts ---
-    function renderCharts() {
-        if(!document.getElementById('chart-cards')) return;
-        const style = getComputedStyle(document.body); const textColor = style.getPropertyValue('--chart-text').trim();
-        const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7'];
-        const m = document.getElementById('analysis-month').value; if(!m) return;
-        
-        let txs = state.transactions.filter(tx => tx.date.startsWith(m) && tx.type === 'expense');
-        
-        const cardTotals = {}; state.cards.forEach(c => cardTotals[c.name] = 0); 
-        txs.forEach(tx => { const card = state.cards.find(c => c.id == tx.cardId); if(card) cardTotals[card.name] += tx.amount; });
-        const pieL = Object.keys(cardTotals).filter(k => cardTotals[k] > 0);
-        const pieD = pieL.map(k => cardTotals[k]);
+    // --- 資料寫入操作 ---
+    function addTransaction(e) {
+        e.preventDefault(); const idStr = document.getElementById('tx-id').value;
+        const tx = { id: idStr ? parseFloat(idStr) : Date.now(), type: document.getElementById('tx-type').value, amount: parseFloat(document.getElementById('tx-amount').value), category: document.getElementById('tx-category').value, cardId: document.getElementById('tx-card') ? document.getElementById('tx-card').value : null, desc: document.getElementById('tx-desc').value, date: document.getElementById('tx-date').value };
+        if(idStr) { const idx = state.transactions.findIndex(t=>t.id==tx.id); if(idx!==-1) state.transactions[idx] = tx; } 
+        else { state.transactions.unshift(tx); if(state.settings && state.settings.tgAutoSend) sendTelegramTx(tx); }
+        saveData(); render(); closeModals();
+    }
+    function editTransaction(id) {
+        const tx = state.transactions.find(t=>t.id==id); if(!tx) return; openModal('transaction'); document.getElementById('tx-id').value=tx.id; setTxType(tx.type || 'expense');
+        document.getElementById('tx-amount').value=tx.amount; document.getElementById('tx-desc').value=tx.desc; document.getElementById('tx-date').value=tx.date;
+        if(tx.cardId && document.getElementById('tx-card')) document.getElementById('tx-card').value=tx.cardId;
+        const title = document.getElementById('tx-modal-title'); if(title) title.innerText="編輯紀錄";
+    }
+    function deleteTransaction(id) { if(confirm('確定刪除紀錄?')) { state.transactions=state.transactions.filter(t=>t.id!==id); saveData(); render(); } }
+    
+    function addCard(e) { e.preventDefault(); state.cards.push({ id: Date.now(), name: document.getElementById('card-name').value, percent: parseFloat(document.getElementById('card-percent').value)||0, cap: parseFloat(document.getElementById('card-cap').value)||0, note: document.getElementById('card-note').value }); saveData(); render(); closeModals(); }
+    function deleteCard(id) { if(confirm('確定刪除卡片?')) { state.cards=state.cards.filter(c=>c.id!==id); saveData(); render(); } }
+    
+    // Trade Logic
+    function selectTradeOption(type, val, el) {
+        const input = document.getElementById('trade-'+type); if(input) input.value=val;
+        const grid = el.parentElement; if(grid) { Array.from(grid.children).forEach(c=>c.classList.remove('selected')); el.classList.add('selected'); }
+        if(type==='model' || type==='cap') { const m = document.getElementById('trade-model').value; const c = document.getElementById('trade-cap').value; if(m && c && IPHONE_PRICES[m] && IPHONE_PRICES[m][c]) { const costInp = document.getElementById('trade-cost'); if(costInp) costInp.value = IPHONE_PRICES[m][c]; } }
+    }
+    function toggleCustomInput(type) { const sel = document.getElementById('trade-'+type); const inp = document.getElementById('trade-'+type+'-custom'); if(sel && inp) { if(sel.value === 'other') { inp.style.display = 'block'; inp.required = true; } else { inp.style.display = 'none'; inp.required = false; } } }
 
-        const days = new Date(parseInt(m.slice(0,4)), parseInt(m.slice(5,7)), 0).getDate();
-        const daily = new Array(days).fill(0);
-        txs.forEach(tx => { daily[parseInt(tx.date.slice(8, 10)) - 1] += tx.amount; });
-        const barL = Array.from({length: days}, (_, i) => (i + 1).toString());
+    function addTrade(e) {
+        e.preventDefault();
+        try {
+            const idStr = document.getElementById('trade-id').value; const cost = parseFloat(document.getElementById('trade-cost').value) || 0; const price = parseFloat(document.getElementById('trade-price').value) || 0; const qty = parseInt(document.getElementById('trade-qty').value) || 1; const cid = document.getElementById('trade-card') ? document.getElementById('trade-card').value : '';
+            let source = document.getElementById('trade-source').value; if(source === 'other') source = document.getElementById('trade-source-custom').value;
+            let shop = document.getElementById('trade-shop').value; if(shop === 'other') shop = document.getElementById('trade-shop-custom').value;
+            const tData = { source, shop, oid: document.getElementById('trade-oid').value || '', model: document.getElementById('trade-model').value, cap: document.getElementById('trade-cap').value, color: document.getElementById('trade-color').value, status: document.getElementById('trade-status').value, condition: document.getElementById('trade-condition').value, cost, price, qty, profit: (price-cost)*qty, cardId: cid, date: document.getElementById('trade-date').value };
+            if (idStr) { tData.id = parseFloat(idStr); const idx = state.trades.findIndex(t => t.id === tData.id); if (idx !== -1) state.trades[idx] = tData; } 
+            else { tData.id = Date.now(); state.trades.unshift(tData); if(state.settings.tgAutoSend) sendTelegramTradeAlert(tData); }
+            saveData(); render(); closeModals(); showToast('✅ 交易已儲存');
+        } catch(err) { alert("儲存失敗: " + err.message); }
+    }
+    function cloneTrade(id) { editTrade(id); const tid = document.getElementById('trade-id'); if(tid) tid.value = ''; const toid = document.getElementById('trade-oid'); if(toid) toid.value = ''; setDefaultTime(); showToast('📋 已複製！請修改後按儲存'); }
+    function editTrade(id) {
+        const t = state.trades.find(x => x.id === id); if (!t) return; openModal('trade'); document.getElementById('trade-id').value = t.id;
+        const srcS = document.getElementById('trade-source'); if(srcS) { if([...srcS.options].some(o=>o.value===t.source)) { srcS.value=t.source; document.getElementById('trade-source-custom').style.display='none'; } else { srcS.value='other'; document.getElementById('trade-source-custom').style.display='block'; document.getElementById('trade-source-custom').value=t.source; } }
+        const shpS = document.getElementById('trade-shop'); if(shpS) { if([...shpS.options].some(o=>o.value===t.shop) || !t.shop) { shpS.value=t.shop||""; document.getElementById('trade-shop-custom').style.display='none'; } else { shpS.value='other'; document.getElementById('trade-shop-custom').style.display='block'; document.getElementById('trade-shop-custom').value=t.shop; } }
+        if(document.getElementById('trade-oid')) document.getElementById('trade-oid').value = t.oid || ""; if(document.getElementById('trade-cost')) document.getElementById('trade-cost').value = t.cost; if(document.getElementById('trade-price')) document.getElementById('trade-price').value = t.price; if(document.getElementById('trade-qty')) document.getElementById('trade-qty').value = t.qty; if(document.getElementById('trade-card')) document.getElementById('trade-card').value = t.cardId || ""; if(document.getElementById('trade-date') && t.date) document.getElementById('trade-date').value = t.date.slice(0,16);
+        ['model', 'cap', 'color', 'status', 'condition'].forEach(type => { const val = t[type]; const input = document.getElementById('trade-'+type); if(input) { input.value = val; const grid = input.parentElement.querySelector('.btn-grid') || input.parentElement.parentElement.querySelector('.btn-grid'); if(grid) { Array.from(grid.children).forEach(b => { b.classList.remove('selected'); if(b.innerText.includes(val) || b.innerText===val) b.classList.add('selected'); }); } } });
+    }
+    function deleteTrade(id) { if(confirm('刪除交易?')) { state.trades = state.trades.filter(t=>t.id!==id); saveData(); render(); } }
 
-        if(pieChart) pieChart.destroy(); if(barChart) barChart.destroy();
-        pieChart = new Chart(document.getElementById('chart-cards').getContext('2d'), { type: 'doughnut', data: { labels: pieL, datasets: [{ data: pieD, backgroundColor: colors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor } } } } });
-        barChart = new Chart(document.getElementById('chart-daily').getContext('2d'), { type: 'bar', data: { labels: barL, datasets: [{ label: '支出', data: daily, backgroundColor: '#ff4d4d', borderRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: '#333' } } }, plugins: { legend: { display: false } } } });
+    function addMission(e) { e.preventDefault(); const name = document.getElementById('mission-name').value; const target = parseFloat(document.getElementById('mission-target').value); const start = document.getElementById('mission-start').value; const end = document.getElementById('mission-end').value; const checkboxes = document.querySelectorAll('input[name="m-card"]:checked'); const cardIds = Array.from(checkboxes).map(cb => cb.value); if (cardIds.length === 0) { alert('請至少選擇一張信用卡！'); return; } state.missions.push({ id: Date.now(), name, target, start, end, cardIds }); saveData(); renderMissions(); closeModals(); e.target.reset(); }
+    function deleteMission(id) { if(confirm('刪除任務?')) { state.missions=state.missions.filter(m=>m.id!==id); saveData(); renderMissions(); } }
+    function addRecurMission(e) { e.preventDefault(); state.recurringMissions.push({id:Date.now(), name:document.getElementById('recur-name').value, target:parseFloat(document.getElementById('recur-target').value), cardId:document.getElementById('recur-card').value, resetDay:parseInt(document.getElementById('recur-reset-day').value)}); saveData(); renderRecurList(); e.target.reset(); }
+    function deleteRecurMission(id) { if(confirm('刪除?')) { state.recurringMissions=state.recurringMissions.filter(m=>m.id!==id); saveData(); renderRecurList(); } }
+    function addWelcome(e) { e.preventDefault(); state.welcomeOffers.push({id:Date.now(), name:document.getElementById('welcome-name').value, cardId:document.getElementById('welcome-card').value, target:parseFloat(document.getElementById('welcome-target').value), deadline:document.getElementById('welcome-deadline').value, start:document.getElementById('welcome-start').value}); saveData(); renderWelcomeList(); e.target.reset(); }
+    function deleteWelcome(id) { if(confirm('刪除?')) { state.welcomeOffers=state.welcomeOffers.filter(w=>w.id!==id); saveData(); renderWelcomeList(); } }
+    function addSubscription(e) { e.preventDefault(); state.subscriptions.push({id:Date.now(), name:document.getElementById('sub-name').value, amount:parseFloat(document.getElementById('sub-amount').value), cardId:document.getElementById('sub-card').value}); saveData(); renderSubsList(); e.target.reset(); }
+    function deleteSub(id) { if(confirm('刪除?')) { state.subscriptions=state.subscriptions.filter(s=>s.id!==id); saveData(); renderSubsList(); } }
+
+    function getCardSpending(cardId) {
+        const nowMonth = new Date().toISOString().slice(0, 7); let total = 0;
+        (state.transactions || []).forEach(tx => { if(tx.date && tx.date.startsWith(nowMonth) && tx.cardId == cardId && tx.type === 'expense') total += (Number(tx.amount) || 0); });
+        (state.trades || []).forEach(t => { if(t.date && t.date.startsWith(nowMonth) && t.cardId == cardId && t.status !== 'cut') total += ((Number(t.cost) || 0) * (Number(t.qty) || 1)); });
+        return total;
     }
 
-    // Export/Import
-    function exportData(type) {
-        const str = type==='json' ? JSON.stringify(state) : 'Date,Desc,Amount\n'+state.transactions.map(t=>`${t.date},${t.desc},${t.amount}`).join('\n');
-        const blob = new Blob([str], {type: type==='json'?'application/json':'text/csv'});
-        const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backup.'+type; a.click();
-    }
-    function triggerImport() { document.getElementById('file-input').click(); }
-    function importData(input) {
-        const reader = new FileReader();
-        reader.onload = e => { state = JSON.parse(e.target.result); saveData(); location.reload(); };
-        reader.readAsText(input.files[0]);
-    }
-    function importPresetCards() {
-        PRESET_CARDS.forEach(p=> { if(p.cap>0 && !state.cards.find(c=>c.name===p.name)) state.cards.push({...p, id: Date.now()+Math.random()}) });
-        saveData(); render(); showToast('✅ 已匯入神卡');
-    }
-    function toggleTheme() {
-        const t = document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
-        document.documentElement.setAttribute('data-theme', t); localStorage.setItem(THEME_KEY, t);
-        if (document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
-    }
-    function applyTheme(t) { document.documentElement.setAttribute('data-theme', t); }
-    function rescueData() { exportData('json'); }
-    function resetData() { if(confirm('確定清除?')) { localStorage.removeItem(DB_KEY); location.reload(); } }
+    // --- TG Notifications ---
+    function saveTGSettings() { state.settings.tgToken = document.getElementById('tg-token').value; state.settings.tgChatId = document.getElementById('tg-chatid').value; state.settings.tgAutoSend = document.getElementById('setting-tg-auto').checked; saveData(); showToast('✅ 設定已儲存'); }
+    async function sendTGMessage(t, cid, msg) { if (!t || !cid) return; try { await fetch(`https://api.telegram.org/bot${t}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({chat_id:cid, text:msg, parse_mode:'Markdown'}) }); } catch(e) { console.error(e); } }
+    function testTG() { sendTGMessage(state.settings.tgToken, state.settings.tgChatId, '🔔 *回贈哥測試*\n這是一條測試訊息！'); showToast('發送請求已送出'); }
 
+    function sendTelegramTradeAlert(t) {
+        if(!state.settings.tgToken || !state.settings.tgChatId) return;
+        let cText = "無使用信用卡", cLimit = "";
+        if (t.cardId) {
+            const card = state.cards.find(c => c.id == t.cardId);
+            if (card) {
+                cText = card.name; const spent = getCardSpending(card.id);
+                cLimit = `\n📊 *本月累積*: $${spent.toLocaleString()}`;
+                if (card.cap > 0) { cLimit += ` / $${card.cap.toLocaleString()} (${Math.round((spent/card.cap)*100)}%)`; if (spent >= card.cap) cLimit += `\n⚠️ *警告：已爆額！* 🚨`; }
+            }
+        }
+        const mStr = t.model === 'Pro Max' ? '大' : (t.model === 'Pro' ? '細' : t.model);
+        const cStr = t.condition === 'opened' ? '開封' : '原封';
+        let msg = `📱 *新炒賣紀錄*\n🛒 來源: ${t.source}${t.oid?` (單號:${t.oid})`:''}\n📦 規格: ${cStr}${mStr}${t.color}${t.cap} x${t.qty}\n💰 總成本: $${(t.cost * t.qty).toLocaleString()}\n`;
+        if (t.status === 'sold') msg += `🤝 回收: ${t.shop} (賣$${t.price})\n📈 利潤: $${t.profit.toLocaleString()}\n`;
+        else msg += `📌 狀態: ${{'pending':'已訂未取','stock':'現貨在手'}[t.status]||t.status}\n`;
+        msg += `💳 卡片: ${cText}${cLimit}`;
+        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
+    }
+    
+    function sendTelegramTx(tx) {
+        if(!state.settings.tgToken || !state.settings.tgChatId) return;
+        const card = state.cards.find(c => c.id == tx.cardId);
+        const cardName = card ? card.name : 'N/A';
+        const dateStr = tx.date ? tx.date.replace('T', ' ') : '';
+        let msg = `🔔 *新增記賬*\n💰 *金額*: HKD $${Number(tx.amount).toLocaleString()}\n💳 *卡片*: ${cardName}\n📝 *描述*: ${tx.desc}\n📂 *類別*: ${tx.category}\n📅 *時間*: ${dateStr}`;
+        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
+    }
+    
+    function sendTradeReport() {
+        if (!state.settings.tgToken) { alert('請先設定 TG Token'); return; }
+        const filterMonth = document.getElementById('analysis-month') ? document.getElementById('analysis-month').value : new Date().toISOString().slice(0, 7);
+        const sold = (state.trades || []).filter(t => t.status === 'sold' && t.date && t.date.startsWith(filterMonth));
+        if (sold.length === 0) { alert('本月暫無已賣出的交易'); return; }
+        sold.sort((a,b) => new Date(b.date) - new Date(a.date));
+        const rep = {}; let tot = 0;
+        sold.forEach(t => { const d = t.date.slice(0, 10); if(!rep[d]) rep[d] = {}; const sh = t.shop || '其他'; if(!rep[d][sh]) rep[d][sh] = []; rep[d][sh].push(t); tot += (Number(t.profit)||0); });
+        let msg = `📊 *炒賣報告 (${filterMonth})*\n💰 總利潤: $${tot.toLocaleString()}\n------------------\n`;
+        for (const [date, shops] of Object.entries(rep)) {
+            msg += `📅 *${date}*\n`;
+            for (const [shop, items] of Object.entries(shops)) {
+                msg += `🏢 ${shop}\n`; const sum = {};
+                items.forEach(t => {
+                    const key = `${t.condition==='opened'?'開封':'原封'}${t.model==='Pro Max'?'大':'細'}${t.color}${t.cap}`;
+                    if(!sum[key]) sum[key] = {q:0, p:0}; sum[key].q += (Number(t.qty)||1); sum[key].p += (Number(t.profit)||0);
+                });
+                for (const [k, v] of Object.entries(sum)) msg += `- ${k}: ${v.q} (賺$${v.p})\n`;
+            } msg += `\n`;
+        }
+        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg); showToast('✅ 報告已發送');
+    }
+
+    // --- Utility / UI Helpers ---
+    function toggleTheme() { const t = document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'; localStorage.setItem(THEME_KEY, t); applyTheme(t); }
+    function applyTheme(t) { document.documentElement.setAttribute('data-theme', t); const btn = document.getElementById('btn-theme'); if(btn) btn.innerText = t==='dark'?'☀️':'🌙'; if (document.getElementById('tab-analysis').classList.contains('active')) renderCharts(); }
+    function importPresetCards() { if(!confirm('確定匯入最新神卡?')) return; PRESET_CARDS.forEach(p=> { if(p.cap>0 && !state.cards.find(c=>c.name===p.name)) state.cards.push({...p, id: Date.now()+Math.random()}) }); saveData(); render(); showToast('✅ 已匯入'); }
+    function exportData(type) { const str = type==='json' ? JSON.stringify(state) : 'Date,Desc,Amount\n'+state.transactions.map(t=>`${t.date},${t.desc},${t.amount}`).join('\n'); const blob = new Blob([str], {type: type==='json'?'application/json':'text/csv'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backup.'+type; a.click(); }
+    function triggerImport() { const f = document.getElementById('file-input'); if(f) f.click(); }
+    function importData(input) { const reader = new FileReader(); reader.onload = e => { try { state = JSON.parse(e.target.result); saveData(); location.reload(); } catch(err) { alert("還原失敗，檔案損壞！"); } }; reader.readAsText(input.files[0]); }
+    function rescueData() { exportData('json'); showToast('💾 資料已下載'); }
+    function resetData() { if(confirm('⚠️ 警告：這將會清除所有資料！確定嗎？')) { localStorage.removeItem(DB_KEY); location.reload(); } }
+    
+    // UI Helpers
+    function setDefaultTime() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const dStr = now.toISOString().slice(0,16);
+        if(document.getElementById('tx-date')) document.getElementById('tx-date').value = dStr;
+        if(document.getElementById('trade-date')) document.getElementById('trade-date').value = dStr;
+    }
+    
+    function handleCurrencyChange() {
+        const c = document.getElementById('tx-currency').value;
+        if(document.getElementById('fx-rate-container')) document.getElementById('fx-rate-container').style.display = c === 'HKD' ? 'none' : 'block';
+        if(document.getElementById('fx-amount-container')) document.getElementById('fx-amount-container').style.display = c === 'HKD' ? 'none' : 'block';
+    }
+    
+    function calcHkdAmount() {
+        const amt = parseFloat(document.getElementById('tx-fx-amount').value) || 0;
+        const rate = parseFloat(document.getElementById('tx-fx-rate').value) || 0;
+        if(amt && rate && document.getElementById('tx-amount')) document.getElementById('tx-amount').value = (amt * rate).toFixed(2);
+    }
+    
+    function calcSplit() {
+        const t = parseFloat(document.getElementById('split-total').value) || 0;
+        const dis = parseFloat(document.getElementById('split-discount').value) || 0;
+        const svc = document.getElementById('split-service') ? document.getElementById('split-service').checked : false;
+        const p = parseInt(document.getElementById('split-people').value) || 1;
+        let final = t;
+        if(svc) final *= 1.1;
+        if(dis) final *= (1 - dis / 100);
+        if(document.getElementById('split-result')) document.getElementById('split-result').innerText = '$' + (final / p).toFixed(2);
+    }
+    
+    function adjustPeople(d) {
+        const i = document.getElementById('split-people');
+        if(i) { i.value = Math.max(1, parseInt(i.value) + d); calcSplit(); }
+    }
+    
+    function applySplit() {
+        if(document.getElementById('split-result') && document.getElementById('tx-amount')) {
+            document.getElementById('tx-amount').value = parseFloat(document.getElementById('split-result').innerText.replace('$', ''));
+            closeModals();
+        }
+    }
+    
+    function adjustTradeQty(d) { 
+        const i = document.getElementById('trade-qty'); 
+        if(i) i.value = Math.max(1, parseInt(i.value) + d); 
+    }
+
+    // Start App
     init();
 </script>
 </body>
