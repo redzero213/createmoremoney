@@ -376,6 +376,804 @@
     const IPHONE_PRICES = { 'Pro': { '256GB': 9399, '512GB': 11099, '1TB': 12799 }, 'Pro Max': { '256GB': 10199, '512GB': 11899, '1TB': 13599, '2TB': 16999 } };
 
     const PRESET_CARDS = [
+        { name: '現金/八達通', cap: 0, percent: 0, note: '無回贈' },
+        { name: '信銀 Motion', cap: 3600, percent: 6, note: '餐飲/網購6% (上限$3,600)' },
+        { name: 'AEON WAKUWAKU', cap: 5000, percent: 6, note: '網購6% (上限$5,000)' },
+        { name: '恒生 MMPOWER', cap: 10000, percent: 5, note: '自選類別5% (上限$10,000)' },
+        { name: '中銀 Chill', cap: 3260, percent: 5, note: '影視/快餐5% (上限$3,260)' },
+        { name: '滙豐 Red 卡', cap: 12500, percent: 4, note: '網購4% (上限$12,500)' },
+        { name: '富邦 iN Visa', cap: 3750, percent: 8, note: '指定類別8% (上限$3,750)' },
+        { name: '安信 EarnMORE', cap: 150000, percent: 2, note: '全城2% (每年首15萬)' }
+    ];
+
+    let state = { transactions: [], cards: [], trades: [] };
+    let pieChart = null, barChart = null;
+
+    // --- Inline Calculator Logic ---
+    function calcPressInline(key) {
+        const input = document.getElementById('tx-amount');
+        const preview = document.getElementById('inline-calc-expr');
+        if (!input || !preview) return;
+
+        let expr = input.value;
+        if (expr === '0' && key !== '.' && !['+', '-', '*', '/'].includes(key)) {
+            expr = '';
+        }
+
+        if (key === 'C') {
+            expr = "0";
+        } else if (key === 'DEL') {
+            expr = expr.slice(0, -1) || "0";
+        } else if (key === '=') {
+            expr = safeEval(expr).toString();
+        } else {
+            const lastChar = expr.slice(-1);
+            const isOp = ['+', '-', '*', '/'].includes(key);
+            if (isOp && ['+', '-', '*', '/'].includes(lastChar)) {
+                expr = expr.slice(0, -1) + key; 
+            } else {
+                expr += key;
+            }
+        }
+        
+        input.value = expr;
+        
+        // Preview Eval
+        try {
+            if (expr && /[\+\-\*\/]/.test(expr) && !/[\+\-\*\/]$/.test(expr)) {
+                let res = new Function('return ' + expr)();
+                preview.innerText = isFinite(res) ? "= " + (Math.round(res * 100) / 100) : "";
+            } else {
+                preview.innerText = "";
+            }
+        } catch(e) { preview.innerText = ""; }
+    }
+
+    function safeEval(expr) {
+        try { 
+            let res = new Function('return ' + expr)(); 
+            return isFinite(res) ? Math.round(res * 100) / 100 : 0;
+        } catch(e) { return 0; }
+    }
+
+    // --- App Core Logic ---
+    function init() {
+        try {
+            const stored = localStorage.getItem(DB_KEY);
+            if (stored) state = JSON.parse(stored);
+            if (!state.cards) state.cards = generatePresetCards();
+            if (!state.transactions) state.transactions = [];
+            if (!state.trades) state.trades = [];
+
+            // ✨ 自動修復舊資料 (解決 undefined 問題)
+            state.cards.forEach(c => {
+                if (c.percent === undefined && c.rate !== undefined) c.percent = c.rate;
+                if (c.percent === undefined) c.percent = 0;
+            });
+
+            // Populate Selects safely
+            const sourceS = document.getElementById('trade-source');
+            if(sourceS) { 
+                sourceS.innerHTML = '<option value="">-- 選擇來源 --</option>';
+                TRADE_SOURCES.forEach(src => sourceS.add(new Option(src, src)));
+                sourceS.add(new Option('其他 (手動輸入)', 'other'));
+            }
+            const shopS = document.getElementById('trade-shop');
+            if(shopS) { 
+                shopS.innerHTML = '<option value="">-- 請選擇 (未賣出可不填) --</option>';
+                TRADE_SHOPS.forEach(sh => shopS.add(new Option(sh, sh)));
+                shopS.add(new Option('其他 (手動輸入)', 'other'));
+            }
+            
+            applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+            setDefaultTime();
+            if(document.getElementById('analysis-month')) document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
+            
+            updateBackupTimeDisplay();
+            setTxType('expense');
+            render();
+
+        } catch (err) { console.error("Init Error:", err); }
+    }
+    
+    function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); const btn = document.getElementById('btn-theme'); if(btn) btn.innerText = theme === 'dark' ? '☀️' : '🌙'; if (document.getElementById('tab-analysis').classList.contains('active')) renderCharts(); }
+    function toggleTheme() { const target = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; localStorage.setItem(THEME_KEY, target); applyTheme(target); }
+    function setDefaultTime() { 
+        const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); 
+        const ds = now.toISOString().slice(0, 16);
+        if(document.getElementById('tx-date')) document.getElementById('tx-date').value = ds; 
+        if(document.getElementById('trade-date')) document.getElementById('trade-date').value = ds; 
+    }
+    function generatePresetCards() { return PRESET_CARDS.map((c, idx) => ({ ...c, id: Date.now() + idx })); }
+    function saveData() { localStorage.setItem(DB_KEY, JSON.stringify(state)); }
+
+    function calculateStats() {
+        let totalSpent = 0, totalIncome = 0, totalCashback = 0;
+        const cardSpending = {}; state.cards.forEach(c => cardSpending[c.id] = 0);
+        const nowMonth = new Date().toISOString().slice(0, 7);
+
+        state.transactions.forEach(tx => {
+            if (tx.date && tx.date.slice(0, 7) === nowMonth) {
+                const type = tx.type || 'expense';
+                if (type === 'expense') {
+                    totalSpent += tx.amount;
+                    const card = state.cards.find(c => c.id == tx.cardId);
+                    if (card) { cardSpending[card.id] += tx.amount; totalCashback += (tx.amount * card.percent / 100); }
+                } else if (type === 'income') { totalIncome += tx.amount; }
+            }
+        });
+
+        // Include trades in total cost
+        state.trades.forEach(t => {
+            if (t.date && t.date.slice(0, 7) === nowMonth && t.cardId && t.status !== 'cut') {
+                const tc = (Number(t.cost)||0) * (Number(t.qty)||1);
+                const card = state.cards.find(c => c.id == t.cardId);
+                if (card) { cardSpending[card.id] += tc; totalCashback += (tc * card.percent / 100); }
+            }
+        });
+
+        if(document.getElementById('total-spent')) document.getElementById('total-spent').innerText = '$' + totalSpent.toLocaleString();
+        if(document.getElementById('total-income')) document.getElementById('total-income').innerText = '$' + totalIncome.toLocaleString();
+        if(document.getElementById('total-cashback')) document.getElementById('total-cashback').innerText = '$' + totalCashback.toFixed(1);
+        if(document.getElementById('tx-count')) document.getElementById('tx-count').innerText = state.transactions.length + ' 筆(總)';
+
+        state.cards.forEach(card => {
+            const spent = cardSpending[card.id] || 0;
+            const progressEl = document.getElementById(`prog-${card.id}`);
+            const spentEl = document.getElementById(`spent-${card.id}`);
+            if (progressEl && spentEl) {
+                spentEl.innerText = `$${spent.toLocaleString()}`;
+                if (card.cap > 0) {
+                    const percent = Math.min((spent / card.cap) * 100, 100);
+                    progressEl.style.width = `${percent}%`;
+                    progressEl.style.backgroundColor = percent >= 100 ? 'var(--danger)' : 'var(--primary)';
+                } else { progressEl.style.width = '0%'; }
+            }
+        });
+    }
+
+    function render() {
+        renderCards();
+        renderTransactions();
+        renderTrading();
+        updateFormOptions();
+        calculateStats();
+        if (document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
+    }
+
+    function renderCharts() {
+        const month = document.getElementById('analysis-month').value; if(!month) return;
+        const monthlyTx = state.transactions.filter(tx => tx.date && tx.date.startsWith(month) && (tx.type === 'expense' || !tx.type));
+        const cardTotals = {}; state.cards.forEach(c => cardTotals[c.name] = 0); 
+        monthlyTx.forEach(tx => { const card = state.cards.find(c => c.id == tx.cardId); const name = card ? card.name : 'Unknown'; if(!cardTotals[name]) cardTotals[name] = 0; cardTotals[name] += tx.amount; });
+
+        const pieLabels = Object.keys(cardTotals).filter(k => cardTotals[k] > 0); const pieData = pieLabels.map(k => cardTotals[k]);
+        const daysInMonth = new Date(parseInt(month.slice(0,4)), parseInt(month.slice(5,7)), 0).getDate();
+        const dailyTotals = new Array(daysInMonth).fill(0);
+        monthlyTx.forEach(tx => { const day = parseInt(tx.date.slice(8, 10)) - 1; if(day >= 0 && day < daysInMonth) dailyTotals[day] += tx.amount; });
+        const barLabels = Array.from({length: daysInMonth}, (_, i) => (i + 1).toString());
+
+        if(pieChart) pieChart.destroy(); if(barChart) barChart.destroy();
+        const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7'];
+        const style = getComputedStyle(document.body); const textColor = style.getPropertyValue('--chart-text').trim();
+
+        pieChart = new Chart(document.getElementById('chart-cards').getContext('2d'), { type: 'doughnut', data: { labels: pieLabels, datasets: [{ data: pieData, backgroundColor: colors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor } } } } });
+        barChart = new Chart(document.getElementById('chart-daily').getContext('2d'), { type: 'bar', data: { labels: barLabels, datasets: [{ label: '每日支出 ($)', data: dailyTotals, backgroundColor: '#ff4d4d', borderRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: textColor === '#e0e0e0' ? '#333' : '#e0e0e0' } } }, plugins: { legend: { display: false } } } });
+    }
+
+    function renderCards() {
+        const list = document.getElementById('card-list'); if(!list) return; list.innerHTML = '';
+        state.cards.forEach(card => {
+            const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
+            const percentVal = card.percent !== undefined ? card.percent : (card.rate || 0);
+            const el = document.createElement('div'); el.className = 'credit-card';
+            el.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:start;"><div><div class="card-name">${card.name}</div><div class="card-info" style="color:var(--primary); font-weight:bold;">${percentVal}% 回贈</div><div class="card-info">${card.note || ''}</div></div><button class="btn-text" onclick="deleteCard(${card.id})" style="color:rgba(255,255,255,0.7);">&times;</button></div><div class="progress-bar"><div id="prog-${card.id}" class="progress-fill"></div></div><div class="card-info"><span>本月已簽: <span id="spent-${card.id}" style="color:#fff;">$0</span>${capText}</span></div>`;
+            list.appendChild(el);
+        });
+        if (state.cards.length === 0) list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡，請按新增或匯入推薦</div>';
+    }
+
+    function renderTransactions() {
+        const list = document.getElementById('transaction-list'); if(!list) return; list.innerHTML = '';
+        let sorted = [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        const q = document.getElementById('search-tx') ? document.getElementById('search-tx').value.toLowerCase() : '';
+        if(q) sorted = sorted.filter(tx => (tx.desc||'').toLowerCase().includes(q) || (tx.category||'').toLowerCase().includes(q));
+
+        sorted.forEach(tx => {
+            const type = tx.type || 'expense'; const category = tx.category || (type === 'income' ? '收入' : '其他'); const dateStr = tx.date ? tx.date.replace('T', ' ') : '';
+            let amountDisplay, colorClass, cashbackTag, cardName;
+            
+            if (type === 'income') { amountDisplay = `+ $${tx.amount.toLocaleString()}`; colorClass = 'color:var(--income);'; cashbackTag = ''; cardName = '收入'; } 
+            else if (type === 'repayment') { amountDisplay = `- $${tx.amount.toLocaleString()}`; colorClass = 'color:var(--repay);'; cashbackTag = '<div class="repay-tag">還款紀錄</div>'; const card = state.cards.find(c => c.id == tx.cardId); cardName = card ? card.name : '未知卡片'; } 
+            else { amountDisplay = `$${tx.amount.toLocaleString()}`; colorClass = 'color:var(--text);'; const card = state.cards.find(c => c.id == tx.cardId); cardName = card ? card.name : '未知卡片'; const rate = card ? card.percent : 0; const cashback = (tx.amount * rate / 100).toFixed(1); cashbackTag = `<div class="cashback-tag">賺 $${cashback}</div>`; }
+
+            const el = document.createElement('div'); el.className = 'list-item';
+            el.innerHTML = `<div class="item-main"><div class="item-title"><span class="cat-tag">${category}</span>${tx.desc}</div><div class="item-sub">${dateStr} • ${cardName}</div>${cashbackTag}</div><div style="display:flex; flex-direction:column; align-items:flex-end;"><div class="item-amount" style="${colorClass}">${amountDisplay}</div><button class="btn-text" style="font-size:0.8rem; margin-top:4px;" onclick="editTransaction(${tx.id})">✎ 編輯</button><button class="btn-text" style="font-size:0.8rem; margin-top:4px;" onclick="deleteTransaction(${tx.id})">刪除</button></div>`;
+            list.appendChild(el);
+        });
+        if(sorted.length === 0) list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">無紀錄</div>';
+    }
+
+    function renderTrading() {
+        const l = document.getElementById('trade-list'); if(!l) return; l.innerHTML = '';
+        let sortedTrades = [...(state.trades || [])].sort((a,b) => new Date(b.date) - new Date(a.date));
+        const q = document.getElementById('search-trade') ? document.getElementById('search-trade').value.toLowerCase() : '';
+        if(q) sortedTrades = sortedTrades.filter(t => (t.model||'').toLowerCase().includes(q) || (t.shop||'').toLowerCase().includes(q) || (t.oid||'').toLowerCase().includes(q));
+
+        let todayProfit = 0, todayVol = 0; const nowMonth = new Date().toISOString().slice(0, 10);
+        sortedTrades.forEach(t => {
+            if (t.date && t.date.slice(0, 10) === nowMonth) { if (t.status !== 'cut') todayVol += (Number(t.qty) || 1); if (t.status === 'sold') todayProfit += (Number(t.profit) || 0); }
+            let sBadge = '', pDisp = '';
+            if (t.status === 'pending') sBadge = '<span class="status-badge status-ordered">🛒 已訂</span>';
+            else if (t.status === 'stock') sBadge = '<span class="status-badge status-stock">📦 現貨</span>';
+            else if (t.status === 'cut') sBadge = '<span class="status-badge status-cut">❌ Cut單</span>';
+            else { sBadge = '<span class="status-badge status-sold">💰 已賣</span>' + (t.condition==='opened'?'🔪':''); const pC = t.profit>=0?'profit-pos':'profit-neg'; pDisp = `<span class="${pC}">$${(Number(t.profit)||0).toLocaleString()}</span>`; }
+            
+            const oid = t.oid ? `(${t.oid})` : ''; const loc = (t.status === 'sold' && t.shop) ? `${t.source||''} ${oid} ➔ ${t.shop}` : `${t.source||''} ${oid}`;
+            const cName = state.cards.find(c => c.id == t.cardId) ? `<span class="cat-tag">💳 ${state.cards.find(c=>c.id==t.cardId).name}</span>` : '';
+            l.innerHTML += `<div class="list-item"><div class="item-main"><div class="item-title">${sBadge} ${t.model||''} ${t.cap||''}</div><div class="item-sub">${loc} • ${t.date?t.date.slice(0,10):''} ${cName}</div></div><div style="text-align:right"><div class="item-amount" style="font-size:0.9rem;">x${t.qty||1} ${pDisp}</div><div style="display:flex; justify-content:flex-end;"><button class="btn-text" onclick="editTrade(${t.id})">✎</button><button class="btn-text" onclick="deleteTrade(${t.id})">X</button></div></div></div>`;
+        });
+        
+        if(document.getElementById('trade-today-profit')) document.getElementById('trade-today-profit').innerText = '$' + todayProfit.toLocaleString();
+        if(document.getElementById('trade-today-vol')) document.getElementById('trade-today-vol').innerText = todayVol + ' 部';
+        if(sortedTrades.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">無交易</div>';
+    }
+
+    function setTxType(type) {
+        document.getElementById('tx-type').value = type;
+        document.getElementById('type-expense').className = `type-option ${type === 'expense' ? 'active expense' : ''}`;
+        document.getElementById('type-income').className = `type-option ${type === 'income' ? 'active income' : ''}`;
+        document.getElementById('type-repayment').className = `type-option ${type === 'repayment' ? 'active repayment' : ''}`;
+        
+        const catSelect = document.getElementById('tx-category'); catSelect.innerHTML = '';
+        CATEGORIES[type].forEach(cat => { const opt = document.createElement('option'); opt.value = cat; opt.innerText = cat; catSelect.appendChild(opt); });
+        
+        const cardGroup = document.getElementById('group-card'); const catGroup = document.getElementById('group-category');
+        if (type === 'income') { cardGroup.style.display = 'none'; catGroup.style.display = 'block'; } 
+        else if (type === 'repayment') { cardGroup.style.display = 'block'; catGroup.style.display = 'none'; } 
+        else { cardGroup.style.display = 'block'; catGroup.style.display = 'block'; }
+        updateCardHint();
+    }
+
+    function updateFormOptions() {
+        const select = document.getElementById('tx-card'); if(!select) return; select.innerHTML = '';
+        state.cards.forEach(card => { 
+            const opt = document.createElement('option'); 
+            opt.value = card.id; 
+            const percentVal = card.percent !== undefined ? card.percent : (card.rate || 0);
+            opt.text = `${card.name} (${percentVal}%)`; 
+            select.appendChild(opt); 
+        });
+        
+        const ts = document.getElementById('trade-card'); if(ts) { ts.innerHTML='<option value="">無使用信用卡</option>'; state.cards.forEach(c => ts.add(new Option(c.name, c.id))); }
+        if(state.cards.length > 0) updateCardHint();
+    }
+
+    function updateCardHint() {
+        const select = document.getElementById('tx-card'); const hintBox = document.getElementById('card-hint'); const hintRate = document.getElementById('hint-rate'); 
+        if(!select || !hintBox || !hintRate) return;
+        const type = document.getElementById('tx-type').value;
+        if (type === 'repayment') { hintBox.style.display = 'none'; return; }
+        const card = state.cards.find(c => c.id == select.value);
+        if (card && type === 'expense') { 
+            hintBox.style.display = 'block'; 
+            hintRate.innerText = card.percent !== undefined ? card.percent : (card.rate || 0); 
+        } else { 
+            hintBox.style.display = 'none'; 
+        }
+    }
+    
+    if(document.getElementById('tx-card')) document.getElementById('tx-card').addEventListener('change', updateCardHint);
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        if(tabName === 'transactions') { document.querySelectorAll('.tab')[0].classList.add('active'); document.getElementById('tab-transactions').classList.add('active'); } 
+        else if (tabName === 'cards') { document.querySelectorAll('.tab')[1].classList.add('active'); document.getElementById('tab-cards').classList.add('active'); } 
+        else if (tabName === 'trading') { document.querySelectorAll('.tab')[2].classList.add('active'); document.getElementById('tab-trading').classList.add('active'); renderTrading(); }
+        else { document.querySelectorAll('.tab')[3].classList.add('active'); document.getElementById('tab-analysis').classList.add('active'); renderCharts(); }
+    }
+
+    function addTransaction(e) {
+        e.preventDefault();
+        const rawAmountStr = document.getElementById('tx-amount').value;
+        const amount = safeEval(rawAmountStr);
+        
+        if (amount <= 0) { alert('請輸入有效金額！'); document.getElementById('tx-amount').focus(); return; }
+
+        const idStr = document.getElementById('tx-id').value;
+        const type = document.getElementById('tx-type').value;
+        const desc = document.getElementById('tx-desc').value;
+        let category = document.getElementById('tx-category').value;
+        const date = document.getElementById('tx-date').value;
+        
+        let cardId = null;
+        if (type === 'expense' || type === 'repayment') { cardId = document.getElementById('tx-card').value; if (!cardId) { alert('請先新增信用卡！'); return; } }
+        if (type === 'repayment') category = '信用卡還款';
+
+        const tx = { id: idStr ? parseFloat(idStr) : Date.now(), type, category, desc, amount, cardId, date };
+        if(idStr) { const idx = state.transactions.findIndex(t=>t.id==tx.id); if(idx!==-1) state.transactions[idx] = tx; } 
+        else { state.transactions.unshift(tx); }
+        
+        saveData(); render(); closeModals(); e.target.reset(); setDefaultTime(); setTxType('expense');
+    }
+
+    function editTransaction(id) {
+        const tx = state.transactions.find(t=>t.id==id); if(!tx) return; openModal('transaction'); document.getElementById('tx-id').value=tx.id; setTxType(tx.type || 'expense');
+        document.getElementById('tx-amount').value=tx.amount; document.getElementById('tx-desc').value=tx.desc; document.getElementById('tx-date').value=tx.date;
+        if(tx.cardId && document.getElementById('tx-card')) document.getElementById('tx-card').value=tx.cardId;
+        const title = document.getElementById('tx-modal-title'); if(title) title.innerText="編輯紀錄";
+        document.getElementById('inline-calc-expr').innerText = ''; // clear calc preview
+    }
+
+    function selectTradeOption(type, val, el) {
+        const input = document.getElementById('trade-'+type); if(input) input.value=val;
+        const grid = el.parentElement; if(grid) { Array.from(grid.children).forEach(c=>c.classList.remove('selected')); el.classList.add('selected'); }
+        if(type==='model' || type==='cap') { const m = document.getElementById('trade-model').value; const c = document.getElementById('trade-cap').value; if(m && c && IPHONE_PRICES[m] && IPHONE_PRICES[m][c]) { const costInp = document.getElementById('trade-cost'); if(costInp) costInp.value = IPHONE_PRICES[m][c]; } }
+    }
+    
+    function toggleCustomInput(type) { const sel = document.getElementById('trade-'+type); const inp = document.getElementById('trade-'+type+'-custom'); if(sel && inp) { if(sel.value === 'other') { inp.style.display = 'block'; inp.required = true; } else { inp.style.display = 'none'; inp.required = false; } } }
+
+    function addTrade(e) {
+        e.preventDefault();
+        try {
+            const idStr = document.getElementById('trade-id').value; const cost = parseFloat(document.getElementById('trade-cost').value) || 0; const price = parseFloat(document.getElementById('trade-price').value) || 0; const qty = parseInt(document.getElementById('trade-qty').value) || 1; const cid = document.getElementById('trade-card') ? document.getElementById('trade-card').value : '';
+            let source = document.getElementById('trade-source').value; if(source === 'other') source = document.getElementById('trade-source-custom').value;
+            let shop = document.getElementById('trade-shop').value; if(shop === 'other') shop = document.getElementById('trade-shop-custom').value;
+            const tData = { source, shop, oid: document.getElementById('trade-oid').value || '', model: document.getElementById('trade-model').value, cap: document.getElementById('trade-cap').value, color: document.getElementById('trade-color').value, status: document.getElementById('trade-status').value, condition: document.getElementById('trade-condition').value, cost, price, qty, profit: (price-cost)*qty, cardId: cid, date: document.getElementById('trade-date').value };
+            if (idStr) { tData.id = parseFloat(idStr); const idx = state.trades.findIndex(t => t.id === tData.id); if (idx !== -1) state.trades[idx] = tData; } 
+            else { tData.id = Date.now(); state.trades.unshift(tData); }
+            saveData(); render(); closeModals(); showToast('✅ 交易已儲存');
+        } catch(err) { alert("儲存失敗: " + err.message); }
+    }
+
+    function editTrade(id) {
+        const t = state.trades.find(x => x.id === id); if (!t) return; openModal('trade'); document.getElementById('trade-id').value = t.id;
+        const srcS = document.getElementById('trade-source'); if(srcS) { if([...srcS.options].some(o=>o.value===t.source)) { srcS.value=t.source; document.getElementById('trade-source-custom').style.display='none'; } else { srcS.value='other'; document.getElementById('trade-source-custom').style.display='block'; document.getElementById('trade-source-custom').value=t.source; } }
+        const shpS = document.getElementById('trade-shop'); if(shpS) { if([...shpS.options].some(o=>o.value===t.shop) || !t.shop) { shpS.value=t.shop||""; document.getElementById('trade-shop-custom').style.display='none'; } else { shpS.value='other'; document.getElementById('trade-shop-custom').style.display='block'; document.getElementById('trade-shop-custom').value=t.shop; } }
+        if(document.getElementById('trade-oid')) document.getElementById('trade-oid').value = t.oid || ""; if(document.getElementById('trade-cost')) document.getElementById('trade-cost').value = t.cost; if(document.getElementById('trade-price')) document.getElementById('trade-price').value = t.price; if(document.getElementById('trade-qty')) document.getElementById('trade-qty').value = t.qty; if(document.getElementById('trade-card')) document.getElementById('trade-card').value = t.cardId || ""; if(document.getElementById('trade-date') && t.date) document.getElementById('trade-date').value = t.date.slice(0,16);
+        ['model', 'cap', 'color', 'status', 'condition'].forEach(type => { const val = t[type]; const input = document.getElementById('trade-'+type); if(input) { input.value = val; const grid = input.parentElement.querySelector('.btn-grid') || input.parentElement.parentElement.querySelector('.btn-grid'); if(grid) { Array.from(grid.children).forEach(b => { b.classList.remove('selected'); if(b.innerText.includes(val) || b.innerText===val) b.classList.add('selected'); }); } } });
+    }
+
+    function addCard(e) {
+        e.preventDefault();
+        const newCard = { id: Date.now(), name: document.getElementById('card-name').value, percent: parseFloat(document.getElementById('card-percent').value), cap: parseFloat(document.getElementById('card-cap').value) || 0, note: document.getElementById('card-note').value };
+        state.cards.push(newCard); saveData(); render(); closeModals(); e.target.reset(); if(state.cards.length === 1) updateFormOptions();
+    }
+
+    function importPresetCards() {
+        if (!confirm('確定要更新或匯入最新信用卡列表嗎？')) return;
+        let addedCount = 0, updatedCount = 0;
+        PRESET_CARDS.forEach(p => {
+            const existingCard = state.cards.find(c => c.name === p.name);
+            if (existingCard) { existingCard.percent = p.percent; existingCard.cap = p.cap; existingCard.note = p.note; updatedCount++; } 
+            else { state.cards.push({ ...p, id: Date.now() + Math.floor(Math.random() * 100000), spent: 0 }); addedCount++; }
+        });
+        saveData(); render(); alert(`成功新增 ${addedCount} 張新卡，更新 ${updatedCount} 張現有卡片！`);
+    }
+
+    function deleteTransaction(id) { if(confirm('確定刪除此紀錄?')) { state.transactions = state.transactions.filter(t => t.id !== id); saveData(); render(); } }
+    function deleteCard(id) { if(confirm('確定刪除此卡片? (相關消費紀錄將保留，但會顯示為未知卡片)')) { state.cards = state.cards.filter(c => c.id !== id); saveData(); render(); } }
+    function deleteTrade(id) { if(confirm('刪除交易?')) { state.trades = state.trades.filter(t=>t.id!==id); saveData(); render(); } }
+    function resetData() { if(confirm('警告：這將會清除所有資料！確定嗎？')) { localStorage.removeItem(DB_KEY); location.reload(); } }
+    
+    function updateBackupTimeDisplay() { const lastBackup = localStorage.getItem(BACKUP_TIME_KEY); const el = document.getElementById('last-backup-time'); if (el) { el.innerText = lastBackup ? lastBackup : '從未備份'; } }
+    function exportData(format) {
+        const now = new Date().toLocaleString(); localStorage.setItem(BACKUP_TIME_KEY, now); updateBackupTimeDisplay();
+        if (format === 'json') { const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `finance_backup_${new Date().toISOString().slice(0,10)}.json`; link.click(); } 
+        else {
+            let csvContent = "\uFEFF日期,時間,類型,類別,描述,金額,信用卡,預計回贈\n";
+            state.transactions.forEach(tx => {
+                const date = tx.date.split('T')[0]; const time = tx.date.split('T')[1] || '';
+                const type = { 'expense': '支出', 'income': '收入', 'repayment': '還款' }[tx.type] || '支出';
+                const desc = `"${tx.desc.replace(/"/g, '""')}"`;
+                let cardName = '', cashback = 0;
+                if (tx.type !== 'income') { const card = state.cards.find(c => c.id == tx.cardId); cardName = card ? card.name : ''; if(card && tx.type === 'expense') { cashback = (tx.amount * card.percent / 100).toFixed(2); } }
+                csvContent += `${date},${time},${type},${tx.category},${desc},${tx.amount},${cardName},${cashback}\n`;
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.setAttribute("href", URL.createObjectURL(blob)); link.setAttribute("download", `finance_data_${new Date().toISOString().slice(0,10)}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+    }
+    function rescueData() { exportData('json'); showToast('💾 資料已下載'); }
+
+    function triggerImport() { document.getElementById('file-input').click(); }
+    function importData(input) {
+        const file = input.files[0]; if (!file) return; const reader = new FileReader();
+        reader.onload = function(e) {
+            try { const imported = JSON.parse(e.target.result); if (imported.transactions && imported.cards) { if(confirm(`準備還原資料：\n\n發現 ${imported.transactions.length} 筆交易\n發現 ${imported.cards.length} 張卡片\n\n確定覆蓋現有資料嗎？`)) { state = imported; saveData(); render(); closeModals(); alert('還原成功！'); } } else { alert('檔案格式錯誤！請確保是正確的備份檔。'); } } catch (err) { alert('讀取失敗：檔案可能已損壞。'); }
+        };
+        reader.readAsText(file); input.value = ''; 
+    }
+
+    function openModal(type) {
+        document.getElementById(`modal-${type}`).classList.add('active');
+        if (type === 'transaction') { setTxType('expense'); setDefaultTime(); document.getElementById('tx-amount').value='0'; document.getElementById('inline-calc-expr').innerText=''; }
+    }
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
+
+    init();
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="zh-HK" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1e1e1e">
+    <title>回贈哥 - 智能簽賬管理</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #00d26a; --primary-dark: #00a855; --bg: #121212; --surface: #1e1e1e;
+            --surface-hover: #2d2d2d; --text: #e0e0e0; --text-muted: #a0a0a0; --danger: #ff4d4d;
+            --income: #4facfe; --repay: #ff9f43; --border: #333;
+            --card-gradient: linear-gradient(135deg, #2c3e50, #000000);
+            --shadow: 0 4px 6px rgba(0,0,0,0.3); --chart-text: #e0e0e0;
+        }
+
+        [data-theme="light"] {
+            --primary: #00b85c; --primary-dark: #008f45; --bg: #f4f6f8; --surface: #ffffff;
+            --surface-hover: #eef2f5; --text: #1a1a1a; --text-muted: #666666; --danger: #d93025;
+            --income: #1a73e8; --repay: #e37400; --border: #e0e0e0;
+            --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af);
+            --shadow: 0 2px 8px rgba(0,0,0,0.08); --chart-text: #333333;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; transition: background-color 0.3s, color 0.3s; }
+
+        header { background: var(--surface); padding: 12px 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); padding-top: max(12px, env(safe-area-inset-top)); }
+        h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+        .logo-icon { font-size: 1.4rem; }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .icon-btn { background: transparent; border: 1px solid transparent; color: var(--text); font-size: 1.1rem; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .icon-btn:hover { background: var(--surface-hover); border-color: var(--border); }
+        .icon-btn:active { transform: scale(0.95); }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; padding-bottom: max(80px, env(safe-area-inset-bottom)); }
+        .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: background 0.3s; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; transition: background 0.3s; }
+        .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); }
+
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .list-item:last-child { border-bottom: none; }
+        .item-main { flex: 1; }
+        .item-title { font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .item-sub { font-size: 0.8rem; color: var(--text-muted); }
+        .item-amount { font-weight: bold; font-size: 1.1rem; text-align: right; margin-left: 10px; }
+        
+        .cat-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: var(--surface-hover); border: 1px solid var(--border); color: var(--text-muted); }
+        .cashback-tag { font-size: 0.75rem; color: var(--primary); background: rgba(0, 210, 106, 0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+        .repay-tag { font-size: 0.75rem; color: var(--repay); border: 1px solid var(--repay); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+        .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 5px; }
+        .status-ordered { background: #f39c12; color: #000; } 
+        .status-stock { background: #3498db; color: #fff; } 
+        .status-sold { background: var(--primary); color: #fff; } 
+        .status-cut { background: var(--danger); color: #fff; text-decoration: line-through; } 
+        .profit-pos { color: var(--primary); } .profit-neg { color: var(--danger); }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1rem; outline: none; transition: background 0.3s; }
+        input:focus, select:focus { border-color: var(--primary); }
+
+        .type-toggle { display: flex; background: var(--bg); border-radius: 8px; padding: 4px; border: 1px solid var(--border); margin-bottom: 15px; transition: background 0.3s; }
+        .type-option { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; color: var(--text-muted); transition: all 0.2s; font-size: 0.9rem; font-weight: 500; }
+        .type-option.active.expense { background: rgba(255, 77, 77, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); border: 1px solid var(--income); }
+        .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); border: 1px solid var(--repay); }
+
+        .btn { background: var(--primary); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn:active { transform: scale(0.98); }
+        .btn-small { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); cursor: pointer; transition: background 0.3s; }
+        .btn-text { background: none; border: none; color: var(--text-muted); padding: 5px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        
+        .credit-card { background: var(--card-gradient); padding: 15px; border-radius: 10px; margin-bottom: 10px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+        .card-name { font-weight: bold; font-size: 1.1rem; color: #fff; }
+        .card-info { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-top: 5px; display: flex; justify-content: space-between; }
+        .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+
+        .fab { position: fixed; bottom: max(20px, env(safe-area-inset-bottom) + 20px); right: 20px; background: var(--primary); color: #fff; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4); cursor: pointer; border: none; z-index: 90; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 200; opacity: 0; transition: opacity 0.2s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content { background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; padding: 25px; border-radius: 16px; position: relative; transform: translateY(20px); transition: transform 0.2s; color: var(--text); }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
+
+        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 15px; }
+        .tab { flex: 1; padding: 10px; text-align: center; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .chart-container { position: relative; height: 250px; width: 100%; margin-bottom: 20px; }
+        
+        /* 🧮 Inline Calculator Styles */
+        .calc-keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); }
+        .calc-btn { background: var(--surface); border: none; color: var(--text); font-size: 1.4rem; padding: 15px 0; cursor: pointer; transition: background 0.1s; display: flex; align-items: center; justify-content: center; font-weight: 500; }
+        .calc-btn:active { background: var(--surface-hover); }
+        .calc-btn.op { color: var(--income); background: var(--surface-hover); font-size: 1.6rem; }
+        .calc-btn.action { color: var(--danger); background: var(--surface-hover); }
+        .calc-btn.done { background: var(--primary); color: #fff; font-weight: bold; grid-row: span 2; }
+
+        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .grid-btn { padding: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-align: center; display:flex; align-items:center; justify-content:center; flex-direction:column; min-height:55px; line-height: 1.2; overflow-wrap: break-word; }
+        .grid-btn.selected { background: var(--primary); color: #000; border-color: var(--primary); font-weight: bold; }
+        .phone-icon { width: 22px; height: 40px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); position: relative; margin-bottom: 3px; box-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .phone-icon.silver { background: linear-gradient(135deg, #e3e4e5 0%, #999 100%); }
+        .phone-icon.orange { background: linear-gradient(135deg, #C5B4A3 0%, #8C7C6D 100%); }
+        .phone-icon.blue { background: linear-gradient(135deg, #3B4C58 0%, #202b36 100%); }
+
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 80px; transform: translateX(-50%); border: 1px solid var(--primary); }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 60px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 60px; opacity: 0;} }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1><span class="logo-icon">💰</span> 回贈哥</h1>
+    <div class="header-actions">
+        <button class="icon-btn" onclick="openModal('data')" title="備份與同步">☁️</button>
+        <button class="icon-btn" onclick="openModal('log')" title="更新日誌">📋</button>
+        <button class="icon-btn" id="btn-theme" onclick="toggleTheme()" title="切換模式">☀️</button>
+    </div>
+</header>
+
+<div class="container">
+    <div class="panel">
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">本月支出</div><div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div></div>
+            <div class="stat-card"><div class="stat-label">本月收入</div><div class="stat-value" id="total-income" style="color:var(--income)">$0</div></div>
+            <div class="stat-card"><div class="stat-label">預計回贈</div><div class="stat-value" id="total-cashback" style="color:var(--primary)">$0</div></div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('transactions')">賬目紀錄</div>
+        <div class="tab" onclick="switchTab('cards')">信用卡管理</div>
+        <div class="tab" onclick="switchTab('trading')">📱 炒賣</div>
+        <div class="tab" onclick="switchTab('analysis')">統計分析</div>
+    </div>
+
+    <div id="tab-transactions" class="tab-content active">
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0; font-size:1.1rem;">最近賬目</h2>
+                <span class="stat-label" id="tx-count">0 筆</span>
+            </div>
+            <div id="transaction-list"><div style="text-align:center; padding:20px; color:var(--text-muted);">暫無紀錄</div></div>
+        </div>
+    </div>
+
+    <div id="tab-cards" class="tab-content">
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0; font-size:1.1rem;">我的卡包</h2>
+                <div style="display:flex; gap:8px;">
+                     <button class="btn-small" onclick="importPresetCards()" style="background:rgba(0,210,106,0.1); border-color:var(--primary); color:var(--primary);">📥 更新推薦</button>
+                    <button class="btn-small" onclick="openModal('card')">+ 新增</button>
+                </div>
+            </div>
+            <div id="card-list"></div>
+        </div>
+    </div>
+
+    <div id="tab-trading" class="tab-content">
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 style="margin:0; font-size:1.1rem;">📱 iPhone 17 炒賣紀錄</h2>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-small" onclick="openModal('trade')" style="background:var(--primary); color:#000;">+ 新增入貨</button>
+                </div>
+            </div>
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom:15px;">
+                <div class="stat-card"><div class="stat-label">今日利潤 (已賣)</div><div class="stat-value" id="trade-today-profit" style="color:var(--primary)">$0</div></div>
+                <div class="stat-card"><div class="stat-label">今日入貨量</div><div class="stat-value" id="trade-today-vol" style="color:var(--text)">0 部</div></div>
+            </div>
+            <div id="trade-list"></div>
+        </div>
+    </div>
+
+    <div id="tab-analysis" class="tab-content">
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0; font-size:1.1rem;">月度支出分析</h2>
+                <input type="month" id="analysis-month" style="width:auto; padding:5px;" onchange="renderCharts()">
+            </div>
+            <div style="margin-bottom:30px;"><h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">卡片簽賬分佈</h3><div class="chart-container"><canvas id="chart-cards"></canvas></div></div>
+            <div><h3 style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">每日支出趨勢</h3><div class="chart-container"><canvas id="chart-daily"></canvas></div></div>
+        </div>
+    </div>
+</div>
+
+<button class="fab" onclick="openModal('transaction')">+</button>
+
+<!-- Modals -->
+<!-- 1. 新增紀錄 Modal (附帶內建計數機) -->
+<div id="modal-transaction" class="modal-overlay">
+    <div class="modal-content" style="padding-bottom: 25px;">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2 id="tx-modal-title">新增紀錄</h2>
+        
+        <div class="type-toggle">
+            <div class="type-option active expense" id="type-expense" onclick="setTxType('expense')">💸 支出</div>
+            <div class="type-option" id="type-income" onclick="setTxType('income')">💰 收入</div>
+            <div class="type-option" id="type-repayment" onclick="setTxType('repayment')">💳 還款</div>
+        </div>
+
+        <form id="tx-form" onsubmit="addTransaction(event)">
+            <input type="hidden" id="tx-type" value="expense">
+            <input type="hidden" id="tx-id">
+            
+            <!-- ✨ 內建智能計數機 (Inline Calculator) ✨ -->
+            <div class="form-group" style="background:var(--surface-hover); border:1px solid var(--border); border-radius:12px; padding:15px; margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <label style="margin:0;">金額 (HKD)</label>
+                    <div id="inline-calc-expr" style="font-size:1rem; color:var(--text-muted); min-height:1.2rem;"></div>
+                </div>
+                <!-- Readonly 阻止原生鍵盤彈出 -->
+                <input type="text" id="tx-amount" readonly required value="0" style="background:transparent; border:none; font-size:2.5rem; font-weight:bold; color:var(--primary); text-align:right; padding:0; margin-bottom:15px; width:100%; outline:none;">
+                
+                <div class="calc-keys" style="border-radius:8px; overflow:hidden; border:1px solid var(--border);">
+                    <button type="button" class="calc-btn action" onclick="calcPressInline('C')">C</button>
+                    <button type="button" class="calc-btn action" onclick="calcPressInline('DEL')">⌫</button>
+                    <button type="button" class="calc-btn op" onclick="calcPressInline('/')">÷</button>
+                    <button type="button" class="calc-btn op" onclick="calcPressInline('*')">×</button>
+                    
+                    <button type="button" class="calc-btn" onclick="calcPressInline('7')">7</button>
+                    <button type="button" class="calc-btn" onclick="calcPressInline('8')">8</button>
+                    <button type="button" class="calc-btn" onclick="calcPressInline('9')">9</button>
+                    <button type="button" class="calc-btn op" onclick="calcPressInline('-')">-</button>
+                    
+                    <button type="button" class="calc-btn" onclick="calcPressInline('4')">4</button>
+                    <button type="button" class="calc-btn" onclick="calcPressInline('5')">5</button>
+                    <button type="button" class="calc-btn" onclick="calcPressInline('6')">6</button>
+                    <button type="button" class="calc-btn op" onclick="calcPressInline('+')">+</button>
+                    
+                    <button type="button" class="calc-btn" onclick="calcPressInline('1')">1</button>
+                    <button type="button" class="calc-btn" onclick="calcPressInline('2')">2</button>
+                    <button type="button" class="calc-btn" onclick="calcPressInline('3')">3</button>
+                    <button type="button" class="calc-btn done" onclick="calcPressInline('=')">=</button>
+                    
+                    <button type="button" class="calc-btn" style="grid-column: span 2;" onclick="calcPressInline('0')">0</button>
+                    <button type="button" class="calc-btn" onclick="calcPressInline('.')">.</button>
+                </div>
+            </div>
+
+            <div class="form-group" id="group-category">
+                <label>類別</label>
+                <select id="tx-category" required></select>
+            </div>
+
+            <div class="form-group" id="group-card">
+                <label>選擇信用卡</label>
+                <select id="tx-card"></select>
+                <div id="card-hint" style="font-size:0.8rem; color:var(--primary); margin-top:5px; display:none;">
+                    回贈: <span id="hint-rate"></span>%
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>描述</label>
+                <!-- 這個保留原生鍵盤 -->
+                <input type="text" id="tx-desc" placeholder="例如: 午餐、出糧" required>
+            </div>
+            
+            <div class="form-group">
+                <label>日期時間</label>
+                <input type="datetime-local" id="tx-date" required>
+            </div>
+            <button type="submit" class="btn" id="btn-submit">儲存記賬</button>
+        </form>
+    </div>
+</div>
+
+<div id="modal-trade" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">&times;</button>
+        <h2>📱 炒賣紀錄</h2>
+        <form id="trade-form" onsubmit="addTrade(event)">
+            <input type="hidden" id="trade-id">
+            <div class="row-group">
+                <div class="form-group"><label>購入來源</label><select id="trade-source" onchange="toggleCustomInput('source')" required></select><input type="text" id="trade-source-custom" placeholder="請輸入來源" style="display:none; margin-top:5px;"></div>
+                <div class="form-group"><label>單號 (選填)</label><input type="text" id="trade-oid" placeholder="W123..."></div>
+            </div>
+            <div class="form-group">
+                <div class="btn-grid" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="grid-btn selected" onclick="selectTradeOption('status', 'pending', this)">🛒 已訂</div>
+                    <div class="grid-btn" onclick="selectTradeOption('status', 'stock', this)">📦 現貨</div>
+                    <div class="grid-btn" onclick="selectTradeOption('status', 'sold', this)">💰 已賣</div>
+                    <div class="grid-btn" onclick="selectTradeOption('status', 'cut', this)">❌ Cut單</div>
+                </div>
+                <input type="hidden" id="trade-status" value="pending" required>
+            </div>
+            <div class="form-group"><label>回收店舖</label><select id="trade-shop" onchange="toggleCustomInput('shop')"></select><input type="text" id="trade-shop-custom" placeholder="請輸入店舖名稱" style="display:none; margin-top:5px;"></div>
+            <div class="form-group"><label>型號</label>
+                <div class="btn-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="grid-btn" onclick="selectTradeOption('model', 'Pro', this)">Pro</div>
+                    <div class="grid-btn" onclick="selectTradeOption('model', 'Pro Max', this)">Pro Max</div>
+                </div><input type="hidden" id="trade-model" required>
+            </div>
+            <div class="form-group"><label>容量</label>
+                <div class="btn-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="grid-btn" onclick="selectTradeOption('cap', '256GB', this)">256GB</div>
+                    <div class="grid-btn" onclick="selectTradeOption('cap', '512GB', this)">512GB</div>
+                    <div class="grid-btn" onclick="selectTradeOption('cap', '1TB', this)">1TB</div>
+                </div><input type="hidden" id="trade-cap" required>
+            </div>
+            <div class="form-group"><label>顏色</label>
+                <div class="btn-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="grid-btn" onclick="selectTradeOption('color', '銀', this)"><div class="phone-icon silver"></div>銀</div>
+                    <div class="grid-btn" onclick="selectTradeOption('color', '橙', this)"><div class="phone-icon orange"></div>橙</div>
+                    <div class="grid-btn" onclick="selectTradeOption('color', '藍', this)"><div class="phone-icon blue"></div>藍</div>
+                </div><input type="hidden" id="trade-color" required>
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                <label>狀態:</label>
+                <div class="btn-grid" style="grid-template-columns: 1fr 1fr; width:100%; margin:0;">
+                    <div class="grid-btn selected" onclick="selectTradeOption('condition', 'sealed', this)">🔒 原封</div>
+                    <div class="grid-btn" onclick="selectTradeOption('condition', 'opened', this)">🔪 開封</div>
+                </div>
+                <input type="hidden" id="trade-condition" value="sealed">
+            </div>
+            <div class="row-group">
+                <div class="form-group"><label>原價/成本</label><input type="number" id="trade-cost" required></div>
+                <div class="form-group"><label>放售價</label><input type="number" id="trade-price" value="0" required></div>
+            </div>
+            <div class="row-group">
+                <div class="form-group"><label>數量</label><input type="number" id="trade-qty" value="1" min="1" required></div>
+                <div class="form-group"><label>付款信用卡</label><select id="trade-card"><option value="">無使用信用卡</option></select></div>
+            </div>
+            <div class="form-group"><label>日期</label><input type="datetime-local" id="trade-date" required></div>
+            <button type="submit" class="btn">儲存交易</button>
+        </form>
+    </div>
+</div>
+
+<div id="modal-card" class="modal-overlay">
+    <div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2>新增信用卡</h2><form id="card-form" onsubmit="addCard(event)"><div class="form-group"><label>卡片名稱</label><input type="text" id="card-name" placeholder="例如: HSBC Red" required></div><div class="form-group"><label>回贈比率 (%)</label><input type="number" id="card-percent" step="0.1" placeholder="4" required></div><div class="form-group"><label>簽賬上限 (留空為無限)</label><input type="number" id="card-cap" placeholder="例如: 12500"></div><div class="form-group"><label>備註 (選填)</label><input type="text" id="card-note" placeholder="例如: 網購專用"></div><button type="submit" class="btn">新增卡片</button></form></div>
+</div>
+
+<div id="modal-data" class="modal-overlay">
+    <div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2 style="margin-top:0;">☁️ 備份與同步</h2><p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">上次備份：<span id="last-backup-time">從未備份</span></p><div class="help-section"><div class="help-title">📤 備份資料</div><div class="data-btn-group"><button class="btn" style="background:#ff9f43;" onclick="exportData('json')">💾 下載備份檔 (JSON)</button><button class="btn" style="background:#4facfe;" onclick="exportData('csv')">📊 匯出 Excel (CSV)</button></div></div><div class="help-section"><div class="help-title">📥 還原資料</div><div class="data-btn-group"><button class="btn" style="background:#333; border:1px solid #666;" onclick="triggerImport()">📂 選擇並還原備份檔</button><input type="file" id="file-input" style="display:none;" accept=".json" onchange="importData(this)"></div></div><div class="help-section"><div class="help-title">🗑️ 危險區域</div><button class="btn-small" onclick="resetData()" style="color:var(--danger); border-color:var(--danger); width:100%;">🔥 清除所有資料 (重置)</button></div></div>
+</div>
+
+<div id="modal-log" class="modal-overlay">
+    <div class="modal-content"><button class="close-modal" onclick="closeModals()">&times;</button><h2 style="margin-top:0;">📋 更新日誌</h2>
+        <div class="log-entry"><div class="log-ver">v1.91 (終極內建計算機)</div><div class="log-date">2026-03-09</div><div class="log-desc">- 創新：記帳畫面直接內嵌數字鍵盤，支援加減乘除，無須切換視窗！<br>- 優化：修復潛在啟動崩潰錯誤。<br>- 刪減：移除舊有分單功能，介面更乾淨。</div></div>
+        <button class="btn" onclick="closeModals()">關閉</button>
+    </div>
+</div>
+
+<script>
+    // --- Data & Config ---
+    const DB_KEY = 'rebate_bro_data_v2';
+    const THEME_KEY = 'rebate_bro_theme';
+    const BACKUP_TIME_KEY = 'rebate_bro_backup_time';
+    
+    const CATEGORIES = {
+        expense: ['食飯', '搭車', '購物', '娛樂', '雜費', '其他'],
+        income: ['薪金', '賣野', '投資', '其他'],
+        repayment: ['信用卡還款']
+    };
+
+    const TRADE_SOURCES = ['AOS (官網)', 'APU (店取)', '百老匯', '豐澤', '友和', '蘇寧', '電器幫', 'CMHK', 'CSL', 'Smartone', '3HK', '中原', '1010'];
+    const TRADE_SHOPS = ['雪球', '萬通', '日韓', '誠信', 'bobo', 'YY', 'G79', 'F9', 'DIY', '新宇宙', '溫記', '鵬程', 'iTrade', '星耀', 'Carousell'];
+    const IPHONE_PRICES = { 'Pro': { '256GB': 9399, '512GB': 11099, '1TB': 12799 }, 'Pro Max': { '256GB': 10199, '512GB': 11899, '1TB': 13599, '2TB': 16999 } };
+
+    const PRESET_CARDS = [
         { name: '信銀 Motion', cap: 3571, percent: 6, note: '👑6% (上限$3,571/月簽$3,800)' },
         { name: 'AEON WAKUWAKU', cap: 3571, percent: 6, note: '👑6% (上限$3,571)' },
         { name: '恒生 MMPOWER', cap: 10870, percent: 5, note: '👑5% (上限$10,870/月簽$5,000)' },
