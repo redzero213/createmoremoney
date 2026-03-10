@@ -10,8 +10,16 @@
     <title>回贈哥 - 智能簽賬管理</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #00d26a; --primary-dark: #00a855; --bg: #121212; --surface: #1e1e1e; --surface-hover: #2d2d2d; --text: #e0e0e0; --text-muted: #a0a0a0; --danger: #ff4d4d; --income: #4facfe; --repay: #ff9f43; --border: #333; --card-gradient: linear-gradient(135deg, #2c3e50, #000000); --shadow: 0 4px 6px rgba(0,0,0,0.3); --chart-text: #e0e0e0; --trade: #00cec9; --telegram: #229ED9; }
-        [data-theme="light"] { --primary: #00b85c; --primary-dark: #008f45; --bg: #f4f6f8; --surface: #ffffff; --surface-hover: #eef2f5; --text: #1a1a1a; --text-muted: #666666; --danger: #d93025; --income: #1a73e8; --repay: #e37400; --border: #e0e0e0; --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af); --shadow: 0 2px 8px rgba(0,0,0,0.08); --chart-text: #333333; }
+        :root { --primary: #00d26a; --primary-dark: #00a855; --bg: #121212; --surface: #1e1e1e; --surface-hover: #2d2d2d; --text: #e0e0e0; --text-muted: #a0a0a0; --danger: #ff4d4d; --income: #4facfe; --repay: #ff9f43; --border: #333; --card-gradient: linear-gradient(135deg, #2c3e50, #000000); --shadow: 0 4px 6px rgba(0,0,0,0.3); --chart-text: #e0e0e0; --trade: #00cec9; --telegram: #229ED9; 
+        
+        /* POS UI Colors */
+        --pos-btn-bg: #2d2d2d; --pos-btn-border: #444; --pos-active-bg: rgba(0, 210, 106, 0.15); --pos-active-border: #00d26a; --pos-active-text: #00d26a; --pos-pad-bg: #1a1a1a;
+        }
+        
+        [data-theme="light"] { --primary: #00b85c; --primary-dark: #008f45; --bg: #f4f6f8; --surface: #ffffff; --surface-hover: #eef2f5; --text: #1a1a1a; --text-muted: #666666; --danger: #d93025; --income: #1a73e8; --repay: #e37400; --border: #e0e0e0; --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af); --shadow: 0 2px 8px rgba(0,0,0,0.08); --chart-text: #333333; 
+        
+        --pos-btn-bg: #ffffff; --pos-btn-border: #dcdcdc; --pos-active-bg: rgba(0, 184, 92, 0.1); --pos-active-border: #00b85c; --pos-active-text: #00b85c; --pos-pad-bg: #f0f2f5;
+        }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; transition: background-color 0.3s, color 0.3s; }
@@ -19,14 +27,19 @@
         h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
         .app-logo { width: 28px; height: 28px; object-fit: contain; }
         .menu-btn { font-size: 0.9rem; background: var(--surface-hover); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; padding-bottom: max(80px, env(safe-area-inset-bottom)); }
-        .panel { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; padding-bottom: max(80px, env(safe-area-inset-bottom)); }
+        .panel { background: var(--surface); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: var(--shadow); }
         
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .stat-card { background: var(--surface-hover); padding: 15px; border-radius: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
-        .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
-        .stat-label { font-size: 0.75rem; color: var(--text-muted); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .stat-card { background: var(--surface-hover); padding: 12px 8px; border-radius: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        .stat-value { font-size: 1.05rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); }
         .profit-pos { color: var(--primary); } .profit-neg { color: var(--danger); }
+        
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 10px; }
+        .menu-item { background: var(--surface-hover); border: 1px solid var(--border); border-radius: 12px; padding: 20px 10px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .menu-item:hover { border-color: var(--primary); }
+        .menu-icon { font-size: 2rem; } .menu-label { font-size: 0.9rem; font-weight: bold; }
         
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
         .list-item:last-child { border-bottom: none; }
@@ -47,7 +60,13 @@
         input:focus, select:focus { border-color: var(--primary); }
         .row-group { display: flex; gap: 10px; } .row-group > div { flex: 1; }
         
-        .btn { background: var(--primary); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .type-toggle { display: flex; background: var(--bg); border-radius: 8px; padding: 4px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .type-option { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+        .type-option.active.expense { background: rgba(255, 77, 77, 0.15); color: var(--danger); }
+        .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); }
+        .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); }
+        
+        .btn { background: var(--primary); color: #000; border: none; padding: 16px; width: 100%; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s;}
         .btn:active { transform: scale(0.98); }
         .btn-small { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
         .btn-text { background: none; border: none; color: var(--text-muted); padding: 5px; cursor: pointer; font-size: 0.8rem; }
@@ -74,11 +93,10 @@
         .chart-container { position: relative; height: 250px; width: 100%; margin-bottom: 20px; }
 
         /* ==================================================
-           🛒 極速 POS 炒賣介面 (g2cart 風格)
+           🛒 極速 POS 炒賣介面
            ================================================== */
         .pos-panel { background: var(--surface); border-radius: 12px; padding: 15px 12px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
         .pos-row { display: flex; gap: 6px; margin-bottom: 6px; width: 100%; }
-        .pos-grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; width: 100%; }
         .pos-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; }
         .pos-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; }
         .pos-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; width: 100%; }
@@ -90,59 +108,44 @@
         }
         .pos-btn:active { transform: scale(0.95); }
 
-        /* Color Coding exactly like the picture */
         .pos-btn.shop { border-color: rgba(52, 152, 219, 0.4); color: #3498db; }
         .pos-btn.shop.active { background: #3498db; color: #fff; border-color: #3498db; font-weight: bold; }
-        
         .pos-btn.cond { background: rgba(155, 89, 182, 0.1); color: #9b59b6; border: none; }
         .pos-btn.cond.active { background: #9b59b6; color: #fff; font-weight: bold; }
-        
-        .pos-btn.color { border-color: rgba(155, 89, 182, 0.4); color: #9b59b6; }
-        .pos-btn.color.active { background: #9b59b6; color: #fff; border-color: #9b59b6; font-weight: bold; }
-        
         .pos-btn.model { background: rgba(39, 174, 96, 0.1); color: #27ae60; border: none; font-weight: bold; }
         .pos-btn.model.active { background: #27ae60; color: #fff; }
-        
         .pos-btn.cap { border-color: rgba(52, 152, 219, 0.4); color: #3498db; }
         .pos-btn.cap.active { background: #3498db; color: #fff; border-color: #3498db; font-weight: bold; }
 
+        /* Color Buttons (橙/白/藍 Only) */
+        .color-orange.active { background-color: #e67e22 !important; color: white !important; border-color: #e67e22 !important; font-weight:bold;}
+        [data-theme="dark"] .color-white.active { background-color: #e0e0e0 !important; color: black !important; border-color: #e0e0e0 !important; font-weight:bold;}
+        [data-theme="light"] .color-white.active { background-color: #ffffff !important; color: black !important; border-color: #999 !important; border-width: 2px; font-weight:bold;}
+        .color-blue.active { background-color: #3498db !important; color: white !important; border-color: #3498db !important; font-weight:bold;}
+
         /* Display Screen */
-        .pos-screen {
-            background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-            padding: 10px 15px; margin: 12px 0;
-        }
-        .pos-screen-hint { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pos-screen { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px 15px; margin: 12px 0; }
+        .pos-screen-hint { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;}
         .pos-screen-values { display: flex; justify-content: space-between; align-items: stretch; gap: 10px; }
-        .pos-val-box { 
-            flex: 1; padding: 8px; border-radius: 6px; cursor: pointer; 
-            border: 2px solid transparent; text-align: center; transition: all 0.2s;
-            background: var(--surface-hover);
-        }
-        .pos-val-box.active { border-color: var(--primary); background: rgba(0,210,106,0.05); }
-        .pos-val-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 2px; }
-        .pos-val-number { font-size: 1.6rem; font-weight: bold; color: var(--text); min-height: 30px; display:flex; align-items:center; justify-content:center;}
+        .pos-val-box { flex: 1; padding: 12px 8px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; text-align: center; transition: all 0.2s; background: var(--surface-hover); }
+        .pos-val-box.active { border-color: var(--primary); background: rgba(0,210,106,0.08); }
+        .pos-val-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+        .pos-val-number { font-size: 1.8rem; font-weight: bold; color: var(--text); min-height: 35px; display:flex; align-items:center; justify-content:center;}
         .pos-val-box.active .pos-val-number { color: var(--primary); }
 
-        /* Keypad */
-        .pos-keypad { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; margin-bottom: 12px; }
+        /* 🧮 乾淨純數字鍵盤 (3列) */
+        .calc-input { cursor: pointer; background: var(--surface-hover); font-size: 2rem; font-weight: bold; color: var(--text); text-align: center; border: 2px solid transparent; padding: 15px; border-radius:12px; width: 100%; outline: none; margin-bottom:15px; transition: border 0.2s;}
+        .calc-input.active-calc { border-color: var(--primary); color: var(--primary); background: rgba(0, 210, 106, 0.05); }
+        
+        .clean-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
         .kp-btn {
-            background: var(--surface-hover); border: 1px solid var(--border); border-radius: 8px; 
-            font-size: 1.4rem; font-weight: 500; color: var(--text); padding: 16px 0; 
+            background: var(--surface-hover); border: 1px solid var(--border); border-radius: 12px; 
+            font-size: 1.6rem; font-weight: 500; color: var(--text); padding: 18px 0; 
             cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        .kp-btn:active { background: var(--bg); transform: scale(0.96); }
-        .kp-col-4 { grid-column: span 4; }
-        .kp-col-3 { grid-column: span 3; }
-        .kp-del { color: var(--danger); font-size: 1.2rem; }
-        .kp-action { font-size: 1rem; color: var(--text-muted); }
-        .kp-submit { background: var(--primary); color: #000; font-weight: bold; border: none; font-size: 1.1rem; }
-
-        /* Toggle general */
-        .type-toggle { display: flex; background: var(--bg); border-radius: 8px; padding: 4px; border: 1px solid var(--border); margin-bottom: 15px; }
-        .type-option { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
-        .type-option.active.expense { background: rgba(255, 77, 77, 0.15); color: var(--danger); }
-        .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); }
-        .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); }
+        .kp-btn:active { background: var(--bg); transform: scale(0.95); }
+        .kp-del { color: var(--danger); font-size: 1.4rem; }
+        .kp-action { color: var(--text-muted); font-size: 1.4rem; }
 
         #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 80px; transform: translateX(-50%); border: 1px solid var(--primary); }
         #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
@@ -161,7 +164,6 @@
 </header>
 
 <div class="container">
-    <!-- Overview Stats -->
     <div class="panel">
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-label">本月支出</div><div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div></div>
@@ -208,110 +210,138 @@
         
         <div class="pos-panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h2 style="margin:0; font-size:1.1rem; color:#3498db; display:flex; align-items:center; gap:5px;">⚡ 極速報價 / 入單</h2>
+                <h2 style="margin:0; font-size:1.1rem; color:#3498db; display:flex; align-items:center; gap:5px;">⚡ 極速報價 / 入貨</h2>
                 <button class="btn-text" onclick="clearPos()" style="font-size:0.8rem; background:var(--bg); padding:4px 10px; border-radius:6px; border:1px solid var(--border);">🔄 重置</button>
             </div>
             
             <input type="hidden" id="pos-id">
             
-            <!-- Row 1: Shops -->
-            <div class="pos-row pos-grid-6" id="pos-grp-shop1">
-                <div class="pos-btn shop active" onclick="posClick('shop','AOS', this)">AOS</div>
-                <div class="pos-btn shop" onclick="posClick('shop','APU', this)">APU</div>
-                <div class="pos-btn shop" onclick="posClick('shop','新宇宙', this)">新宇宙</div>
-                <div class="pos-btn shop" onclick="posClick('shop','手電站', this)">手電站</div>
-                <div class="pos-btn shop" onclick="posClick('shop','G79', this)">G79</div>
-                <div class="pos-btn shop" onclick="posClick('shop','雪球', this)">雪球</div>
-            </div>
-            <div class="pos-row pos-grid-6" id="pos-grp-shop2">
-                <div class="pos-btn shop" onclick="posClick('shop','JK', this)">JK</div>
-                <div class="pos-btn shop" onclick="posClick('shop','BOBO', this)">BOBO</div>
-                <div class="pos-btn shop" onclick="posClick('shop','YY', this)">YY</div>
-                <div class="pos-btn shop" onclick="posClick('shop','誠信', this)">誠信</div>
-                <div class="pos-btn shop" onclick="posClick('shop','萬通', this)">萬通</div>
-                <div class="pos-btn shop" onclick="posClick('shop','鵬程', this)">鵬程</div>
+            <!-- Row 0: 購入來源 -->
+            <div class="pos-row" style="gap:10px; margin-bottom:12px; align-items: flex-end;">
+                <div style="flex:1;">
+                    <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">📥 購入來源</label>
+                    <select id="pos-source" onchange="togglePosSource()" style="padding:8px; font-size:0.85rem;"></select>
+                    <input type="text" id="pos-source-custom" placeholder="請輸入來源" style="display:none; margin-top:5px; padding:8px; font-size:0.85rem;">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">單號 (選填)</label>
+                    <input type="text" id="pos-oid" placeholder="W123..." style="padding:8px; font-size:0.85rem;">
+                </div>
             </div>
 
-            <!-- Row 2: Cond + Color -->
-            <div class="pos-row">
+            <!-- Row 1: 狀態 -->
+            <div class="pos-grid-4" id="pos-status" style="margin-bottom:12px;">
+                <div class="pos-btn active-status" onclick="setPosVal('status', 'pending', this)">🛒 已訂</div>
+                <div class="pos-btn" onclick="setPosVal('status', 'stock', this)">📦 現貨</div>
+                <div class="pos-btn" onclick="setPosVal('status', 'sold', this)">💰 已賣</div>
+                <div class="pos-btn" onclick="setPosVal('status', 'cut', this)">❌ Cut單</div>
+            </div>
+            <input type="hidden" id="pos-status-val" value="pending">
+
+            <!-- Row 2: 回收店舖 (只限已賣) -->
+            <div id="pos-shop-area">
+                <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block;">🤝 回收店舖</label>
+                <div class="pos-grid-4" id="pos-shops" style="margin-bottom:6px;">
+                    <div class="pos-btn shop active-shop" onclick="setPosShop('日韓', this)">日韓</div>
+                    <div class="pos-btn shop" onclick="setPosShop('ITRADE', this)">ITRADE</div>
+                    <div class="pos-btn shop" onclick="setPosShop('G79', this)">G79</div>
+                    <div class="pos-btn shop" onclick="setPosShop('雪球', this)">雪球</div>
+                    <div class="pos-btn shop" onclick="setPosShop('YY', this)">YY</div>
+                    <div class="pos-btn shop" onclick="setPosShop('誠信', this)">誠信</div>
+                    <div class="pos-btn shop" onclick="setPosShop('萬通', this)">萬通</div>
+                    <div class="pos-btn shop" onclick="setPosShop('自訂', this)">自訂...</div>
+                </div>
+                <input type="text" id="pos-shop-custom" placeholder="請輸入回收店舖" style="display:none; margin-bottom:12px; padding:8px; font-size:0.85rem; width:100%;">
+            </div>
+            <input type="hidden" id="pos-shop-val" value="日韓">
+
+            <!-- Row 3: 顏色 (橙/白/藍) -->
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block;">🎨 顏色</label>
+            <div class="pos-grid-3" id="pos-grp-color" style="margin-bottom:12px;">
+                <div class="pos-btn color color-orange active" onclick="setPosVal('color','橙', this)">橙</div>
+                <div class="pos-btn color color-white" onclick="setPosVal('color','白', this)">白</div>
+                <div class="pos-btn color color-blue" onclick="setPosVal('color','藍', this)">藍</div>
+            </div>
+            <input type="hidden" id="pos-color-val" value="橙">
+
+            <!-- Row 4: 規格 (封, 型號, 容量) -->
+            <div style="display:flex; gap:6px; margin-bottom:6px;">
                 <div class="pos-grid-2" style="flex:2;" id="pos-grp-cond">
-                    <div class="pos-btn cond active" onclick="posClick('cond','原封', this)">原封</div>
-                    <div class="pos-btn cond" onclick="posClick('cond','開封', this)">開封</div>
+                    <div class="pos-btn cond active" onclick="setPosVal('cond', '原封', this)">原封</div>
+                    <div class="pos-btn cond" onclick="setPosVal('cond', '開封', this)">開封</div>
                 </div>
-                <div class="pos-grid-4" style="flex:4;" id="pos-grp-color">
-                    <div class="pos-btn color active" onclick="posClick('color','沙漠', this)">沙漠</div>
-                    <div class="pos-btn color" onclick="posClick('color','原色', this)">原色</div>
-                    <div class="pos-btn color" onclick="posClick('color','白', this)">白</div>
-                    <div class="pos-btn color" onclick="posClick('color','黑', this)">黑</div>
-                </div>
-            </div>
-
-            <!-- Row 3: Model + Cap -->
-            <div class="pos-row">
                 <div class="pos-grid-2" style="flex:2;" id="pos-grp-model">
-                    <div class="pos-btn model active" onclick="posClick('model','Pro Max', this)">大</div>
-                    <div class="pos-btn model" onclick="posClick('model','Pro', this)">細</div>
-                </div>
-                <div class="pos-grid-4" style="flex:4;" id="pos-grp-cap">
-                    <div class="pos-btn cap active" onclick="posClick('cap','256GB', this)">256</div>
-                    <div class="pos-btn cap" onclick="posClick('cap','512GB', this)">512</div>
-                    <div class="pos-btn cap" onclick="posClick('cap','1TB', this)">1TB</div>
-                    <div class="pos-btn cap" onclick="posClick('cap','2TB', this)">2TB</div>
+                    <div class="pos-btn model active" onclick="setPosVal('model', 'Pro Max', this); autoFillCost();">大機</div>
+                    <div class="pos-btn model" onclick="setPosVal('model', 'Pro', this); autoFillCost();">細機</div>
                 </div>
             </div>
+            <input type="hidden" id="pos-cond-val" value="原封">
+            <input type="hidden" id="pos-model-val" value="Pro Max">
 
-            <!-- Display Screen -->
+            <div class="pos-grid-4" id="pos-grp-cap">
+                <div class="pos-btn cap active" onclick="setPosVal('cap', '256GB', this); autoFillCost();">256</div>
+                <div class="pos-btn cap" onclick="setPosVal('cap', '512GB', this); autoFillCost();">512</div>
+                <div class="pos-btn cap" onclick="setPosVal('cap', '1TB', this); autoFillCost();">1TB</div>
+                <div class="pos-btn cap" onclick="setPosVal('cap', '2TB', this); autoFillCost();">2TB</div>
+            </div>
+            <input type="hidden" id="pos-cap-val" value="256GB">
+
+            <!-- Block 3: 🧮 雙向顯示框 -->
             <div class="pos-screen">
-                <div class="pos-screen-hint" id="pos-hint">AOS | 原封大沙漠256GB</div>
+                <div class="pos-screen-hint" id="pos-hint">日韓 | 原封大橙256GB</div>
                 <div class="pos-screen-values">
-                    <div class="pos-val-box" id="pos-box-cost" onclick="posSetTarget('cost')">
+                    <div class="pos-val-box active" id="pos-box-cost" onclick="posSetTarget('cost')">
                         <div class="pos-val-label">💰 成本 (每部)</div>
                         <div class="pos-val-number" id="pos-val-cost">10199</div>
                     </div>
-                    <div class="pos-val-box active" id="pos-box-price" onclick="posSetTarget('price')">
-                        <div class="pos-val-label">🤝 放售價</div>
+                    <div class="pos-val-box" id="pos-box-price" onclick="posSetTarget('price')">
+                        <div class="pos-val-label">🤝 放售 (出)</div>
                         <div class="pos-val-number" id="pos-val-price">0</div>
                     </div>
                 </div>
+            </div>
+            <input type="hidden" id="val-cost" value="10199">
+            <input type="hidden" id="val-price" value="0">
+
+            <!-- Block 4: 🧮 極簡 3x4 數字鍵盤 -->
+            <div class="clean-keypad">
+                <button type="button" class="kp-btn" onclick="posType('1')">1</button>
+                <button type="button" class="kp-btn" onclick="posType('2')">2</button>
+                <button type="button" class="kp-btn" onclick="posType('3')">3</button>
                 
-                <div style="display:flex; gap:8px; margin-top:10px;">
-                    <select id="pos-status" style="flex:1; padding:8px; font-size:0.85rem; border-color:var(--border);">
-                        <option value="sold">💰 已賣出</option>
-                        <option value="stock">📦 現貨</option>
-                        <option value="pending">🛒 已訂</option>
-                    </select>
-                    <input type="number" id="pos-qty" value="1" min="1" style="flex:0.5; padding:8px; text-align:center; font-size:0.85rem;" placeholder="數量">
-                    <select id="pos-card" style="flex:1.5; padding:8px; font-size:0.85rem; border-color:var(--border);">
-                        <option value="">無卡 (不計回贈)</option>
-                    </select>
+                <button type="button" class="kp-btn" onclick="posType('4')">4</button>
+                <button type="button" class="kp-btn" onclick="posType('5')">5</button>
+                <button type="button" class="kp-btn" onclick="posType('6')">6</button>
+                
+                <button type="button" class="kp-btn" onclick="posType('7')">7</button>
+                <button type="button" class="kp-btn" onclick="posType('8')">8</button>
+                <button type="button" class="kp-btn" onclick="posType('9')">9</button>
+                
+                <button type="button" class="kp-btn kp-action" onclick="posType('00')">00</button>
+                <button type="button" class="kp-btn" onclick="posType('0')">0</button>
+                <button type="button" class="kp-btn kp-del" onclick="posType('DEL')">⌫</button>
+            </div>
+            
+            <button type="button" class="btn" style="margin-bottom:15px;" onclick="posSubmit()">💾 儲存紀錄</button>
+
+            <!-- Block 5: 附加設定 (數量, 信用卡) -->
+            <div style="display:flex; gap:10px; padding:0 5px; border-top: 1px solid var(--border); padding-top:15px;">
+                <div style="flex:1;">
+                    <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">數量</label>
+                    <input type="number" id="pos-qty" value="1" min="1" style="padding:10px; font-size:1rem; text-align:center;">
+                </div>
+                <div style="flex:2;">
+                    <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">付款信用卡 (計算回贈)</label>
+                    <select id="pos-card" style="padding:10px; font-size:1rem;"><option value="">無使用信用卡</option></select>
                 </div>
             </div>
-
-            <!-- Keypad -->
-            <div class="pos-keypad">
-                <button class="kp-btn kp-col-4" onclick="posType('7')">7</button>
-                <button class="kp-btn kp-col-4" onclick="posType('8')">8</button>
-                <button class="kp-btn kp-col-4" onclick="posType('9')">9</button>
-                
-                <button class="kp-btn kp-col-4" onclick="posType('4')">4</button>
-                <button class="kp-btn kp-col-4" onclick="posType('5')">5</button>
-                <button class="kp-btn kp-col-4" onclick="posType('6')">6</button>
-                
-                <button class="kp-btn kp-col-4" onclick="posType('1')">1</button>
-                <button class="kp-btn kp-col-4" onclick="posType('2')">2</button>
-                <button class="kp-btn kp-col-4" onclick="posType('3')">3</button>
-                
-                <button class="kp-btn kp-col-3" onclick="posType('0')">0</button>
-                <button class="kp-btn kp-col-3 kp-del" onclick="posType('DEL')">⌫</button>
-                <button class="kp-btn kp-col-3 kp-action" onclick="posType('C')">清空</button>
-                <button class="kp-btn kp-col-3 kp-submit" onclick="posSubmit()">記帳</button>
-            </div>
+            
         </div>
 
         <!-- 歷史紀錄面板 -->
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h2 style="margin:0; font-size:1.1rem;">炒賣紀錄</h2>
+                <h2 style="margin:0; font-size:1.1rem;">歷史紀錄</h2>
                 <button class="btn-small" onclick="sendTradeReport()" style="background:var(--telegram); color:white; border:none;">📊 TG報數</button>
             </div>
             <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom:15px;">
@@ -357,7 +387,7 @@
 <div id="modal-transaction" class="modal-overlay">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModals()">×</button>
-        <h2 id="tx-modal-title">新增紀錄</h2>
+        <h2 id="tx-modal-title" style="margin-top:0;">新增紀錄</h2>
         <div class="type-toggle">
             <div class="type-option active expense" id="type-expense" onclick="setTxType('expense')">💸 支出</div>
             <div class="type-option" id="type-income" onclick="setTxType('income')">💰 收入</div>
@@ -368,15 +398,33 @@
             <input type="hidden" id="tx-id">
             
             <div class="form-group">
-                <label style="margin:0;">金額 (HKD)</label>
-                <input type="number" id="tx-amount" step="0.1" required style="font-size:1.5rem; font-weight:bold;">
+                <label>金額 (HKD)</label>
+                <input type="text" id="tx-amount" class="calc-input active-calc" readonly required value="0">
+                
+                <div class="clean-keypad">
+                    <button type="button" class="kp-btn" onclick="calcTxPress('1')">1</button>
+                    <button type="button" class="kp-btn" onclick="calcTxPress('2')">2</button>
+                    <button type="button" class="kp-btn" onclick="calcTxPress('3')">3</button>
+                    
+                    <button type="button" class="kp-btn" onclick="calcTxPress('4')">4</button>
+                    <button type="button" class="kp-btn" onclick="calcTxPress('5')">5</button>
+                    <button type="button" class="kp-btn" onclick="calcTxPress('6')">6</button>
+                    
+                    <button type="button" class="kp-btn" onclick="calcTxPress('7')">7</button>
+                    <button type="button" class="kp-btn" onclick="calcTxPress('8')">8</button>
+                    <button type="button" class="kp-btn" onclick="calcTxPress('9')">9</button>
+                    
+                    <button type="button" class="kp-btn kp-action" onclick="calcTxPress('.')">.</button>
+                    <button type="button" class="kp-btn" onclick="calcTxPress('0')">0</button>
+                    <button type="button" class="kp-btn kp-del" onclick="calcTxPress('DEL')">⌫</button>
+                </div>
+                <button type="submit" class="btn" id="btn-submit">💾 儲存記帳</button>
             </div>
             
             <div class="form-group" id="group-category"><label>類別</label><select id="tx-category" required></select></div>
             <div class="form-group" id="group-card"><label>選擇信用卡</label><select id="tx-card" onchange="updateCardHint()"></select><div id="card-hint" style="font-size:0.8rem; color:var(--primary); margin-top:5px; display:none;"></div></div>
             <div class="form-group"><label>描述</label><input type="text" id="tx-desc" required></div>
             <div class="form-group"><label>日期</label><input type="datetime-local" id="tx-date" required></div>
-            <button type="submit" class="btn" id="btn-submit">儲存記帳</button>
         </form>
     </div>
 </div>
@@ -411,6 +459,9 @@
     const DB_KEY = 'rebate_bro_data_v2';
     const THEME_KEY = 'rebate_bro_theme';
     
+    const TRADE_SOURCES = ['AOS (官網)', 'APU (店取)', '百老匯', '豐澤', '友和', '蘇寧', '電器幫', 'CMHK', 'CSL', 'Smartone', '3HK', '中原', '1010'];
+    const TRADE_SHOPS = ['日韓', 'ITRADE', 'G79', '雪球', 'YY', '誠信', '萬通', '鵬程', 'JK', 'BOBO']; 
+    
     const IPHONE_PRICES = { 'Pro': { '256GB': 9399, '512GB': 11099, '1TB': 12799 }, 'Pro Max': { '256GB': 10199, '512GB': 11899, '1TB': 13599, '2TB': 16999 } };
     const DEFAULT_CATEGORIES = { expense: ['食飯', '八達通增值', '購物', '娛樂', '雜費', '其他', '固定開支'], income: ['薪金', '賣野', '投資', '其他'], repayment: ['信用卡還款'] };
     
@@ -428,38 +479,67 @@
     let state = { transactions: [], cards: [], trades: [], categories: null, settings: {} };
     let pieChart = null, barChart = null, currentCatEditType = 'expense';
 
+    // --- 安全執行工具 ---
+    function safeEval(expr) {
+        try { let res = new Function('return ' + expr)(); return isFinite(res) ? Math.round(res * 100) / 100 : 0; } catch(e) { return 0; }
+    }
+
+    // --- 🧮 內建計算機邏輯 (普通記帳) ---
+    function calcTxPress(key) {
+        const input = document.getElementById('tx-amount');
+        if (!input) return;
+
+        let current = input.value;
+        if (current === '0' && key !== '.') current = '';
+        
+        if (key === 'DEL') { 
+            current = current.slice(0, -1); 
+            if(current === '') current = '0';
+        } else if (key === '.' && current.includes('.')) {
+            // do nothing if decimal already exists
+        } else {
+            current += key;
+        }
+
+        if (current.length > 12) current = current.slice(0, 12);
+        
+        // Cleanup leading zeros
+        if (current !== '0' && current.startsWith('0') && !current.startsWith('0.')) {
+            current = current.replace(/^0+/, '');
+            if (current === '') current = '0';
+        }
+        if (current === '.') current = '0.';
+
+        input.value = current;
+    }
+
     // --- 🚀 POS 炒賣 UI 核心狀態與邏輯 ---
     let posState = {
-        shop: 'AOS',
+        shop: '日韓',
         cond: '原封',
-        color: '沙漠',
+        color: '橙', 
         model: 'Pro Max',
         cap: '256GB',
-        target: 'price', // 'price' or 'cost'
+        target: 'price', 
         priceStr: '0',
         costStr: '10199'
     };
 
     function updatePosHint() {
         const hint = document.getElementById('pos-hint');
-        if(hint) hint.innerText = `${posState.shop} | ${posState.cond}${posState.model === 'Pro Max' ? '大' : '細'}${posState.color}${posState.cap}`;
+        let shopName = posState.shop === '自訂' ? document.getElementById('pos-shop-custom').value : posState.shop;
+        if(!shopName) shopName = '未選擇店舖';
+        if(hint) hint.innerText = `${shopName} | ${posState.cond}${posState.model === 'Pro Max' ? '大' : '細'}${posState.color}${posState.cap}`;
     }
 
-    function posClick(type, val, el) {
+    function setPosVal(type, val, el) {
         posState[type] = val;
         
-        // Update UI buttons
-        const containerId = type === 'shop' ? (el.parentElement.id) : `pos-grp-${type}`;
-        
-        if (type === 'shop') {
-            document.querySelectorAll('.pos-btn.shop').forEach(b => b.classList.remove('active'));
-        } else {
-            const grid = document.getElementById(containerId);
-            if(grid) Array.from(grid.children).forEach(c => c.classList.remove('active'));
-        }
+        const containerId = `pos-grp-${type}`;
+        const grid = document.getElementById(containerId);
+        if(grid) Array.from(grid.children).forEach(c => c.classList.remove('active'));
         el.classList.add('active');
 
-        // Auto Cost calculation
         if(type==='model' || type==='cap') {
             const p = IPHONE_PRICES[posState.model];
             if(p && p[posState.cap]) {
@@ -468,17 +548,41 @@
             }
         }
         
-        // Auto status adjustment for Shops
-        if (type === 'shop') {
-            const statusSelect = document.getElementById('pos-status');
-            if (val === 'AOS' || val === 'APU') {
-                statusSelect.value = 'stock'; // Default to stock for buying
-            } else {
-                statusSelect.value = 'sold'; // Default to sold for shop selling
-            }
+        if(type==='status') {
+            const area = document.getElementById('pos-shop-area');
+            if(val === 'sold') area.style.display = 'block';
+            else area.style.display = 'none';
         }
-        
+
         updatePosHint();
+    }
+    
+    function setPosShop(val, el) {
+        posState.shop = val;
+        const grid = document.getElementById('pos-shops');
+        Array.from(grid.children).forEach(c => c.classList.remove('active-shop', 'active'));
+        el.classList.add('active-shop');
+        
+        const customInput = document.getElementById('pos-shop-custom');
+        if(val === '自訂') {
+            customInput.style.display = 'block';
+            customInput.focus();
+        } else {
+            customInput.style.display = 'none';
+        }
+        document.getElementById('pos-shop-val').value = val;
+        updatePosHint();
+    }
+    
+    function togglePosSource() {
+        const sel = document.getElementById('pos-source');
+        const custom = document.getElementById('pos-source-custom');
+        if(sel.value === 'other') { custom.style.display = 'block'; custom.required = true; }
+        else { custom.style.display = 'none'; custom.required = false; }
+    }
+    
+    if(document.getElementById('pos-shop-custom')) {
+        document.getElementById('pos-shop-custom').addEventListener('input', updatePosHint);
     }
 
     function posSetTarget(target) {
@@ -491,14 +595,20 @@
     function posType(key) {
         let current = posState.target === 'cost' ? posState.costStr : posState.priceStr;
         
-        if (current === '0' && key !== 'C' && key !== 'DEL') current = '';
+        if (current === '0' && key !== 'C' && key !== 'DEL' && key !== '.') current = '';
         
-        if (key === 'C') { current = "0"; }
-        else if (key === 'DEL') { current = current.slice(0, -1) || "0"; }
+        if (key === 'DEL') { 
+            current = current.slice(0, -1);
+            if (current === '') current = '0';
+        }
         else { current += key; }
         
-        // Limit length
-        if (current.length > 8) current = current.slice(0, 8);
+        if (current.length > 10) current = current.slice(0, 10);
+        
+        if (current !== '0' && current.startsWith('0') && !current.startsWith('0.')) {
+            current = current.replace(/^0+/, '');
+            if (current === '') current = '0';
+        }
 
         if (posState.target === 'cost') {
             posState.costStr = current;
@@ -509,41 +619,40 @@
         }
     }
     
-    function posClear() {
+    function clearPos() {
         document.getElementById('pos-id').value = '';
         posState.priceStr = '0';
         document.getElementById('pos-val-price').innerText = '0';
         document.getElementById('pos-qty').value = '1';
-        document.getElementById('pos-status').value = posState.shop === 'AOS' || posState.shop === 'APU' ? 'stock' : 'sold';
+        
+        setPosVal('status', 'pending', document.getElementById('pos-status').children[0]);
         posSetTarget('price');
+        updatePosHint();
     }
 
     function posSubmit() {
         try {
             const idStr = document.getElementById('pos-id').value;
-            const cost = parseFloat(posState.costStr) || 0;
-            const price = parseFloat(posState.priceStr) || 0;
-            const qty = parseInt(document.getElementById('pos-qty').value) || 1;
+            const cost = parseFloat(posState.costStr) || 0; 
+            const price = parseFloat(posState.priceStr) || 0; 
+            const qty = parseInt(document.getElementById('pos-qty').value) || 1; 
             const cid = document.getElementById('pos-card').value;
-            const status = document.getElementById('pos-status').value;
+            const status = document.getElementById('pos-status-val').value;
             
-            // Logic to determine source vs shop
-            let finalSource = '實體店';
+            let finalSource = document.getElementById('pos-source').value;
+            if(finalSource === 'other') finalSource = document.getElementById('pos-source-custom').value;
+            
             let finalShop = '';
-            
-            if (posState.shop === 'AOS' || posState.shop === 'APU') {
-                finalSource = posState.shop;
-            } else {
+            if(status === 'sold') {
                 finalShop = posState.shop;
+                if(finalShop === '自訂') finalShop = document.getElementById('pos-shop-custom').value;
             }
-
-            if (status !== 'sold') finalShop = ''; // Only store shop if sold
 
             const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             const tDate = now.toISOString().slice(0, 16);
 
             const tData = { 
-                source: finalSource, shop: finalShop, oid: '', 
+                source: finalSource, shop: finalShop, oid: document.getElementById('pos-oid').value || '', 
                 model: posState.model, cap: posState.cap, color: posState.color, 
                 status: status, condition: posState.cond === '原封' ? 'sealed' : 'opened', 
                 cost, price, qty, profit: (price-cost)*qty, cardId: cid, date: tDate 
@@ -559,13 +668,14 @@
                 if(state.settings.tgAutoSend) sendTelegramTradeAlert(tData); 
             }
             
-            saveData(); renderAll(); posClear(); showToast('✅ 交易已記錄');
+            saveData(); renderAll(); clearPos(); showToast('✅ 交易已記錄');
         } catch(err) { alert("儲存失敗: " + err.message); }
     }
 
     function cloneTrade(id) { 
         editTrade(id); 
         document.getElementById('pos-id').value = ''; 
+        document.getElementById('pos-oid').value = '';
         showToast('📋 已載入 (請修改後記帳)'); 
     }
 
@@ -575,18 +685,38 @@
         
         document.getElementById('pos-id').value = t.id;
         
-        // Try to trigger POS buttons based on data
-        const triggerPos = (type, text) => {
-            const btns = document.querySelectorAll(`.pos-btn.${type}`);
-            btns.forEach(b => { if(b.innerText.includes(text)) b.click(); });
-        };
+        const srcS = document.getElementById('pos-source');
+        if(srcS) {
+            if([...srcS.options].some(o=>o.value===t.source)) { 
+                srcS.value=t.source; document.getElementById('pos-source-custom').style.display='none'; 
+            } else { 
+                srcS.value='other'; document.getElementById('pos-source-custom').style.display='block'; document.getElementById('pos-source-custom').value = t.source || ''; 
+            }
+        }
+        
+        document.getElementById('pos-oid').value = t.oid || '';
 
-        const targetShop = t.shop || t.source || 'AOS';
-        triggerPos('shop', targetShop);
-        triggerPos('cond', t.condition === 'opened' ? '開封' : '原封');
-        triggerPos('model', t.model === 'Pro Max' ? '大' : '細');
-        triggerPos('color', t.color);
-        triggerPos('cap', t.cap.replace('GB',''));
+        const stBtns = document.getElementById('pos-status').children;
+        const stMap = {'pending':'🛒 已訂', 'stock':'📦 現貨', 'sold':'💰 已賣', 'cut':'❌ Cut單'};
+        Array.from(stBtns).forEach(b => { if(b.innerText === stMap[t.status]) setPosVal('status', t.status, b); });
+
+        if (t.status === 'sold' && t.shop) {
+            const shopBtns = document.getElementById('pos-shops').children;
+            let shopFound = false;
+            Array.from(shopBtns).forEach(b => {
+                if(b.innerText === t.shop) { setPosShop(t.shop, b); shopFound = true; }
+            });
+            if(!shopFound) {
+                const customBtn = Array.from(shopBtns).find(b => b.innerText.includes('自訂'));
+                if(customBtn) setPosShop('自訂', customBtn);
+                document.getElementById('pos-shop-custom').value = t.shop;
+            }
+        }
+
+        simulatePosClick('pos-grp-cond', 'cond', t.condition === 'opened' ? '開封' : '原封');
+        simulatePosClick('pos-grp-model', 'model', t.model === 'Pro Max' ? '大' : '細');
+        simulatePosClick('pos-grp-color', 'color', t.color);
+        simulatePosClick('pos-grp-cap', 'cap', t.cap.replace('GB',''));
 
         posState.costStr = t.cost.toString();
         posState.priceStr = t.price.toString();
@@ -594,12 +724,24 @@
         document.getElementById('pos-val-price').innerText = t.price;
         
         document.getElementById('pos-qty').value = t.qty;
-        document.getElementById('pos-status').value = t.status || 'pending';
         document.getElementById('pos-card').value = t.cardId || "";
+        
+        updatePosHint();
+    }
+    
+    function simulatePosClick(containerId, type, val) {
+        const container = document.getElementById(containerId);
+        if(!container) return;
+        Array.from(container.children).forEach(b => {
+            if(b.innerText.includes(val) || (val==='Pro Max'&&b.innerText==='大機') || (val==='Pro'&&b.innerText==='細機')) {
+                setPosVal(type, val, b);
+            }
+        });
     }
 
-
-    // --- App Lifecycle ---
+    // ==========================================
+    // Core App Logic
+    // ==========================================
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         const btn = document.getElementById('btn-theme');
@@ -633,11 +775,17 @@
             if(!state.settings) state.settings = { tgAutoSend: false };
             if(!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
 
-            // 自動修復舊卡片 undefined% 問題
             state.cards.forEach(c => {
                 if (c.percent === undefined && c.rate !== undefined) c.percent = c.rate;
                 if (c.percent === undefined) c.percent = 0;
             });
+
+            const sourceS = document.getElementById('pos-source');
+            if(sourceS) { 
+                sourceS.innerHTML = '<option value="">-- 選擇 --</option>';
+                TRADE_SOURCES.forEach(src => sourceS.add(new Option(src, src)));
+                sourceS.add(new Option('其他 (手動輸入)', 'other'));
+            }
 
             if(document.getElementById('tg-token')) document.getElementById('tg-token').value = state.settings.tgToken || '';
             if(document.getElementById('tg-chatid')) document.getElementById('tg-chatid').value = state.settings.tgChatId || '';
@@ -648,6 +796,7 @@
             if(document.getElementById('analysis-month')) document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
             
             setTxType('expense');
+            posSetTarget('price');
             updatePosHint();
             renderAll();
         } catch (err) { console.error(err); }
@@ -698,7 +847,7 @@
         l.innerHTML = '';
         let sortedTrades = [...(state.trades || [])].sort((a,b) => { const dA = a.date?new Date(a.date):new Date(0); const dB = b.date?new Date(b.date):new Date(0); return dB - dA; });
         const q = document.getElementById('search-trade') ? document.getElementById('search-trade').value.toLowerCase() : '';
-        if(q) sortedTrades = sortedTrades.filter(t => (t.model||'').toLowerCase().includes(q) || (t.shop||'').toLowerCase().includes(q));
+        if(q) sortedTrades = sortedTrades.filter(t => (t.model||'').toLowerCase().includes(q) || (t.shop||'').toLowerCase().includes(q) || (t.source||'').toLowerCase().includes(q));
 
         let todayProfit = 0, todayVol = 0; const nowMonth = new Date().toISOString().slice(0, 10);
         sortedTrades.forEach(t => {
@@ -709,9 +858,10 @@
             else if (t.status === 'cut') sBadge = '<span class="status-badge status-cut">Cut單</span>';
             else { sBadge = '<span class="status-badge status-sold">已賣</span>' + (t.condition==='opened'?'🔪':''); const pC = t.profit>=0?'profit-pos':'profit-neg'; pDisp = `<span class="${pC}">$${(Number(t.profit)||0).toLocaleString()}</span>`; }
             
-            const loc = (t.status === 'sold' && t.shop) ? `${t.source||''} ➔ ${t.shop}` : `${t.source||''}`;
+            const oid = t.oid ? `(${t.oid})` : ''; 
+            const loc = (t.status === 'sold' && t.shop) ? `${t.source||''} ${oid} ➔ ${t.shop}` : `${t.source||''} ${oid}`;
             const cName = state.cards.find(c => c.id == t.cardId) ? `<span class="cat-tag">💳 ${state.cards.find(c=>c.id==t.cardId).name}</span>` : '';
-            l.innerHTML += `<div class="list-item"><div class="item-main" style="cursor:pointer;" onclick="editTrade(${t.id})"><div class="item-title">${sBadge} ${t.model||''} ${t.cap||''}</div><div class="item-sub">${loc} • ${t.date?t.date.slice(0,10):''} ${cName}</div></div><div style="text-align:right"><div class="item-amount" style="font-size:0.9rem;">x${t.qty||1} ${pDisp}</div><div style="display:flex; justify-content:flex-end;"><button class="btn-text" onclick="cloneTrade(${t.id})" title="複製此單">📋</button><button class="btn-text" onclick="deleteTrade(${t.id})">X</button></div></div></div>`;
+            l.innerHTML += `<div class="list-item"><div class="item-main" style="cursor:pointer;" onclick="editTrade(${t.id})"><div class="item-title">${sBadge} ${t.model||''} ${t.cap||''} <span style="font-size:0.75rem; font-weight:normal; margin-left:4px; opacity:0.8;">${t.color||''}</span></div><div class="item-sub">${loc} • ${t.date?t.date.slice(0,10):''} ${cName}</div></div><div style="text-align:right"><div class="item-amount" style="font-size:0.9rem;">x${t.qty||1} ${pDisp}</div><div style="display:flex; justify-content:flex-end;"><button class="btn-text" onclick="cloneTrade(${t.id})" title="複製此單">📋</button><button class="btn-text" onclick="deleteTrade(${t.id})">X</button></div></div></div>`;
         });
         
         if(document.getElementById('trade-today-profit')) document.getElementById('trade-today-profit').innerText = '$' + todayProfit.toLocaleString();
@@ -788,7 +938,7 @@
     // --- 視窗及操作管理 ---
     function openModal(type) {
         const m = document.getElementById('modal-'+type); if(!m) return; m.classList.add('active');
-        if(type==='transaction') { document.getElementById('tx-form').reset(); document.getElementById('tx-id').value=''; setTxType('expense'); setDefaultTime(); document.getElementById('tx-amount').value='';}
+        if(type==='transaction') { document.getElementById('tx-form').reset(); document.getElementById('tx-id').value=''; setTxType('expense'); setDefaultTime(); document.getElementById('tx-amount').value=''; }
         else if(type==='category') renderCategories();
     }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
