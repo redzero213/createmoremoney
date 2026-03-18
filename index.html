@@ -109,13 +109,18 @@
         .pos-btn:active { transform: scale(0.95); }
 
         .pos-btn.shop { border-color: rgba(52, 152, 219, 0.4); color: #3498db; }
-        .pos-btn.shop.active { background: #3498db; color: #fff; border-color: #3498db; font-weight: bold; }
+        .pos-btn.shop.active-shop { background: #3498db; color: #fff; border-color: #3498db; font-weight: bold; }
+        
         .pos-btn.cond { background: rgba(155, 89, 182, 0.1); color: #9b59b6; border: none; }
         .pos-btn.cond.active { background: #9b59b6; color: #fff; font-weight: bold; }
+        
         .pos-btn.model { background: rgba(39, 174, 96, 0.1); color: #27ae60; border: none; font-weight: bold; }
         .pos-btn.model.active { background: #27ae60; color: #fff; }
+        
         .pos-btn.cap { border-color: rgba(52, 152, 219, 0.4); color: #3498db; }
         .pos-btn.cap.active { background: #3498db; color: #fff; border-color: #3498db; font-weight: bold; }
+
+        .pos-btn.active-status { background: var(--pos-active-bg); border-color: var(--pos-active-border); color: var(--pos-active-text); font-weight: bold; }
 
         /* Color Buttons (橙/白/藍 Only) */
         .color-orange.active { background-color: #e67e22 !important; color: white !important; border-color: #e67e22 !important; font-weight:bold;}
@@ -239,7 +244,7 @@
             <input type="hidden" id="pos-status-val" value="pending">
 
             <!-- Row 2: 回收店舖 (只限已賣) -->
-            <div id="pos-shop-area">
+            <div id="pos-shop-area" style="display:none;">
                 <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block;">🤝 回收店舖</label>
                 <div class="pos-grid-4" id="pos-shops" style="margin-bottom:6px;">
                     <div class="pos-btn shop active-shop" onclick="setPosShop('日韓', this)">日韓</div>
@@ -397,9 +402,11 @@
             <input type="hidden" id="tx-type" value="expense">
             <input type="hidden" id="tx-id">
             
-            <div class="form-group">
-                <label>金額 (HKD)</label>
-                <input type="text" id="tx-amount" class="calc-input active-calc" readonly required value="0">
+            <div class="form-group" style="background:var(--surface-hover); border:1px solid var(--border); border-radius:12px; padding:15px; margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <label style="margin:0;">金額 (HKD)</label>
+                </div>
+                <input type="text" id="tx-amount" class="calc-input active-calc" readonly required value="0" style="background:transparent; border:none; font-size:2.2rem; margin-bottom:10px; width:100%;">
                 
                 <div class="clean-keypad">
                     <button type="button" class="kp-btn" onclick="calcTxPress('1')">1</button>
@@ -439,7 +446,21 @@
     </div>
 </div>
 
-<div id="modal-card" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>新增信用卡</h2><form id="card-form" onsubmit="addCard(event)"><div class="form-group"><label>卡片名稱</label><input type="text" id="card-name" required></div><div class="form-group"><label>回贈比率 (%)</label><input type="number" id="card-percent" step="0.1" required></div><div class="form-group"><label>簽賬上限 (留空為無限)</label><input type="number" id="card-cap"></div><div class="form-group"><label>備註</label><input type="text" id="card-note"></div><button type="submit" class="btn">新增卡片</button></form></div></div>
+<!-- 信用卡 新增/編輯 Modal -->
+<div id="modal-card" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModals()">×</button>
+        <h2 id="card-modal-title">新增信用卡</h2>
+        <form id="card-form" onsubmit="addCard(event)">
+            <input type="hidden" id="card-id">
+            <div class="form-group"><label>卡片名稱</label><input type="text" id="card-name" required></div>
+            <div class="form-group"><label>回贈比率 (%)</label><input type="number" id="card-percent" step="0.1" required></div>
+            <div class="form-group"><label>簽賬上限 (留空為無限)</label><input type="number" id="card-cap"></div>
+            <div class="form-group"><label>備註</label><input type="text" id="card-note"></div>
+            <button type="submit" class="btn">儲存卡片</button>
+        </form>
+    </div>
+</div>
 
 <div id="modal-data" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2 style="margin-top:0;">☁️ 備份與同步</h2><button class="btn" onclick="exportData('json')" style="background:#ff9f43; margin-bottom:10px;">💾 下載備份 (JSON)</button><button class="btn" onclick="exportData('csv')" style="background:#4facfe; margin-bottom:10px;">📊 匯出 Excel (CSV)</button><button class="btn" style="background:#333; border:1px solid #666; margin-bottom:20px;" onclick="triggerImport()">📂 還原備份</button><input type="file" id="file-input" accept=".json" onchange="importData(this)" style="display:none;"><button class="btn-small" onclick="resetData()" style="color:var(--danger); border-color:var(--danger); width:100%;">🔥 重置資料 (清空)</button></div></div>
 <div id="modal-settings" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>⚙️ 設定</h2><div class="form-group"><label>Telegram Bot Token</label><input type="password" id="tg-token" placeholder="Bot Token" onchange="saveTGSettings()"></div><div class="form-group"><label>Telegram Chat ID</label><input type="text" id="tg-chatid" placeholder="Chat ID" onchange="saveTGSettings()"></div><div class="form-group"><label><input type="checkbox" id="setting-tg-auto" onchange="saveTGSettings()" style="width:auto; margin-right:8px;"> 開啟 TG 自動通知</label></div><button class="btn-small" onclick="testTG()" style="width:100%;">測試發送</button></div></div>
@@ -496,14 +517,13 @@
             current = current.slice(0, -1); 
             if(current === '') current = '0';
         } else if (key === '.' && current.includes('.')) {
-            // do nothing if decimal already exists
+            // do nothing
         } else {
             current += key;
         }
 
         if (current.length > 12) current = current.slice(0, 12);
         
-        // Cleanup leading zeros
         if (current !== '0' && current.startsWith('0') && !current.startsWith('0.')) {
             current = current.replace(/^0+/, '');
             if (current === '') current = '0';
@@ -533,28 +553,40 @@
     }
 
     function setPosVal(type, val, el) {
-        posState[type] = val;
-        
-        const containerId = `pos-grp-${type}`;
-        const grid = document.getElementById(containerId);
-        if(grid) Array.from(grid.children).forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-
-        if(type==='model' || type==='cap') {
-            const p = IPHONE_PRICES[posState.model];
-            if(p && p[posState.cap]) {
-                posState.costStr = p[posState.cap].toString();
-                document.getElementById('pos-val-cost').innerText = posState.costStr;
+        try {
+            posState[type] = val;
+            
+            if (type === 'status') {
+                const grid = document.getElementById('pos-status');
+                if(grid) Array.from(grid.children).forEach(c => c.classList.remove('active-status'));
+                if(el) el.classList.add('active-status');
+                
+                const area = document.getElementById('pos-shop-area');
+                if(area) {
+                    if(val === 'sold') area.style.display = 'block';
+                    else area.style.display = 'none';
+                }
+            } else {
+                const containerId = `pos-grp-${type}`;
+                const grid = document.getElementById(containerId);
+                if(grid) Array.from(grid.children).forEach(c => c.classList.remove('active'));
+                if(el) el.classList.add('active');
             }
-        }
-        
-        if(type==='status') {
-            const area = document.getElementById('pos-shop-area');
-            if(val === 'sold') area.style.display = 'block';
-            else area.style.display = 'none';
-        }
 
-        updatePosHint();
+            // Auto Cost calculation
+            if(type === 'model' || type === 'cap') {
+                const p = IPHONE_PRICES[posState.model];
+                if(p && p[posState.cap]) {
+                    posState.costStr = p[posState.cap].toString();
+                    const costEl = document.getElementById('pos-val-cost');
+                    if(costEl) costEl.innerText = posState.costStr;
+                }
+            }
+
+            updatePosHint();
+        } catch(err) {
+            console.error('setPosVal error:', err);
+        }
     }
     
     function setPosShop(val, el) {
@@ -625,7 +657,9 @@
         document.getElementById('pos-val-price').innerText = '0';
         document.getElementById('pos-qty').value = '1';
         
-        setPosVal('status', 'pending', document.getElementById('pos-status').children[0]);
+        const pendingBtn = document.getElementById('pos-status').children[0];
+        if (pendingBtn) setPosVal('status', 'pending', pendingBtn);
+        
         posSetTarget('price');
         updatePosHint();
     }
@@ -775,9 +809,16 @@
             if(!state.settings) state.settings = { tgAutoSend: false };
             if(!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
 
+            // 自動修復舊卡片 undefined% 問題，並順便提示 WeWa 10% 已失效
             state.cards.forEach(c => {
                 if (c.percent === undefined && c.rate !== undefined) c.percent = c.rate;
                 if (c.percent === undefined) c.percent = 0;
+                
+                // WeWa 卡自動修改
+                if (c.name.toLowerCase().includes('wewa') && c.percent === 10) {
+                    c.percent = 0;
+                    c.note = '回贈已完結，請按 ✎ 編輯修改';
+                }
             });
 
             const sourceS = document.getElementById('pos-source');
@@ -820,7 +861,22 @@
         state.cards.forEach(card => {
             const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
             const rateVal = card.percent !== undefined ? card.percent : 0;
-            l.innerHTML += `<div class="credit-card"><div style="display:flex; justify-content:space-between; align-items:start;"><div><div class="card-name">${card.name}</div><div class="card-info" style="color:var(--primary); font-weight:bold;">${rateVal}% 回贈</div><div class="card-info">${card.note||''}</div></div><button class="btn-text" onclick="deleteCard(${card.id})" style="color:#fff; font-size:1.2rem;">&times;</button></div><div class="progress-bar"><div id="prog-${card.id}" class="progress-fill"></div></div><div class="card-info"><span>本月已簽: <span id="spent-${card.id}">$0</span>${capText}</span></div></div>`;
+            l.innerHTML += `
+            <div class="credit-card">
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div>
+                        <div class="card-name">${card.name}</div>
+                        <div class="card-info" style="color:var(--primary); font-weight:bold;">${rateVal}% 回贈</div>
+                        <div class="card-info">${card.note||''}</div>
+                    </div>
+                    <div>
+                        <button class="btn-text" onclick="editCard(${card.id})" style="color:var(--income); font-size:1.2rem; display:inline-block; margin-right:8px;">✎</button>
+                        <button class="btn-text" onclick="deleteCard(${card.id})" style="color:rgba(255,255,255,0.7); font-size:1.2rem; display:inline-block;">&times;</button>
+                    </div>
+                </div>
+                <div class="progress-bar"><div id="prog-${card.id}" class="progress-fill"></div></div>
+                <div class="card-info"><span>本月已簽: <span id="spent-${card.id}">$0</span>${capText}</span></div>
+            </div>`;
         });
         if(state.cards.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡</div>';
     }
@@ -939,6 +995,7 @@
     function openModal(type) {
         const m = document.getElementById('modal-'+type); if(!m) return; m.classList.add('active');
         if(type==='transaction') { document.getElementById('tx-form').reset(); document.getElementById('tx-id').value=''; setTxType('expense'); setDefaultTime(); document.getElementById('tx-amount').value=''; }
+        else if(type==='card') { document.getElementById('card-form').reset(); document.getElementById('card-id').value=''; document.getElementById('card-modal-title').innerText='新增信用卡'; }
         else if(type==='category') renderCategories();
     }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
@@ -1024,7 +1081,40 @@
     
     function deleteTransaction(id) { if(confirm('確定刪除紀錄?')) { state.transactions=state.transactions.filter(t=>t.id!==id); saveData(); renderAll(); } }
     
-    function addCard(e) { e.preventDefault(); state.cards.push({ id: Date.now(), name: document.getElementById('card-name').value, percent: parseFloat(document.getElementById('card-percent').value)||0, cap: parseFloat(document.getElementById('card-cap').value)||0, note: document.getElementById('card-note').value }); saveData(); renderAll(); closeModals(); }
+    function addCard(e) { 
+        e.preventDefault(); 
+        const idStr = document.getElementById('card-id').value;
+        const capVal = document.getElementById('card-cap').value;
+        const newCard = { 
+            id: idStr ? parseFloat(idStr) : Date.now(), 
+            name: document.getElementById('card-name').value, 
+            percent: parseFloat(document.getElementById('card-percent').value)||0, 
+            cap: capVal ? parseFloat(capVal) : 0, 
+            note: document.getElementById('card-note').value 
+        };
+        
+        if (idStr) {
+            const idx = state.cards.findIndex(c => c.id === newCard.id);
+            if (idx !== -1) state.cards[idx] = newCard;
+        } else {
+            state.cards.push(newCard); 
+        }
+        
+        saveData(); renderAll(); closeModals(); e.target.reset(); document.getElementById('card-id').value = '';
+        if(state.cards.length === 1) updateFormOptions(); 
+    }
+    
+    function editCard(id) {
+        const c = state.cards.find(x => x.id === id); if(!c) return;
+        openModal('card');
+        document.getElementById('card-modal-title').innerText = '編輯信用卡';
+        document.getElementById('card-id').value = c.id;
+        document.getElementById('card-name').value = c.name;
+        document.getElementById('card-percent').value = c.percent;
+        document.getElementById('card-cap').value = c.cap > 0 ? c.cap : '';
+        document.getElementById('card-note').value = c.note || '';
+    }
+
     function deleteCard(id) { if(confirm('確定刪除卡片?')) { state.cards=state.cards.filter(c=>c.id!==id); saveData(); renderAll(); } }
     function deleteTrade(id) { if(confirm('刪除交易?')) { state.trades = state.trades.filter(t=>t.id!==id); saveData(); renderAll(); } }
 
@@ -1104,5 +1194,4 @@
     init();
 </script>
 </body>
-</html>
 </html>
