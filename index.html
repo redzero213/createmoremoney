@@ -243,8 +243,8 @@
             </div>
             <input type="hidden" id="pos-status-val" value="pending">
 
-            <!-- Row 2: 回收店舖 (只限已賣) -->
-            <div id="pos-shop-area" style="display:none;">
+            <!-- Row 2: 回收店舖 (永遠顯示) -->
+            <div id="pos-shop-area">
                 <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block;">🤝 回收店舖</label>
                 <div class="pos-grid-4" id="pos-shops" style="margin-bottom:6px;">
                     <div class="pos-btn shop active-shop" onclick="setPosShop('日韓', this)">日韓</div>
@@ -560,12 +560,6 @@
                 const grid = document.getElementById('pos-status');
                 if(grid) Array.from(grid.children).forEach(c => c.classList.remove('active-status'));
                 if(el) el.classList.add('active-status');
-                
-                const area = document.getElementById('pos-shop-area');
-                if(area) {
-                    if(val === 'sold') area.style.display = 'block';
-                    else area.style.display = 'none';
-                }
             } else {
                 const containerId = `pos-grp-${type}`;
                 const grid = document.getElementById(containerId);
@@ -676,11 +670,8 @@
             let finalSource = document.getElementById('pos-source').value;
             if(finalSource === 'other') finalSource = document.getElementById('pos-source-custom').value;
             
-            let finalShop = '';
-            if(status === 'sold') {
-                finalShop = posState.shop;
-                if(finalShop === '自訂') finalShop = document.getElementById('pos-shop-custom').value;
-            }
+            let finalShop = posState.shop;
+            if(finalShop === '自訂') finalShop = document.getElementById('pos-shop-custom').value;
 
             const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             const tDate = now.toISOString().slice(0, 16);
