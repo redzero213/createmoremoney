@@ -535,6 +535,7 @@
 
     // --- 🚀 POS 炒賣 UI 核心狀態與邏輯 ---
     let posState = {
+        status: 'pending',
         shop: '日韓',
         cond: '原封',
         color: '橙', 
@@ -651,6 +652,7 @@
         document.getElementById('pos-val-price').innerText = '0';
         document.getElementById('pos-qty').value = '1';
         
+        posState.status = 'pending';
         const pendingBtn = document.getElementById('pos-status').children[0];
         if (pendingBtn) setPosVal('status', 'pending', pendingBtn);
         
@@ -665,13 +667,16 @@
             const price = parseFloat(posState.priceStr) || 0; 
             const qty = parseInt(document.getElementById('pos-qty').value) || 1; 
             const cid = document.getElementById('pos-card').value;
-            const status = document.getElementById('pos-status-val').value;
+            const status = posState.status || 'pending';
             
             let finalSource = document.getElementById('pos-source').value;
             if(finalSource === 'other') finalSource = document.getElementById('pos-source-custom').value;
             
-            let finalShop = posState.shop;
-            if(finalShop === '自訂') finalShop = document.getElementById('pos-shop-custom').value;
+            let finalShop = '';
+            if(status === 'sold') {
+                finalShop = posState.shop;
+                if(finalShop === '自訂') finalShop = document.getElementById('pos-shop-custom').value;
+            }
 
             const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             const tDate = now.toISOString().slice(0, 16);
@@ -800,17 +805,19 @@
             if(!state.settings) state.settings = { tgAutoSend: false };
             if(!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
 
-            // 自動修復舊卡片 undefined% 問題，並順便提示 WeWa 10% 已失效
+            let needsSave = false;
             state.cards.forEach(c => {
-                if (c.percent === undefined && c.rate !== undefined) c.percent = c.rate;
-                if (c.percent === undefined) c.percent = 0;
+                if (c.percent === undefined && c.rate !== undefined) { c.percent = c.rate; needsSave = true; }
+                if (c.percent === undefined) { c.percent = 0; needsSave = true; }
                 
-                // WeWa 卡自動修改
+                // 強制修復 WeWa 卡並自動儲存
                 if (c.name.toLowerCase().includes('wewa') && c.percent === 10) {
                     c.percent = 0;
-                    c.note = '回贈已完結，請按 ✎ 編輯修改';
+                    c.note = '回贈已完結 (按 ✎ 編輯修改)';
+                    needsSave = true;
                 }
             });
+            if (needsSave) saveData();
 
             const sourceS = document.getElementById('pos-source');
             if(sourceS) { 
