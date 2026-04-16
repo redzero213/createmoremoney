@@ -3,1193 +3,336 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1e1e1e">
-    <title>回贈哥 - 智能簽賬管理</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>回贈哥 v3.0 - 雲端聯動版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+
+        // 已整合你提供的 Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyDqRIU7FTjapGmJK6n1Nty_-qJFLXm9JBo",
+            authDomain: "createmoremoney-94aa2.firebaseapp.com",
+            projectId: "createmoremoney-94aa2",
+            storageBucket: "createmoremoney-94aa2.firebasestorage.app",
+            messagingSenderId: "460518489963",
+            appId: "1:460518489963:web:1a15fd52a19b3a3251962e",
+            measurementId: "G-1KLFPE4SDS"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+        const appId = 'rebate-bro-v3';
+
+        // 核心狀態
+        let state = {
+            transactions: [],
+            cards: [
+                { id: 'cash', name: '💵 現金 / 無回贈', rate: 0, type: 'cash', paid: true },
+                { id: 'red', name: 'HSBC Red', rate: 4, type: 'cash', paid: false },
+                { id: 'waku', name: 'Waku Waku', rate: 6, type: 'cash', paid: false }
+            ],
+            lastUpdated: 0
+        };
+
+        let user = null;
+        let currentTab = 'expense';
+
+        // --- Auth 邏輯 ---
+        window.loginWithGoogle = async () => {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (e) {
+                showToast("登入失敗: " + e.message, "error");
+            }
+        };
+
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            if (user) {
+                document.getElementById('auth-status').innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <img src="${user.photoURL || 'https://via.placeholder.com/24'}" class="w-5 h-5 rounded-full border border-green-500">
+                        <span class="text-green-400 font-bold">${user.displayName || '已同步'}</span>
+                    </div>`;
+                subscribeToData();
+            } else {
+                document.getElementById('auth-status').innerHTML = `
+                    <button onclick="loginWithGoogle()" class="text-[10px] bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full transition-all flex items-center gap-1">
+                        <i class="fab fa-google"></i> 登入同步雲端
+                    </button>`;
+            }
+        });
+
+        function subscribeToData() {
+            if (!user) return;
+            // 遵循路徑規則: /artifacts/{appId}/users/{userId}/{collectionName}
+            const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'appState', 'main');
+            onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.lastUpdated > state.lastUpdated) {
+                        state = data;
+                        renderAll();
+                    }
+                } else {
+                    saveToCloud();
+                }
+            }, (err) => {
+                console.error("Firestore Error:", err);
+                showToast("雲端讀取失敗", "error");
+            });
+        }
+
+        async function saveToCloud() {
+            if (!user) return;
+            state.lastUpdated = Date.now();
+            const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'appState', 'main');
+            try {
+                await setDoc(docRef, state);
+                showToast("☁️ 數據已自動同步");
+            } catch (e) {
+                console.error("Save Error:", e);
+                showToast("同步失敗", "error");
+            }
+        }
+
+        // --- 業務邏輯 ---
+        window.addExpense = async () => {
+            const desc = document.getElementById('exp-desc').value;
+            const amountStr = document.getElementById('exp-amount').value;
+            const amount = parseFloat(amountStr);
+            const cardId = document.getElementById('exp-card').value;
+            
+            if (!desc || !amountStr || isNaN(amount)) {
+                showToast("請輸入有效名稱同金額", "error");
+                return;
+            }
+
+            const card = state.cards.find(c => c.id == cardId);
+            let rebateText = "";
+            if (card.type === 'miles') {
+                const miles = Math.floor(amount / card.rate);
+                rebateText = `${miles} 里`;
+            } else {
+                const rebate = (amount * (card.rate / 100)).toFixed(1);
+                rebateText = `$${rebate}`;
+            }
+
+            state.transactions.unshift({
+                id: Date.now(),
+                date: new Date().toLocaleDateString(),
+                desc,
+                amount,
+                cardName: card.name,
+                rebateText,
+                isSettled: false
+            });
+
+            document.getElementById('exp-desc').value = '';
+            document.getElementById('exp-amount').value = '';
+            renderAll();
+            await saveToCloud();
+        };
+
+        window.toggleSettle = async (id) => {
+            const tx = state.transactions.find(t => t.id === id);
+            if (tx) tx.isSettled = !tx.isSettled;
+            renderAll();
+            await saveToCloud();
+        };
+
+        window.deleteTx = async (id) => {
+            if(!confirm('確定刪除此紀錄？')) return;
+            state.transactions = state.transactions.filter(t => t.id !== id);
+            renderAll();
+            await saveToCloud();
+        };
+
+        window.switchTab = (tab) => {
+            currentTab = tab;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('text-green-400', 'bg-gray-800/50'));
+            event.currentTarget.classList.add('text-green-400', 'bg-gray-800/50');
+        };
+
+        function renderAll() {
+            // 渲染列表
+            const list = document.getElementById('tx-list');
+            if (state.transactions.length === 0) {
+                list.innerHTML = `<div class="text-center py-10 text-gray-600 text-sm">暫無簽賬紀錄</div>`;
+            } else {
+                list.innerHTML = state.transactions.map(t => `
+                    <div class="bg-gray-800/40 backdrop-blur-sm p-4 rounded-2xl mb-3 flex justify-between items-center transition-all ${t.isSettled ? 'opacity-40 grayscale border-l-4 border-green-500' : 'border-l-4 border-transparent shadow-lg shadow-black/20'}">
+                        <div onclick="toggleSettle(${t.id})" class="flex-1 cursor-pointer">
+                            <div class="font-bold text-white flex items-center gap-2">
+                                ${t.isSettled ? '<i class="fas fa-check-circle text-green-500"></i>' : ''}
+                                <span class="${t.isSettled ? 'line-through' : ''}">${t.desc}</span>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1">${t.date} • ${t.cardName}</div>
+                        </div>
+                        <div class="text-right flex flex-col items-end gap-1">
+                            <div class="text-white font-mono font-black">$${t.amount.toLocaleString()}</div>
+                            <div class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400">${t.rebateText}</div>
+                            ${!t.isSettled ? `<button onclick="deleteTx(${t.id})" class="text-[10px] text-red-900/50 hover:text-red-500 mt-1">刪除</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // 渲染卡片選單
+            const cardSelect = document.getElementById('exp-card');
+            cardSelect.innerHTML = state.cards.map(c => `<option value="${c.id}">${c.name} (${c.type === 'miles' ? '$'+c.rate+'/里' : c.rate+'%'})</option>`).join('');
+            
+            // 統計未找總額
+            const total = state.transactions.filter(t => !t.isSettled).reduce((a, b) => a + b.amount, 0);
+            document.getElementById('total-unsettled').innerText = `$${total.toLocaleString()}`;
+        }
+
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.className = `fixed top-6 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full text-white text-xs font-bold z-[9999] transition-all duration-300 shadow-2xl ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+            setTimeout(() => t.className = 'hidden', 2000);
+        }
+
+        window.onload = () => { renderAll(); };
+    </script>
     <style>
-        :root { --primary: #00d26a; --primary-dark: #00a855; --bg: #121212; --surface: #1e1e1e; --surface-hover: #2d2d2d; --text: #e0e0e0; --text-muted: #a0a0a0; --danger: #ff4d4d; --income: #4facfe; --repay: #ff9f43; --border: #333; --card-gradient: linear-gradient(135deg, #2c3e50, #000000); --shadow: 0 4px 6px rgba(0,0,0,0.3); --chart-text: #e0e0e0; --trade: #00cec9; --telegram: #229ED9; 
-        
-        /* POS UI Colors */
-        --pos-btn-bg: #2d2d2d; --pos-btn-border: #444; --pos-active-bg: rgba(0, 210, 106, 0.15); --pos-active-border: #00d26a; --pos-active-text: #00d26a; --pos-pad-bg: #1a1a1a;
-        }
-        
-        [data-theme="light"] { --primary: #00b85c; --primary-dark: #008f45; --bg: #f4f6f8; --surface: #ffffff; --surface-hover: #eef2f5; --text: #1a1a1a; --text-muted: #666666; --danger: #d93025; --income: #1a73e8; --repay: #e37400; --border: #e0e0e0; --card-gradient: linear-gradient(135deg, #2c3e50, #4ca1af); --shadow: 0 2px 8px rgba(0,0,0,0.08); --chart-text: #333333; 
-        
-        --pos-btn-bg: #ffffff; --pos-btn-border: #dcdcdc; --pos-active-bg: rgba(0, 184, 92, 0.1); --pos-active-border: #00b85c; --pos-active-text: #00b85c; --pos-pad-bg: #f0f2f5;
-        }
-        
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; transition: background-color 0.3s, color 0.3s; }
-        header { background: var(--surface); padding: 12px 20px; padding-top: max(12px, env(safe-area-inset-top)); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
-        h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
-        .app-logo { width: 28px; height: 28px; object-fit: contain; }
-        .menu-btn { font-size: 0.9rem; background: var(--surface-hover); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .container { max-width: 600px; margin: 0 auto; padding: 15px; padding-bottom: max(80px, env(safe-area-inset-bottom)); }
-        .panel { background: var(--surface); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: var(--shadow); }
-        
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .stat-card { background: var(--surface-hover); padding: 12px 8px; border-radius: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
-        .stat-value { font-size: 1.05rem; font-weight: bold; color: var(--text); margin: 5px 0; word-break: break-word; }
-        .stat-label { font-size: 0.7rem; color: var(--text-muted); }
-        .profit-pos { color: var(--primary); } .profit-neg { color: var(--danger); }
-        
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 10px; }
-        .menu-item { background: var(--surface-hover); border: 1px solid var(--border); border-radius: 12px; padding: 20px 10px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .menu-item:hover { border-color: var(--primary); }
-        .menu-icon { font-size: 2rem; } .menu-label { font-size: 0.9rem; font-weight: bold; }
-        
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
-        .list-item:last-child { border-bottom: none; }
-        .item-main { flex: 1; }
-        .item-title { font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
-        .item-sub { font-size: 0.8rem; color: var(--text-muted); }
-        .item-amount { font-weight: bold; font-size: 1.1rem; text-align: right; margin-left: 10px; }
-        
-        .cat-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: var(--surface-hover); border: 1px solid var(--border); color: var(--text-muted); }
-        .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 5px; }
-        .status-ordered { background: rgba(243, 156, 18, 0.2); color: #f39c12; } 
-        .status-stock { background: rgba(52, 152, 219, 0.2); color: #3498db; } 
-        .status-sold { background: rgba(0, 210, 106, 0.2); color: var(--primary); } 
-        .status-cut { background: rgba(255, 77, 77, 0.2); color: var(--danger); text-decoration: line-through; } 
-        
-        .form-group { margin-bottom: 15px; } label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
-        input, select { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1rem; outline: none; }
-        input:focus, select:focus { border-color: var(--primary); }
-        .row-group { display: flex; gap: 10px; } .row-group > div { flex: 1; }
-        
-        .type-toggle { display: flex; background: var(--bg); border-radius: 8px; padding: 4px; border: 1px solid var(--border); margin-bottom: 15px; }
-        .type-option { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
-        .type-option.active.expense { background: rgba(255, 77, 77, 0.15); color: var(--danger); }
-        .type-option.active.income { background: rgba(79, 172, 254, 0.15); color: var(--income); }
-        .type-option.active.repayment { background: rgba(255, 159, 67, 0.15); color: var(--repay); }
-        
-        .btn { background: var(--primary); color: #000; border: none; padding: 16px; width: 100%; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s;}
-        .btn:active { transform: scale(0.98); }
-        .btn-small { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
-        .btn-text { background: none; border: none; color: var(--text-muted); padding: 5px; cursor: pointer; font-size: 0.8rem; }
-        
-        .credit-card { background: var(--card-gradient); padding: 15px; border-radius: 10px; margin-bottom: 10px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
-        .card-name { font-weight: bold; font-size: 1.1rem; color: #fff; }
-        .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
-        
-        .fab { position: fixed; bottom: max(20px, env(safe-area-inset-bottom) + 20px); right: 20px; background: var(--primary); color: #fff; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,210,106,0.4); cursor: pointer; border: none; z-index: 90; }
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 200; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: var(--surface); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; padding: 25px; border-radius: 16px; position: relative; }
-        .close-modal { position: absolute; top: 10px; right: 10px; background: #cc4444; border: 2px solid #fff; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 1.4rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        
-        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 15px; overflow-x: auto; white-space: nowrap; }
-        .tab { flex: 1; padding: 10px; text-align: center; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; min-width: 80px; }
-        .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        
-        .search-bar { width: 100%; padding: 10px; margin-bottom: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none; }
-        .chart-container { position: relative; height: 250px; width: 100%; margin-bottom: 20px; }
-
-        /* ==================================================
-           🛒 極速 POS 炒賣介面
-           ================================================== */
-        .pos-panel { background: var(--surface); border-radius: 12px; padding: 15px 12px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
-        .pos-row { display: flex; gap: 6px; margin-bottom: 6px; width: 100%; }
-        .pos-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; }
-        .pos-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; }
-        .pos-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; width: 100%; }
-        
-        .pos-btn {
-            background: var(--bg); border: 1px solid var(--border); color: var(--text);
-            padding: 12px 2px; border-radius: 6px; font-size: 0.85rem; text-align: center;
-            cursor: pointer; user-select: none; transition: all 0.1s; display: flex; align-items: center; justify-content: center;
-        }
-        .pos-btn:active { transform: scale(0.95); }
-
-        .pos-btn.shop { border-color: rgba(52, 152, 219, 0.4); color: #3498db; }
-        .pos-btn.shop.active-shop { background: #3498db; color: #fff; border-color: #3498db; font-weight: bold; }
-        
-        .pos-btn.cond { background: rgba(155, 89, 182, 0.1); color: #9b59b6; border: none; }
-        .pos-btn.cond.active { background: #9b59b6; color: #fff; font-weight: bold; }
-        
-        .pos-btn.model { background: rgba(39, 174, 96, 0.1); color: #27ae60; border: none; font-weight: bold; }
-        .pos-btn.model.active { background: #27ae60; color: #fff; }
-        
-        .pos-btn.cap { border-color: rgba(52, 152, 219, 0.4); color: #3498db; }
-        .pos-btn.cap.active { background: #3498db; color: #fff; border-color: #3498db; font-weight: bold; }
-
-        .pos-btn.active-status { background: var(--pos-active-bg); border-color: var(--pos-active-border); color: var(--pos-active-text); font-weight: bold; }
-
-        /* Color Buttons (橙/白/藍 Only) */
-        .color-orange.active { background-color: #e67e22 !important; color: white !important; border-color: #e67e22 !important; font-weight:bold;}
-        [data-theme="dark"] .color-white.active { background-color: #e0e0e0 !important; color: black !important; border-color: #e0e0e0 !important; font-weight:bold;}
-        [data-theme="light"] .color-white.active { background-color: #ffffff !important; color: black !important; border-color: #999 !important; border-width: 2px; font-weight:bold;}
-        .color-blue.active { background-color: #3498db !important; color: white !important; border-color: #3498db !important; font-weight:bold;}
-
-        /* Display Screen */
-        .pos-screen { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px 15px; margin: 12px 0; }
-        .pos-screen-hint { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;}
-        .pos-screen-values { display: flex; justify-content: space-between; align-items: stretch; gap: 10px; }
-        .pos-val-box { flex: 1; padding: 12px 8px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; text-align: center; transition: all 0.2s; background: var(--surface-hover); }
-        .pos-val-box.active { border-color: var(--primary); background: rgba(0,210,106,0.08); }
-        .pos-val-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
-        .pos-val-number { font-size: 1.8rem; font-weight: bold; color: var(--text); min-height: 35px; display:flex; align-items:center; justify-content:center;}
-        .pos-val-box.active .pos-val-number { color: var(--primary); }
-
-        /* 🧮 乾淨純數字鍵盤 (3列) */
-        .calc-input { cursor: pointer; background: var(--surface-hover); font-size: 2rem; font-weight: bold; color: var(--text); text-align: center; border: 2px solid transparent; padding: 15px; border-radius:12px; width: 100%; outline: none; margin-bottom:15px; transition: border 0.2s;}
-        .calc-input.active-calc { border-color: var(--primary); color: var(--primary); background: rgba(0, 210, 106, 0.05); }
-        
-        .clean-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
-        .kp-btn {
-            background: var(--surface-hover); border: 1px solid var(--border); border-radius: 12px; 
-            font-size: 1.6rem; font-weight: 500; color: var(--text); padding: 18px 0; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .kp-btn:active { background: var(--bg); transform: scale(0.95); }
-        .kp-del { color: var(--danger); font-size: 1.4rem; }
-        .kp-action { color: var(--text-muted); font-size: 1.4rem; }
-
-        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 80px; transform: translateX(-50%); border: 1px solid var(--primary); }
-        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
-        @keyframes fadein { from {bottom: 60px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
-        @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 60px; opacity: 0;} }
-        #error-console { display:none; background:#8b0000; color:#fff; padding:15px; font-size:0.85rem; position:fixed; bottom:0; left:0; right:0; z-index:1000; text-align:left; max-height:150px; overflow:auto; box-shadow: 0 -4px 10px rgba(0,0,0,0.5); }
+        body { background: #0b0f1a; color: #e2e8f0; -webkit-user-select: none; font-family: -apple-system, system-ui, sans-serif; }
+        ::-webkit-scrollbar { display: none; }
+        .tab-content { animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        input, select { -webkit-appearance: none; }
+        .safe-bottom { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
     </style>
 </head>
-<body>
+<body class="flex flex-col h-screen overflow-hidden">
 
-<header>
-    <h1><img src="https://cdn-icons-png.flaticon.com/512/6963/6963703.png" alt="Logo" class="app-logo">回贈哥</h1>
-    <div class="header-actions">
-        <button class="menu-btn" onclick="openMenuTarget('menu')">☰ 選單</button>
-    </div>
-</header>
+    <div id="toast" class="hidden"></div>
 
-<div class="container">
-    <div class="panel">
-        <div class="stats-grid">
-            <div class="stat-card"><div class="stat-label">本月支出</div><div class="stat-value" id="total-spent" style="color:var(--danger)">$0</div></div>
-            <div class="stat-card"><div class="stat-label">本月收入</div><div class="stat-value" id="total-income" style="color:var(--income)">$0</div></div>
-            <div class="stat-card"><div class="stat-label">預計回贈</div><div class="stat-value" id="total-cashback" style="color:var(--primary)">$0</div></div>
+    <!-- Header -->
+    <header class="p-6 pt-14 bg-gray-900/80 backdrop-blur-xl border-b border-white/5 flex justify-between items-end sticky top-0 z-50">
+        <div>
+            <h1 class="text-2xl font-black text-white tracking-tighter italic">REBATE BRO <span class="text-green-500 not-italic text-xs ml-1">v3.0</span></h1>
+            <div id="auth-status" class="mt-1"></div>
         </div>
-    </div>
-
-    <div class="tabs">
-        <div class="tab active" onclick="switchTab('transactions')">賬目</div>
-        <div class="tab" onclick="switchTab('cards')">卡包</div>
-        <div class="tab" onclick="switchTab('trading')">📱 炒賣</div>
-        <div class="tab" onclick="switchTab('analysis')">分析</div>
-    </div>
-
-    <!-- 📑 Tab: Transactions -->
-    <div id="tab-transactions" class="tab-content active">
-        <div class="panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; font-size:1.1rem;">最近賬目</h2>
-                <span class="stat-label" id="tx-count">0 筆</span>
-            </div>
-            <input type="text" id="search-tx" class="search-bar" placeholder="🔍 搜尋紀錄、類別或金額..." oninput="renderTransactions()">
-            <div id="transaction-list"></div>
+        <div class="text-right">
+            <p class="text-[9px] text-gray-500 uppercase tracking-[0.2em] font-bold">未找數金額</p>
+            <p id="total-unsettled" class="text-2xl font-black text-white font-mono">$0</p>
         </div>
-    </div>
+    </header>
 
-    <!-- 📑 Tab: Cards -->
-    <div id="tab-cards" class="tab-content">
-        <div class="panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; font-size:1.1rem;">我的卡包</h2>
-                <div style="display:flex; gap:8px;">
-                     <button class="btn-small" onclick="importPresetCards()" style="background:rgba(0,210,106,0.1); border-color:var(--primary); color:var(--primary);">📥 更新神卡</button>
-                    <button class="btn-small" onclick="openModal('card')">+ 新增</button>
-                </div>
-            </div>
-            <div id="card-list"></div>
-        </div>
-    </div>
-
-    <!-- 📑 Tab: Trading (🚀 極速 POS 介面 🚀) -->
-    <div id="tab-trading" class="tab-content">
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-4 pb-32">
         
-        <div class="pos-panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h2 style="margin:0; font-size:1.1rem; color:#3498db; display:flex; align-items:center; gap:5px;">⚡ 極速報價 / 入貨</h2>
-                <button class="btn-text" onclick="clearPos()" style="font-size:0.8rem; background:var(--bg); padding:4px 10px; border-radius:6px; border:1px solid var(--border);">🔄 重置</button>
-            </div>
-            
-            <input type="hidden" id="pos-id">
-            
-            <!-- Row 0: 購入來源 -->
-            <div class="pos-row" style="gap:10px; margin-bottom:12px; align-items: flex-end;">
-                <div style="flex:1;">
-                    <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">📥 購入來源</label>
-                    <select id="pos-source" onchange="togglePosSource()" style="padding:8px; font-size:0.85rem;"></select>
-                    <input type="text" id="pos-source-custom" placeholder="請輸入來源" style="display:none; margin-top:5px; padding:8px; font-size:0.85rem;">
-                </div>
-                <div style="flex:1;">
-                    <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">單號 (選填)</label>
-                    <input type="text" id="pos-oid" placeholder="W123..." style="padding:8px; font-size:0.85rem;">
-                </div>
-            </div>
-
-            <!-- Row 1: 狀態 -->
-            <div class="pos-grid-4" id="pos-status" style="margin-bottom:12px;">
-                <div class="pos-btn active-status" onclick="setPosVal('status', 'pending', this)">🛒 已訂</div>
-                <div class="pos-btn" onclick="setPosVal('status', 'stock', this)">📦 現貨</div>
-                <div class="pos-btn" onclick="setPosVal('status', 'sold', this)">💰 已賣</div>
-                <div class="pos-btn" onclick="setPosVal('status', 'cut', this)">❌ Cut單</div>
-            </div>
-            <input type="hidden" id="pos-status-val" value="pending">
-
-            <!-- Row 2: 回收店舖 (永遠顯示) -->
-            <div id="pos-shop-area">
-                <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block;">🤝 回收店舖</label>
-                <div class="pos-grid-4" id="pos-shops" style="margin-bottom:6px;">
-                    <div class="pos-btn shop active-shop" onclick="setPosShop('日韓', this)">日韓</div>
-                    <div class="pos-btn shop" onclick="setPosShop('ITRADE', this)">ITRADE</div>
-                    <div class="pos-btn shop" onclick="setPosShop('G79', this)">G79</div>
-                    <div class="pos-btn shop" onclick="setPosShop('雪球', this)">雪球</div>
-                    <div class="pos-btn shop" onclick="setPosShop('YY', this)">YY</div>
-                    <div class="pos-btn shop" onclick="setPosShop('誠信', this)">誠信</div>
-                    <div class="pos-btn shop" onclick="setPosShop('萬通', this)">萬通</div>
-                    <div class="pos-btn shop" onclick="setPosShop('自訂', this)">自訂...</div>
-                </div>
-                <input type="text" id="pos-shop-custom" placeholder="請輸入回收店舖" style="display:none; margin-bottom:12px; padding:8px; font-size:0.85rem; width:100%;">
-            </div>
-            <input type="hidden" id="pos-shop-val" value="日韓">
-
-            <!-- Row 3: 顏色 (橙/白/藍) -->
-            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block;">🎨 顏色</label>
-            <div class="pos-grid-3" id="pos-grp-color" style="margin-bottom:12px;">
-                <div class="pos-btn color color-orange active" onclick="setPosVal('color','橙', this)">橙</div>
-                <div class="pos-btn color color-white" onclick="setPosVal('color','白', this)">白</div>
-                <div class="pos-btn color color-blue" onclick="setPosVal('color','藍', this)">藍</div>
-            </div>
-            <input type="hidden" id="pos-color-val" value="橙">
-
-            <!-- Row 4: 規格 (封, 型號, 容量) -->
-            <div style="display:flex; gap:6px; margin-bottom:6px;">
-                <div class="pos-grid-2" style="flex:2;" id="pos-grp-cond">
-                    <div class="pos-btn cond active" onclick="setPosVal('cond', '原封', this)">原封</div>
-                    <div class="pos-btn cond" onclick="setPosVal('cond', '開封', this)">開封</div>
-                </div>
-                <div class="pos-grid-2" style="flex:2;" id="pos-grp-model">
-                    <div class="pos-btn model active" onclick="setPosVal('model', 'Pro Max', this)">大機</div>
-                    <div class="pos-btn model" onclick="setPosVal('model', 'Pro', this)">細機</div>
-                </div>
-            </div>
-            <input type="hidden" id="pos-cond-val" value="原封">
-            <input type="hidden" id="pos-model-val" value="Pro Max">
-
-            <div class="pos-grid-4" id="pos-grp-cap">
-                <div class="pos-btn cap active" onclick="setPosVal('cap', '256GB', this)">256</div>
-                <div class="pos-btn cap" onclick="setPosVal('cap', '512GB', this)">512</div>
-                <div class="pos-btn cap" onclick="setPosVal('cap', '1TB', this)">1TB</div>
-                <div class="pos-btn cap" onclick="setPosVal('cap', '2TB', this)">2TB</div>
-            </div>
-            <input type="hidden" id="pos-cap-val" value="256GB">
-
-            <!-- Block 3: 🧮 雙向顯示框 -->
-            <div class="pos-screen">
-                <div class="pos-screen-hint" id="pos-hint">日韓 | 原封大橙256GB</div>
-                <div class="pos-screen-values">
-                    <div class="pos-val-box active" id="pos-box-cost" onclick="posSetTarget('cost')">
-                        <div class="pos-val-label">💰 成本 (每部)</div>
-                        <div class="pos-val-number" id="pos-val-cost">10199</div>
+        <!-- Tab: Expense (記帳) -->
+        <div id="tab-expense" class="tab-content">
+            <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-[2rem] border border-white/10 mb-8 shadow-2xl">
+                <div class="flex flex-col gap-4">
+                    <div class="grid grid-cols-5 gap-3">
+                        <input id="exp-desc" type="text" placeholder="項目名稱" class="col-span-3 bg-black/40 border-none rounded-2xl p-4 text-white placeholder-gray-600 focus:ring-1 ring-green-500 outline-none transition-all">
+                        <input id="exp-amount" type="number" inputmode="decimal" placeholder="金額" class="col-span-2 bg-black/40 border-none rounded-2xl p-4 text-white font-mono text-center focus:ring-1 ring-green-500 outline-none transition-all">
                     </div>
-                    <div class="pos-val-box" id="pos-box-price" onclick="posSetTarget('price')">
-                        <div class="pos-val-label">🤝 放售 (出)</div>
-                        <div class="pos-val-number" id="pos-val-price">0</div>
+                    <div class="relative">
+                        <select id="exp-card" class="w-full bg-black/40 border-none rounded-2xl p-4 text-white outline-none cursor-pointer pr-10"></select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none"></i>
                     </div>
+                    <button onclick="addExpense()" class="w-full bg-green-500 hover:bg-green-400 py-4 rounded-2xl text-black font-black text-lg shadow-[0_10px_30px_-10px_rgba(34,197,94,0.5)] active:scale-[0.97] transition-all">
+                        🚀 記錄簽賬
+                    </button>
                 </div>
             </div>
-            <input type="hidden" id="val-cost" value="10199">
-            <input type="hidden" id="val-price" value="0">
 
-            <!-- Block 4: 🧮 極簡 3x4 數字鍵盤 -->
-            <div class="clean-keypad">
-                <button type="button" class="kp-btn" onclick="posType('1')">1</button>
-                <button type="button" class="kp-btn" onclick="posType('2')">2</button>
-                <button type="button" class="kp-btn" onclick="posType('3')">3</button>
-                
-                <button type="button" class="kp-btn" onclick="posType('4')">4</button>
-                <button type="button" class="kp-btn" onclick="posType('5')">5</button>
-                <button type="button" class="kp-btn" onclick="posType('6')">6</button>
-                
-                <button type="button" class="kp-btn" onclick="posType('7')">7</button>
-                <button type="button" class="kp-btn" onclick="posType('8')">8</button>
-                <button type="button" class="kp-btn" onclick="posType('9')">9</button>
-                
-                <button type="button" class="kp-btn kp-action" onclick="posType('00')">00</button>
-                <button type="button" class="kp-btn" onclick="posType('0')">0</button>
-                <button type="button" class="kp-btn kp-del" onclick="posType('DEL')">⌫</button>
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">最近紀錄</h3>
+                <span class="text-[10px] text-gray-600">撳一下項目找數</span>
             </div>
             
-            <button type="button" class="btn" style="margin-bottom:15px;" onclick="posSubmit()">💾 儲存紀錄</button>
-
-            <!-- Block 5: 附加設定 (數量, 信用卡) -->
-            <div style="display:flex; gap:10px; padding:0 5px; border-top: 1px solid var(--border); padding-top:15px;">
-                <div style="flex:1;">
-                    <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">數量</label>
-                    <input type="number" id="pos-qty" value="1" min="1" style="padding:10px; font-size:1rem; text-align:center;">
-                </div>
-                <div style="flex:2;">
-                    <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">付款信用卡 (計算回贈)</label>
-                    <select id="pos-card" style="padding:10px; font-size:1rem;"><option value="">無使用信用卡</option></select>
-                </div>
-            </div>
-            
+            <div id="tx-list"></div>
         </div>
 
-        <!-- 歷史紀錄面板 -->
-        <div class="panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h2 style="margin:0; font-size:1.1rem;">歷史紀錄</h2>
-                <button class="btn-small" onclick="sendTradeReport()" style="background:var(--telegram); color:white; border:none;">📊 TG報數</button>
-            </div>
-            <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom:15px;">
-                <div class="stat-card"><div class="stat-label">今日利潤 (已賣)</div><div class="stat-value" id="trade-today-profit" style="color:var(--primary)">$0</div></div>
-                <div class="stat-card"><div class="stat-label">今日入貨量</div><div class="stat-value" id="trade-today-vol" style="color:var(--text)">0 部</div></div>
-            </div>
-            <input type="text" id="search-trade" class="search-bar" placeholder="🔍 搜尋店舖、型號..." oninput="renderTrading()">
-            <div id="trade-list"></div>
-        </div>
-    </div>
-
-    <!-- 📑 Tab: Analysis -->
-    <div id="tab-analysis" class="tab-content">
-        <div class="panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; font-size:1.1rem;">月度支出分析</h2>
-                <input type="month" id="analysis-month" style="width:auto; padding:5px;" onchange="renderCharts()">
-            </div>
-            <div style="margin-bottom:30px;"><div class="chart-container"><canvas id="chart-cards"></canvas></div></div>
-            <div><div class="chart-container"><canvas id="chart-daily"></canvas></div></div>
-        </div>
-    </div>
-</div>
-
-<div id="main-fab"><button class="fab" onclick="openModal('transaction')">+</button></div>
-
-<!-- ================= Modals ================= -->
-
-<div id="modal-menu" class="modal-overlay">
-    <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">×</button>
-        <h2>功能選單</h2>
-        <div class="menu-grid">
-            <div class="menu-item" onclick="openMenuTarget('category')"><div class="menu-icon">📂</div><div class="menu-label">自訂類別</div></div>
-            <div class="menu-item" onclick="openMenuTarget('data')"><div class="menu-icon">☁️</div><div class="menu-label">備份與同步</div></div>
-            <div class="menu-item" onclick="openMenuTarget('settings')"><div class="menu-icon">⚙️</div><div class="menu-label">系統設定</div></div>
-            <div class="menu-item" onclick="toggleTheme(); closeModals();"><div class="menu-icon">🌗</div><div class="menu-label">切換模式</div></div>
-        </div>
-    </div>
-</div>
-
-<!-- 一般記帳 Modal -->
-<div id="modal-transaction" class="modal-overlay">
-    <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">×</button>
-        <h2 id="tx-modal-title" style="margin-top:0;">新增紀錄</h2>
-        <div class="type-toggle">
-            <div class="type-option active expense" id="type-expense" onclick="setTxType('expense')">💸 支出</div>
-            <div class="type-option" id="type-income" onclick="setTxType('income')">💰 收入</div>
-            <div class="type-option" id="type-repayment" onclick="setTxType('repayment')">💳 還款</div>
-        </div>
-        <form id="tx-form" onsubmit="addTransaction(event)">
-            <input type="hidden" id="tx-type" value="expense">
-            <input type="hidden" id="tx-id">
-            
-            <div class="form-group" style="background:var(--surface-hover); border:1px solid var(--border); border-radius:12px; padding:15px; margin-bottom:20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                    <label style="margin:0;">金額 (HKD)</label>
+        <!-- Tab: Toolbox (工具箱) -->
+        <div id="tab-tools" class="tab-content hidden">
+            <h2 class="text-xl font-black mb-6 flex items-center gap-2 px-2">
+                <i class="fas fa-toolbox text-blue-500"></i> 百寶箱
+            </h2>
+            <div class="space-y-4">
+                <div class="p-2 bg-blue-500/10 rounded-xl mb-4">
+                    <p class="text-[10px] text-blue-400 font-bold px-2">銀行熱線 (一撳即撥)</p>
                 </div>
-                <input type="text" id="tx-amount" class="calc-input active-calc" readonly required value="0" style="background:transparent; border:none; font-size:2.2rem; margin-bottom:10px; width:100%;">
-                
-                <div class="clean-keypad">
-                    <button type="button" class="kp-btn" onclick="calcTxPress('1')">1</button>
-                    <button type="button" class="kp-btn" onclick="calcTxPress('2')">2</button>
-                    <button type="button" class="kp-btn" onclick="calcTxPress('3')">3</button>
-                    
-                    <button type="button" class="kp-btn" onclick="calcTxPress('4')">4</button>
-                    <button type="button" class="kp-btn" onclick="calcTxPress('5')">5</button>
-                    <button type="button" class="kp-btn" onclick="calcTxPress('6')">6</button>
-                    
-                    <button type="button" class="kp-btn" onclick="calcTxPress('7')">7</button>
-                    <button type="button" class="kp-btn" onclick="calcTxPress('8')">8</button>
-                    <button type="button" class="kp-btn" onclick="calcTxPress('9')">9</button>
-                    
-                    <button type="button" class="kp-btn kp-action" onclick="calcTxPress('.')">.</button>
-                    <button type="button" class="kp-btn" onclick="calcTxPress('0')">0</button>
-                    <button type="button" class="kp-btn kp-del" onclick="calcTxPress('DEL')">⌫</button>
+                <div class="grid grid-cols-1 gap-3">
+                    <a href="tel:22333000" class="bg-gray-800/40 p-5 rounded-2xl flex justify-between items-center border border-white/5 hover:bg-gray-800/60 transition-all group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 font-bold">H</div>
+                            <div>
+                                <div class="font-bold text-white">滙豐 HSBC</div>
+                                <div class="text-[10px] text-gray-500">卓越理財熱線</div>
+                            </div>
+                        </div>
+                        <i class="fas fa-phone text-green-500 group-hover:scale-125 transition-transform"></i>
+                    </a>
+                    <a href="tel:28220228" class="bg-gray-800/40 p-5 rounded-2xl flex justify-between items-center border border-white/5 hover:bg-gray-800/60 transition-all group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-red-700/20 flex items-center justify-center text-red-700 font-bold">B</div>
+                            <div>
+                                <div class="font-bold text-white">中銀 BOC</div>
+                                <div class="text-[10px] text-gray-500">信用卡客服</div>
+                            </div>
+                        </div>
+                        <i class="fas fa-phone text-green-500 group-hover:scale-125 transition-transform"></i>
+                    </a>
+                    <div class="h-px bg-white/5 my-4"></div>
+                    <p class="text-[10px] text-blue-400 font-bold px-2 mb-2">常用登記 Link</p>
+                    <a href="https://www.redhotoffers.hsbc.com.hk/tc/latest-offers/reward-plus/registration/" target="_blank" class="bg-gray-800/40 p-5 rounded-2xl flex justify-between items-center border border-white/5 hover:bg-gray-800/60 transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-white"><i class="fas fa-link"></i></div>
+                            <div class="font-bold text-white">HSBC Reward+ 登記頁</div>
+                        </div>
+                        <i class="fas fa-external-link-alt text-gray-600"></i>
+                    </a>
                 </div>
-                <button type="submit" class="btn" id="btn-submit">💾 儲存記帳</button>
             </div>
-            
-            <div class="form-group" id="group-category"><label>類別</label><select id="tx-category" required></select></div>
-            <div class="form-group" id="group-card"><label>選擇信用卡</label><select id="tx-card" onchange="updateCardHint()"></select><div id="card-hint" style="font-size:0.8rem; color:var(--primary); margin-top:5px; display:none;"></div></div>
-            <div class="form-group"><label>描述</label><input type="text" id="tx-desc" required></div>
-            <div class="form-group"><label>日期</label><input type="datetime-local" id="tx-date" required></div>
-        </form>
-    </div>
-</div>
+        </div>
+
+        <!-- Tab: Settings (設定) -->
+        <div id="tab-settings" class="tab-content hidden">
+             <div class="bg-gray-800/40 p-6 rounded-3xl border border-white/5 text-center">
+                 <i class="fas fa-cloud-check text-4xl text-green-500 mb-4"></i>
+                 <h3 class="font-bold text-lg">雲端同步狀態</h3>
+                 <p class="text-xs text-gray-500 mt-2">所有數據會自動加密並上傳至 Firebase 雲端資料庫。更換裝置只需登入 Google 即可同步。</p>
+                 <button onclick="auth.signOut().then(()=>location.reload())" class="mt-6 text-xs text-red-500 border border-red-500/30 px-4 py-2 rounded-xl">登出帳號</button>
+             </div>
+        </div>
+    </main>
+
+    <!-- Navigation Bar -->
+    <nav class="fixed bottom-0 w-full bg-gray-900/90 backdrop-blur-2xl border-t border-white/5 flex justify-around items-center px-4 safe-bottom z-50">
+        <button onclick="switchTab('expense')" class="nav-item text-green-400 bg-gray-800/50 p-3 rounded-2xl transition-all flex flex-col items-center min-w-[64px]">
+            <i class="fas fa-receipt text-lg"></i>
+            <span class="text-[9px] mt-1 font-black uppercase">記帳</span>
+        </button>
+        <button onclick="switchTab('cards')" class="nav-item text-gray-600 p-3 rounded-2xl transition-all flex flex-col items-center min-w-[64px]">
+            <i class="fas fa-wallet text-lg"></i>
+            <span class="text-[9px] mt-1 font-black uppercase">卡包</span>
+        </button>
+        <button onclick="switchTab('tools')" class="nav-item text-gray-600 p-3 rounded-2xl transition-all flex flex-col items-center min-w-[64px]">
+            <i class="fas fa-layer-group text-lg"></i>
+            <span class="text-[9px] mt-1 font-black uppercase">工具</span>
+        </button>
+        <button onclick="switchTab('settings')" class="nav-item text-gray-600 p-3 rounded-2xl transition-all flex flex-col items-center min-w-[64px]">
+            <i class="fas fa-fingerprint text-lg"></i>
+            <span class="text-[9px] mt-1 font-black uppercase">我的</span>
+        </button>
+    </nav>
 
-<div id="modal-category" class="modal-overlay">
-    <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">×</button>
-        <h2 style="margin-top:0;">📂 自訂收支類別</h2>
-        <div class="type-toggle"><div class="type-option active expense" id="cat-type-expense" onclick="switchCatType('expense')">支出</div><div class="type-option" id="cat-type-income" onclick="switchCatType('income')">收入</div></div>
-        <div id="category-list" style="margin-bottom:15px; max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;"></div>
-        <form onsubmit="addCategory(event)"><div style="display:flex; gap:10px;"><input type="text" id="new-category-name" placeholder="新類別" required style="flex:1;"><button type="submit" class="btn-small" style="background:var(--primary); color:#fff;">新增</button></div></form>
-    </div>
-</div>
-
-<!-- 信用卡 新增/編輯 Modal -->
-<div id="modal-card" class="modal-overlay">
-    <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()">×</button>
-        <h2 id="card-modal-title">新增信用卡</h2>
-        <form id="card-form" onsubmit="addCard(event)">
-            <input type="hidden" id="card-id">
-            <div class="form-group"><label>卡片名稱</label><input type="text" id="card-name" required></div>
-            <div class="form-group"><label>回贈比率 (%)</label><input type="number" id="card-percent" step="0.1" required></div>
-            <div class="form-group"><label>簽賬上限 (留空為無限)</label><input type="number" id="card-cap"></div>
-            <div class="form-group"><label>備註</label><input type="text" id="card-note"></div>
-            <button type="submit" class="btn">儲存卡片</button>
-        </form>
-    </div>
-</div>
-
-<div id="modal-data" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2 style="margin-top:0;">☁️ 備份與同步</h2><button class="btn" onclick="exportData('json')" style="background:#ff9f43; margin-bottom:10px;">💾 下載備份 (JSON)</button><button class="btn" onclick="exportData('csv')" style="background:#4facfe; margin-bottom:10px;">📊 匯出 Excel (CSV)</button><button class="btn" style="background:#333; border:1px solid #666; margin-bottom:20px;" onclick="triggerImport()">📂 還原備份</button><input type="file" id="file-input" accept=".json" onchange="importData(this)" style="display:none;"><button class="btn-small" onclick="resetData()" style="color:var(--danger); border-color:var(--danger); width:100%;">🔥 重置資料 (清空)</button></div></div>
-<div id="modal-settings" class="modal-overlay"><div class="modal-content"><button class="close-modal" onclick="closeModals()">×</button><h2>⚙️ 設定</h2><div class="form-group"><label>Telegram Bot Token</label><input type="password" id="tg-token" placeholder="Bot Token" onchange="saveTGSettings()"></div><div class="form-group"><label>Telegram Chat ID</label><input type="text" id="tg-chatid" placeholder="Chat ID" onchange="saveTGSettings()"></div><div class="form-group"><label><input type="checkbox" id="setting-tg-auto" onchange="saveTGSettings()" style="width:auto; margin-right:8px;"> 開啟 TG 自動通知</label></div><button class="btn-small" onclick="testTG()" style="width:100%;">測試發送</button></div></div>
-
-<div id="error-console"></div>
-<div id="toast"></div>
-
-<script>
-    // --- 防崩潰系統 ---
-    window.onerror = function(msg, url, line) {
-        const div = document.getElementById('error-console');
-        if(div) { div.style.display = 'block'; div.innerHTML += `🔴 Error: ${msg} <br>Line: ${line}`; }
-        return false;
-    };
-
-    // --- 資料庫與設定 ---
-    const DB_KEY = 'rebate_bro_data_v2';
-    const THEME_KEY = 'rebate_bro_theme';
-    
-    const TRADE_SOURCES = ['AOS (官網)', 'APU (店取)', '百老匯', '豐澤', '友和', '蘇寧', '電器幫', 'CMHK', 'CSL', 'Smartone', '3HK', '中原', '1010'];
-    const TRADE_SHOPS = ['日韓', 'ITRADE', 'G79', '雪球', 'YY', '誠信', '萬通', '鵬程', 'JK', 'BOBO']; 
-    
-    const IPHONE_PRICES = { 'Pro': { '256GB': 9399, '512GB': 11099, '1TB': 12799 }, 'Pro Max': { '256GB': 10199, '512GB': 11899, '1TB': 13599, '2TB': 16999 } };
-    const DEFAULT_CATEGORIES = { expense: ['食飯', '八達通增值', '購物', '娛樂', '雜費', '其他', '固定開支'], income: ['薪金', '賣野', '投資', '其他'], repayment: ['信用卡還款'] };
-    
-    const PRESET_CARDS = [ 
-        { name: '現金/八達通', cap: 0, percent: 0, note: '無回贈' }, 
-        { name: '信銀 Motion', cap: 3600, percent: 6, note: '餐飲/網購6%' },
-        { name: 'AEON WAKUWAKU', cap: 5000, percent: 6, note: '網購6%' },
-        { name: '恒生 MMPOWER', cap: 10000, percent: 5, note: '自選類別5%' },
-        { name: '中銀 Chill', cap: 3260, percent: 5, note: '影視/快餐5%' },
-        { name: '滙豐 Red 卡', cap: 12500, percent: 4, note: '網購4%' },
-        { name: '富邦 iN Visa', cap: 3750, percent: 8, note: '指定類別8%' },
-        { name: '安信 EarnMORE', cap: 150000, percent: 2, note: '全城2%' }
-    ];
-
-    let state = { transactions: [], cards: [], trades: [], categories: null, settings: {} };
-    let pieChart = null, barChart = null, currentCatEditType = 'expense';
-
-    // --- 安全執行工具 ---
-    function safeEval(expr) {
-        try { let res = new Function('return ' + expr)(); return isFinite(res) ? Math.round(res * 100) / 100 : 0; } catch(e) { return 0; }
-    }
-
-    // --- 🧮 內建計算機邏輯 (普通記帳) ---
-    function calcTxPress(key) {
-        const input = document.getElementById('tx-amount');
-        if (!input) return;
-
-        let current = input.value;
-        if (current === '0' && key !== '.') current = '';
-        
-        if (key === 'DEL') { 
-            current = current.slice(0, -1); 
-            if(current === '') current = '0';
-        } else if (key === '.' && current.includes('.')) {
-            // do nothing
-        } else {
-            current += key;
-        }
-
-        if (current.length > 12) current = current.slice(0, 12);
-        
-        if (current !== '0' && current.startsWith('0') && !current.startsWith('0.')) {
-            current = current.replace(/^0+/, '');
-            if (current === '') current = '0';
-        }
-        if (current === '.') current = '0.';
-
-        input.value = current;
-    }
-
-    // --- 🚀 POS 炒賣 UI 核心狀態與邏輯 ---
-    let posState = {
-        status: 'pending',
-        shop: '日韓',
-        cond: '原封',
-        color: '橙', 
-        model: 'Pro Max',
-        cap: '256GB',
-        target: 'price', 
-        priceStr: '0',
-        costStr: '10199'
-    };
-
-    function updatePosHint() {
-        const hint = document.getElementById('pos-hint');
-        let shopName = posState.shop === '自訂' ? document.getElementById('pos-shop-custom').value : posState.shop;
-        if(!shopName) shopName = '未選擇店舖';
-        if(hint) hint.innerText = `${shopName} | ${posState.cond}${posState.model === 'Pro Max' ? '大' : '細'}${posState.color}${posState.cap}`;
-    }
-
-    function setPosVal(type, val, el) {
-        try {
-            posState[type] = val;
-            
-            if (type === 'status') {
-                const grid = document.getElementById('pos-status');
-                if(grid) Array.from(grid.children).forEach(c => c.classList.remove('active-status'));
-                if(el) el.classList.add('active-status');
-            } else {
-                const containerId = `pos-grp-${type}`;
-                const grid = document.getElementById(containerId);
-                if(grid) Array.from(grid.children).forEach(c => c.classList.remove('active'));
-                if(el) el.classList.add('active');
-            }
-
-            // Auto Cost calculation
-            if(type === 'model' || type === 'cap') {
-                const p = IPHONE_PRICES[posState.model];
-                if(p && p[posState.cap]) {
-                    posState.costStr = p[posState.cap].toString();
-                    const costEl = document.getElementById('pos-val-cost');
-                    if(costEl) costEl.innerText = posState.costStr;
-                }
-            }
-
-            updatePosHint();
-        } catch(err) {
-            console.error('setPosVal error:', err);
-        }
-    }
-    
-    function setPosShop(val, el) {
-        posState.shop = val;
-        const grid = document.getElementById('pos-shops');
-        Array.from(grid.children).forEach(c => c.classList.remove('active-shop', 'active'));
-        el.classList.add('active-shop');
-        
-        const customInput = document.getElementById('pos-shop-custom');
-        if(val === '自訂') {
-            customInput.style.display = 'block';
-            customInput.focus();
-        } else {
-            customInput.style.display = 'none';
-        }
-        document.getElementById('pos-shop-val').value = val;
-        updatePosHint();
-    }
-    
-    function togglePosSource() {
-        const sel = document.getElementById('pos-source');
-        const custom = document.getElementById('pos-source-custom');
-        if(sel.value === 'other') { custom.style.display = 'block'; custom.required = true; }
-        else { custom.style.display = 'none'; custom.required = false; }
-    }
-    
-    if(document.getElementById('pos-shop-custom')) {
-        document.getElementById('pos-shop-custom').addEventListener('input', updatePosHint);
-    }
-
-    function posSetTarget(target) {
-        posState.target = target;
-        document.getElementById('pos-box-cost').classList.remove('active');
-        document.getElementById('pos-box-price').classList.remove('active');
-        document.getElementById(`pos-box-${target}`).classList.add('active');
-    }
-
-    function posType(key) {
-        let current = posState.target === 'cost' ? posState.costStr : posState.priceStr;
-        
-        if (current === '0' && key !== 'C' && key !== 'DEL' && key !== '.') current = '';
-        
-        if (key === 'DEL') { 
-            current = current.slice(0, -1);
-            if (current === '') current = '0';
-        }
-        else { current += key; }
-        
-        if (current.length > 10) current = current.slice(0, 10);
-        
-        if (current !== '0' && current.startsWith('0') && !current.startsWith('0.')) {
-            current = current.replace(/^0+/, '');
-            if (current === '') current = '0';
-        }
-
-        if (posState.target === 'cost') {
-            posState.costStr = current;
-            document.getElementById('pos-val-cost').innerText = current;
-        } else {
-            posState.priceStr = current;
-            document.getElementById('pos-val-price').innerText = current;
-        }
-    }
-    
-    function clearPos() {
-        document.getElementById('pos-id').value = '';
-        posState.priceStr = '0';
-        document.getElementById('pos-val-price').innerText = '0';
-        document.getElementById('pos-qty').value = '1';
-        
-        posState.status = 'pending';
-        const pendingBtn = document.getElementById('pos-status').children[0];
-        if (pendingBtn) setPosVal('status', 'pending', pendingBtn);
-        
-        posSetTarget('price');
-        updatePosHint();
-    }
-
-    function posSubmit() {
-        try {
-            const idStr = document.getElementById('pos-id').value;
-            const cost = parseFloat(posState.costStr) || 0; 
-            const price = parseFloat(posState.priceStr) || 0; 
-            const qty = parseInt(document.getElementById('pos-qty').value) || 1; 
-            const cid = document.getElementById('pos-card').value;
-            const status = posState.status || 'pending';
-            
-            let finalSource = document.getElementById('pos-source').value;
-            if(finalSource === 'other') finalSource = document.getElementById('pos-source-custom').value;
-            
-            let finalShop = '';
-            if(status === 'sold') {
-                finalShop = posState.shop;
-                if(finalShop === '自訂') finalShop = document.getElementById('pos-shop-custom').value;
-            }
-
-            const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            const tDate = now.toISOString().slice(0, 16);
-
-            const tData = { 
-                source: finalSource, shop: finalShop, oid: document.getElementById('pos-oid').value || '', 
-                model: posState.model, cap: posState.cap, color: posState.color, 
-                status: status, condition: posState.cond === '原封' ? 'sealed' : 'opened', 
-                cost, price, qty, profit: (price-cost)*qty, cardId: cid, date: tDate 
-            };
-            
-            if (idStr) { 
-                tData.id = parseFloat(idStr); 
-                const idx = state.trades.findIndex(t => t.id === tData.id); 
-                if (idx !== -1) state.trades[idx] = tData; 
-            } else { 
-                tData.id = Date.now(); 
-                state.trades.unshift(tData); 
-                if(state.settings.tgAutoSend) sendTelegramTradeAlert(tData); 
-            }
-            
-            saveData(); renderAll(); clearPos(); showToast('✅ 交易已記錄');
-        } catch(err) { alert("儲存失敗: " + err.message); }
-    }
-
-    function cloneTrade(id) { 
-        editTrade(id); 
-        document.getElementById('pos-id').value = ''; 
-        document.getElementById('pos-oid').value = '';
-        showToast('📋 已載入 (請修改後記帳)'); 
-    }
-
-    function editTrade(id) {
-        const t = state.trades.find(x => x.id === id); if (!t) return; 
-        switchTab('trading'); window.scrollTo({ top: 0, behavior: 'smooth' });
-        
-        document.getElementById('pos-id').value = t.id;
-        
-        const srcS = document.getElementById('pos-source');
-        if(srcS) {
-            if([...srcS.options].some(o=>o.value===t.source)) { 
-                srcS.value=t.source; document.getElementById('pos-source-custom').style.display='none'; 
-            } else { 
-                srcS.value='other'; document.getElementById('pos-source-custom').style.display='block'; document.getElementById('pos-source-custom').value = t.source || ''; 
-            }
-        }
-        
-        document.getElementById('pos-oid').value = t.oid || '';
-
-        const stBtns = document.getElementById('pos-status').children;
-        const stMap = {'pending':'🛒 已訂', 'stock':'📦 現貨', 'sold':'💰 已賣', 'cut':'❌ Cut單'};
-        Array.from(stBtns).forEach(b => { if(b.innerText === stMap[t.status]) setPosVal('status', t.status, b); });
-
-        if (t.status === 'sold' && t.shop) {
-            const shopBtns = document.getElementById('pos-shops').children;
-            let shopFound = false;
-            Array.from(shopBtns).forEach(b => {
-                if(b.innerText === t.shop) { setPosShop(t.shop, b); shopFound = true; }
-            });
-            if(!shopFound) {
-                const customBtn = Array.from(shopBtns).find(b => b.innerText.includes('自訂'));
-                if(customBtn) setPosShop('自訂', customBtn);
-                document.getElementById('pos-shop-custom').value = t.shop;
-            }
-        }
-
-        simulatePosClick('pos-grp-cond', 'cond', t.condition === 'opened' ? '開封' : '原封');
-        simulatePosClick('pos-grp-model', 'model', t.model === 'Pro Max' ? '大' : '細');
-        simulatePosClick('pos-grp-color', 'color', t.color);
-        simulatePosClick('pos-grp-cap', 'cap', t.cap.replace('GB',''));
-
-        posState.costStr = t.cost.toString();
-        posState.priceStr = t.price.toString();
-        document.getElementById('pos-val-cost').innerText = t.cost;
-        document.getElementById('pos-val-price').innerText = t.price;
-        
-        document.getElementById('pos-qty').value = t.qty;
-        document.getElementById('pos-card').value = t.cardId || "";
-        
-        updatePosHint();
-    }
-    
-    function simulatePosClick(containerId, type, val) {
-        const container = document.getElementById(containerId);
-        if(!container) return;
-        Array.from(container.children).forEach(b => {
-            if(b.innerText.includes(val) || (val==='Pro Max'&&b.innerText==='大機') || (val==='Pro'&&b.innerText==='細機')) {
-                setPosVal(type, val, b);
-            }
-        });
-    }
-
-    // ==========================================
-    // Core App Logic
-    // ==========================================
-    function applyTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        const btn = document.getElementById('btn-theme');
-        if (btn) btn.innerText = theme === 'dark' ? '☀️' : '🌙';
-        if (document.getElementById('tab-analysis') && document.getElementById('tab-analysis').classList.contains('active')) {
-            renderCharts();
-        }
-    }
-
-    function toggleTheme() {
-        const target = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        localStorage.setItem(THEME_KEY, target);
-        applyTheme(target);
-    }
-
-    function setDefaultTime() {
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        const ds = now.toISOString().slice(0, 16);
-        if (document.getElementById('tx-date')) document.getElementById('tx-date').value = ds;
-    }
-
-    function init() {
-        try {
-            const stored = localStorage.getItem(DB_KEY);
-            if (stored) state = JSON.parse(stored);
-            
-            if(!state.transactions) state.transactions = [];
-            if(!state.cards) state.cards = [];
-            if(!state.trades) state.trades = [];
-            if(!state.settings) state.settings = { tgAutoSend: false };
-            if(!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-
-            let needsSave = false;
-            state.cards.forEach(c => {
-                if (c.percent === undefined && c.rate !== undefined) { c.percent = c.rate; needsSave = true; }
-                if (c.percent === undefined) { c.percent = 0; needsSave = true; }
-                
-                // 強制修復 WeWa 卡並自動儲存
-                if (c.name.toLowerCase().includes('wewa') && c.percent === 10) {
-                    c.percent = 0;
-                    c.note = '回贈已完結 (按 ✎ 編輯修改)';
-                    needsSave = true;
-                }
-            });
-            if (needsSave) saveData();
-
-            const sourceS = document.getElementById('pos-source');
-            if(sourceS) { 
-                sourceS.innerHTML = '<option value="">-- 選擇 --</option>';
-                TRADE_SOURCES.forEach(src => sourceS.add(new Option(src, src)));
-                sourceS.add(new Option('其他 (手動輸入)', 'other'));
-            }
-
-            if(document.getElementById('tg-token')) document.getElementById('tg-token').value = state.settings.tgToken || '';
-            if(document.getElementById('tg-chatid')) document.getElementById('tg-chatid').value = state.settings.tgChatId || '';
-            if(document.getElementById('setting-tg-auto')) document.getElementById('setting-tg-auto').checked = state.settings.tgAutoSend || false;
-
-            applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
-            setDefaultTime();
-            if(document.getElementById('analysis-month')) document.getElementById('analysis-month').value = new Date().toISOString().slice(0, 7);
-            
-            setTxType('expense');
-            posSetTarget('price');
-            updatePosHint();
-            renderAll();
-        } catch (err) { console.error(err); }
-    }
-
-    function saveData() { localStorage.setItem(DB_KEY, JSON.stringify(state)); }
-    function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.className = 'show'; setTimeout(()=>t.className='', 2500); }
-
-    function renderAll() {
-        renderCards();
-        renderTransactions();
-        renderTrading();
-        updateFormOptions();
-        calculateStats();
-        if (document.getElementById('tab-analysis').classList.contains('active')) renderCharts();
-    }
-
-    function renderCards() {
-        const l = document.getElementById('card-list'); if(!l) return;
-        l.innerHTML = '';
-        state.cards.forEach(card => {
-            const capText = card.cap > 0 ? ` / $${card.cap.toLocaleString()}` : '';
-            const rateVal = card.percent !== undefined ? card.percent : 0;
-            l.innerHTML += `
-            <div class="credit-card">
-                <div style="display:flex; justify-content:space-between; align-items:start;">
-                    <div>
-                        <div class="card-name">${card.name}</div>
-                        <div class="card-info" style="color:var(--primary); font-weight:bold;">${rateVal}% 回贈</div>
-                        <div class="card-info">${card.note||''}</div>
-                    </div>
-                    <div>
-                        <button class="btn-text" onclick="editCard(${card.id})" style="color:var(--income); font-size:1.2rem; display:inline-block; margin-right:8px;">✎</button>
-                        <button class="btn-text" onclick="deleteCard(${card.id})" style="color:rgba(255,255,255,0.7); font-size:1.2rem; display:inline-block;">&times;</button>
-                    </div>
-                </div>
-                <div class="progress-bar"><div id="prog-${card.id}" class="progress-fill"></div></div>
-                <div class="card-info"><span>本月已簽: <span id="spent-${card.id}">$0</span>${capText}</span></div>
-            </div>`;
-        });
-        if(state.cards.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">未有信用卡</div>';
-    }
-
-    function renderTransactions() {
-        const l = document.getElementById('transaction-list'); if(!l) return;
-        l.innerHTML = '';
-        let sorted = [...(state.transactions || [])].sort((a,b) => { const dA = a.date?new Date(a.date):new Date(0); const dB = b.date?new Date(b.date):new Date(0); return dB - dA; });
-        const q = document.getElementById('search-tx') ? document.getElementById('search-tx').value.toLowerCase() : '';
-        if(q) sorted = sorted.filter(tx => (tx.desc||'').toLowerCase().includes(q) || (tx.category||'').toLowerCase().includes(q));
-        
-        sorted.forEach(tx => {
-            const card = state.cards.find(c => c.id == tx.cardId); const cName = card ? card.name : '未知卡片';
-            const color = tx.type === 'income' ? 'var(--income)' : (tx.type === 'repayment' ? 'var(--repay)' : 'var(--text)');
-            const sign = tx.type === 'income' ? '+' : (tx.type === 'repayment' ? '-' : '');
-            const dStr = tx.date ? tx.date.replace('T', ' ') : '';
-            l.innerHTML += `<div class="list-item"><div class="item-main" onclick="editTransaction(${tx.id})" style="cursor:pointer;"><div class="item-title"><span class="cat-tag">${tx.category||'其他'}</span> ${tx.desc||''}</div><div class="item-sub">${dStr} • ${cName}</div></div><div style="text-align:right"><div class="item-amount" style="color:${color}">${sign}$${Number(tx.amount).toLocaleString()}</div><button class="btn-text" style="font-size:0.75rem;" onclick="deleteTransaction(${tx.id})">刪除</button></div></div>`;
-        });
-        if(sorted.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">無紀錄</div>';
-    }
-
-    function renderTrading() {
-        const l = document.getElementById('trade-list'); if(!l) return;
-        l.innerHTML = '';
-        let sortedTrades = [...(state.trades || [])].sort((a,b) => { const dA = a.date?new Date(a.date):new Date(0); const dB = b.date?new Date(b.date):new Date(0); return dB - dA; });
-        const q = document.getElementById('search-trade') ? document.getElementById('search-trade').value.toLowerCase() : '';
-        if(q) sortedTrades = sortedTrades.filter(t => (t.model||'').toLowerCase().includes(q) || (t.shop||'').toLowerCase().includes(q) || (t.source||'').toLowerCase().includes(q));
-
-        let todayProfit = 0, todayVol = 0; const nowMonth = new Date().toISOString().slice(0, 10);
-        sortedTrades.forEach(t => {
-            if (t.date && t.date.slice(0, 10) === nowMonth) { if (t.status !== 'cut') todayVol += (Number(t.qty) || 1); if (t.status === 'sold') todayProfit += (Number(t.profit) || 0); }
-            let sBadge = '', pDisp = '';
-            if (t.status === 'pending') sBadge = '<span class="status-badge status-ordered">已訂</span>';
-            else if (t.status === 'stock') sBadge = '<span class="status-badge status-stock">現貨</span>';
-            else if (t.status === 'cut') sBadge = '<span class="status-badge status-cut">Cut單</span>';
-            else { sBadge = '<span class="status-badge status-sold">已賣</span>' + (t.condition==='opened'?'🔪':''); const pC = t.profit>=0?'profit-pos':'profit-neg'; pDisp = `<span class="${pC}">$${(Number(t.profit)||0).toLocaleString()}</span>`; }
-            
-            const oid = t.oid ? `(${t.oid})` : ''; 
-            const loc = (t.status === 'sold' && t.shop) ? `${t.source||''} ${oid} ➔ ${t.shop}` : `${t.source||''} ${oid}`;
-            const cName = state.cards.find(c => c.id == t.cardId) ? `<span class="cat-tag">💳 ${state.cards.find(c=>c.id==t.cardId).name}</span>` : '';
-            l.innerHTML += `<div class="list-item"><div class="item-main" style="cursor:pointer;" onclick="editTrade(${t.id})"><div class="item-title">${sBadge} ${t.model||''} ${t.cap||''} <span style="font-size:0.75rem; font-weight:normal; margin-left:4px; opacity:0.8;">${t.color||''}</span></div><div class="item-sub">${loc} • ${t.date?t.date.slice(0,10):''} ${cName}</div></div><div style="text-align:right"><div class="item-amount" style="font-size:0.9rem;">x${t.qty||1} ${pDisp}</div><div style="display:flex; justify-content:flex-end;"><button class="btn-text" onclick="cloneTrade(${t.id})" title="複製此單">📋</button><button class="btn-text" onclick="deleteTrade(${t.id})">X</button></div></div></div>`;
-        });
-        
-        if(document.getElementById('trade-today-profit')) document.getElementById('trade-today-profit').innerText = '$' + todayProfit.toLocaleString();
-        if(document.getElementById('trade-today-vol')) document.getElementById('trade-today-vol').innerText = todayVol + ' 部';
-        if(sortedTrades.length === 0) l.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">無交易紀錄</div>';
-    }
-
-    function calculateStats() {
-        let spent=0, inc=0, cash=0;
-        const cardSpent = {}; state.cards.forEach(c => cardSpent[c.id]=0);
-        const nowMonth = new Date().toISOString().slice(0, 7);
-
-        (state.transactions || []).forEach(tx => {
-            if(tx.date && tx.date.startsWith(nowMonth)) {
-                const amt = Number(tx.amount) || 0;
-                if(tx.type==='expense') {
-                    spent += amt;
-                    if(tx.cardId && cardSpent[tx.cardId] !== undefined) { cardSpent[tx.cardId] += amt; const c = state.cards.find(x=>x.id==tx.cardId); if(c) cash += (amt * (c.percent||0) / 100); }
-                } else if(tx.type==='income') inc += amt;
-            }
-        });
-        (state.trades || []).forEach(t => {
-            if(t.date && t.date.startsWith(nowMonth) && t.cardId && t.status !== 'cut') {
-                const cst = (Number(t.cost)||0) * (Number(t.qty)||1);
-                if(cardSpent[t.cardId] !== undefined) { cardSpent[t.cardId] += cst; const c = state.cards.find(x=>x.id==t.cardId); if(c) cash += (cst * (c.percent||0) / 100); }
-            }
-        });
-
-        if(document.getElementById('total-spent')) document.getElementById('total-spent').innerText = '$'+spent.toLocaleString();
-        if(document.getElementById('total-income')) document.getElementById('total-income').innerText = '$'+inc.toLocaleString();
-        if(document.getElementById('total-cashback')) document.getElementById('total-cashback').innerText = '$'+Math.round(cash).toLocaleString();
-        if(document.getElementById('tx-count')) document.getElementById('tx-count').innerText = (state.transactions || []).length + ' 筆';
-
-        state.cards.forEach(c => {
-             const s = cardSpent[c.id] || 0;
-             if(document.getElementById('spent-'+c.id)) document.getElementById('spent-'+c.id).innerText = '$'+s.toLocaleString();
-             const elBar = document.getElementById('prog-'+c.id); 
-             if(elBar && c.cap > 0) {
-                 const pct = Math.min((s/c.cap)*100, 100);
-                 elBar.style.width = pct+'%';
-                 elBar.style.backgroundColor = pct>=100 ? 'var(--danger)' : 'var(--primary)';
-             }
-        });
-    }
-
-    // --- 圖表 ---
-    function renderCharts() {
-        const elCards = document.getElementById('chart-cards'); const elDaily = document.getElementById('chart-daily');
-        if(!elCards || !elDaily) return;
-        const style = getComputedStyle(document.body); const textColor = style.getPropertyValue('--chart-text').trim();
-        const colors = ['#00d26a', '#4facfe', '#ff6b6b', '#fca5a5', '#ffd93d', '#a855f7'];
-        const m = document.getElementById('analysis-month').value; if(!m) return;
-        
-        let txs = (state.transactions || []).filter(tx => tx.date && tx.date.startsWith(m) && tx.type === 'expense');
-        let tradeTxs = (state.trades || []).filter(t => t.date && t.date.startsWith(m) && t.status !== 'cut');
-        const cardTotals = {}; state.cards.forEach(c => cardTotals[c.name] = 0); 
-        txs.forEach(tx => { const card = state.cards.find(c => c.id == tx.cardId); if(card) cardTotals[card.name] += (Number(tx.amount)||0); });
-        tradeTxs.forEach(t => { const card = state.cards.find(c => c.id == t.cardId); if(card) cardTotals[card.name] += ((Number(t.cost)||0)*(Number(t.qty)||1)); });
-        
-        const pieL = Object.keys(cardTotals).filter(k => cardTotals[k] > 0); const pieD = pieL.map(k => cardTotals[k]);
-        const dateParts = m.split('-'); if(dateParts.length < 2) return;
-        const days = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]), 0).getDate();
-        const daily = new Array(days).fill(0);
-        
-        txs.forEach(tx => { const dIdx = parseInt(tx.date.slice(8, 10)) - 1; if(!isNaN(dIdx) && dIdx >= 0 && dIdx < days) daily[dIdx] += (Number(tx.amount)||0); });
-        tradeTxs.forEach(t => { const dIdx = parseInt(t.date.slice(8, 10)) - 1; if(!isNaN(dIdx) && dIdx >= 0 && dIdx < days) daily[dIdx] += ((Number(t.cost)||0)*(Number(t.qty)||1)); });
-        const barL = Array.from({length: days}, (_, i) => (i + 1).toString());
-
-        if(pieChart) pieChart.destroy(); if(barChart) barChart.destroy();
-        pieChart = new Chart(elCards.getContext('2d'), { type: 'doughnut', data: { labels: pieL, datasets: [{ data: pieD, backgroundColor: colors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor } } } } });
-        barChart = new Chart(elDaily.getContext('2d'), { type: 'bar', data: { labels: barL, datasets: [{ label: '支出', data: daily, backgroundColor: '#ff4d4d', borderRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: '#333' } } }, plugins: { legend: { display: false } } } });
-    }
-
-    // --- 視窗及操作管理 ---
-    function openModal(type) {
-        const m = document.getElementById('modal-'+type); if(!m) return; m.classList.add('active');
-        if(type==='transaction') { document.getElementById('tx-form').reset(); document.getElementById('tx-id').value=''; setTxType('expense'); setDefaultTime(); document.getElementById('tx-amount').value=''; }
-        else if(type==='card') { document.getElementById('card-form').reset(); document.getElementById('card-id').value=''; document.getElementById('card-modal-title').innerText='新增信用卡'; }
-        else if(type==='category') renderCategories();
-    }
-    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
-    function openMenuTarget(t) { closeModals(); setTimeout(()=>openModal(t), 50); }
-
-    function setTxType(t) {
-        const txType = document.getElementById('tx-type'); if(txType) txType.value = t;
-        document.querySelectorAll('.type-option').forEach(e=>e.classList.remove('active','expense','income','repayment'));
-        const activeBtn = document.getElementById('type-'+t); if(activeBtn) activeBtn.classList.add('active', t);
-        const catS = document.getElementById('tx-category'); 
-        if(catS) { catS.innerHTML=''; const safeCats = (state.categories && state.categories[t]) ? state.categories[t] : DEFAULT_CATEGORIES[t]; safeCats.forEach(c=>catS.add(new Option(c,c))); }
-        const groupCard = document.getElementById('group-card'); if(groupCard) groupCard.style.display = t==='income'?'none':'block';
-        updateCardHint();
-    }
-
-    function switchCatType(t) {
-        currentCatEditType = t;
-        document.getElementById('cat-type-expense').classList.remove('active', 'expense');
-        document.getElementById('cat-type-income').classList.remove('active', 'income');
-        document.getElementById('cat-type-'+t).classList.add('active', t);
-        renderCategories();
-    }
-
-    function renderCategories() {
-        const l = document.getElementById('category-list'); if(!l) return; l.innerHTML = '';
-        const cats = (state.categories && state.categories[currentCatEditType]) ? state.categories[currentCatEditType] : [];
-        cats.forEach((c, idx) => { l.innerHTML += `<div class="cat-list-item"><span>${c}</span><button class="btn-text" style="color:var(--danger)" onclick="deleteCategory('${currentCatEditType}', ${idx})">X</button></div>`; });
-    }
-
-    function addCategory(e) {
-        e.preventDefault(); const v = document.getElementById('new-category-name').value.trim();
-        if(v && state.categories && state.categories[currentCatEditType] && !state.categories[currentCatEditType].includes(v)) {
-            state.categories[currentCatEditType].push(v); saveData(); renderCategories(); document.getElementById('new-category-name').value = '';
-            if(document.getElementById('tx-type').value === currentCatEditType) setTxType(currentCatEditType);
-        }
-    }
-    function deleteCategory(type, idx) { if(state.categories && state.categories[type]) { state.categories[type].splice(idx, 1); saveData(); renderCategories(); if(document.getElementById('tx-type').value === type) setTxType(type); } }
-
-    function updateCardHint() {
-        const select = document.getElementById('tx-card'); const hintBox = document.getElementById('card-hint'); const txType = document.getElementById('tx-type');
-        if(!select || !hintBox || !txType) return;
-        const c = state.cards.find(x=>x.id==select.value);
-        if(c && txType.value === 'expense') { hintBox.style.display = 'block'; const r = c.percent !== undefined ? c.percent : 0; hintBox.innerHTML = `回贈: ${r}%`; } 
-        else { hintBox.style.display = 'none'; }
-    }
-    
-    function updateFormOptions() {
-        const s = document.getElementById('tx-card'); if(s) { s.innerHTML=''; state.cards.forEach(c => s.add(new Option(c.name, c.id))); }
-        const ts = document.getElementById('pos-card'); if(ts) { ts.innerHTML='<option value="">無使用信用卡</option>'; state.cards.forEach(c => ts.add(new Option(c.name, c.id))); }
-        updateCardHint();
-    }
-
-    function switchTab(name) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        const tabBtns = document.querySelectorAll('.tab');
-        if(name==='transactions' && tabBtns[0]) { tabBtns[0].classList.add('active'); document.getElementById('tab-transactions').classList.add('active'); }
-        else if(name==='cards' && tabBtns[1]) { tabBtns[1].classList.add('active'); document.getElementById('tab-cards').classList.add('active'); }
-        else if(name==='trading' && tabBtns[2]) { tabBtns[2].classList.add('active'); document.getElementById('tab-trading').classList.add('active'); renderTrading(); }
-        else if(name==='analysis' && tabBtns[3]) { tabBtns[3].classList.add('active'); document.getElementById('tab-analysis').classList.add('active'); renderCharts(); }
-    }
-
-    // --- 資料寫入操作 ---
-    function addTransaction(e) {
-        e.preventDefault(); 
-        const amount = parseFloat(document.getElementById('tx-amount').value);
-        if (isNaN(amount) || amount <= 0) { alert('請輸入有效金額！'); return; }
-
-        const idStr = document.getElementById('tx-id').value;
-        const tx = { id: idStr ? parseFloat(idStr) : Date.now(), type: document.getElementById('tx-type').value, amount, category: document.getElementById('tx-category').value, cardId: document.getElementById('tx-card') ? document.getElementById('tx-card').value : null, desc: document.getElementById('tx-desc').value, date: document.getElementById('tx-date').value };
-        if(tx.type === 'repayment') tx.category = '信用卡還款';
-
-        if(idStr) { const idx = state.transactions.findIndex(t=>t.id==tx.id); if(idx!==-1) state.transactions[idx] = tx; } 
-        else { state.transactions.unshift(tx); if(state.settings && state.settings.tgAutoSend) sendTelegramTx(tx); }
-        saveData(); renderAll(); closeModals();
-    }
-
-    function editTransaction(id) {
-        const tx = state.transactions.find(t=>t.id==id); if(!tx) return; openModal('transaction'); document.getElementById('tx-id').value=tx.id; setTxType(tx.type || 'expense');
-        document.getElementById('tx-amount').value=tx.amount; document.getElementById('tx-desc').value=tx.desc; document.getElementById('tx-date').value=tx.date;
-        if(tx.cardId && document.getElementById('tx-card')) document.getElementById('tx-card').value=tx.cardId;
-    }
-    
-    function deleteTransaction(id) { if(confirm('確定刪除紀錄?')) { state.transactions=state.transactions.filter(t=>t.id!==id); saveData(); renderAll(); } }
-    
-    function addCard(e) { 
-        e.preventDefault(); 
-        const idStr = document.getElementById('card-id').value;
-        const capVal = document.getElementById('card-cap').value;
-        const newCard = { 
-            id: idStr ? parseFloat(idStr) : Date.now(), 
-            name: document.getElementById('card-name').value, 
-            percent: parseFloat(document.getElementById('card-percent').value)||0, 
-            cap: capVal ? parseFloat(capVal) : 0, 
-            note: document.getElementById('card-note').value 
-        };
-        
-        if (idStr) {
-            const idx = state.cards.findIndex(c => c.id === newCard.id);
-            if (idx !== -1) state.cards[idx] = newCard;
-        } else {
-            state.cards.push(newCard); 
-        }
-        
-        saveData(); renderAll(); closeModals(); e.target.reset(); document.getElementById('card-id').value = '';
-        if(state.cards.length === 1) updateFormOptions(); 
-    }
-    
-    function editCard(id) {
-        const c = state.cards.find(x => x.id === id); if(!c) return;
-        openModal('card');
-        document.getElementById('card-modal-title').innerText = '編輯信用卡';
-        document.getElementById('card-id').value = c.id;
-        document.getElementById('card-name').value = c.name;
-        document.getElementById('card-percent').value = c.percent;
-        document.getElementById('card-cap').value = c.cap > 0 ? c.cap : '';
-        document.getElementById('card-note').value = c.note || '';
-    }
-
-    function deleteCard(id) { if(confirm('確定刪除卡片?')) { state.cards=state.cards.filter(c=>c.id!==id); saveData(); renderAll(); } }
-    function deleteTrade(id) { if(confirm('刪除交易?')) { state.trades = state.trades.filter(t=>t.id!==id); saveData(); renderAll(); } }
-
-    function getCardSpending(cardId) {
-        const nowMonth = new Date().toISOString().slice(0, 7); let total = 0;
-        (state.transactions || []).forEach(tx => { if(tx.date && tx.date.startsWith(nowMonth) && tx.cardId == cardId && tx.type === 'expense') total += (Number(tx.amount) || 0); });
-        (state.trades || []).forEach(t => { if(t.date && t.date.startsWith(nowMonth) && t.cardId == cardId && t.status !== 'cut') total += ((Number(t.cost) || 0) * (Number(t.qty) || 1)); });
-        return total;
-    }
-
-    // --- TG Notifications ---
-    function saveTGSettings() { state.settings.tgToken = document.getElementById('tg-token').value; state.settings.tgChatId = document.getElementById('tg-chatid').value; state.settings.tgAutoSend = document.getElementById('setting-tg-auto').checked; saveData(); showToast('✅ 設定已儲存'); }
-    async function sendTGMessage(t, cid, msg) { if (!t || !cid) return; try { await fetch(`https://api.telegram.org/bot${t}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({chat_id:cid, text:msg, parse_mode:'Markdown'}) }); } catch(e) { console.error(e); } }
-    function testTG() { sendTGMessage(state.settings.tgToken, state.settings.tgChatId, '🔔 *回贈哥測試*\n收到這條訊息代表設定成功！'); showToast('發送請求已送出'); }
-
-    function sendTelegramTradeAlert(t) {
-        if(!state.settings.tgToken || !state.settings.tgChatId) return;
-        let cText = "無卡", cLimit = "";
-        if (t.cardId) {
-            const card = state.cards.find(c => c.id == t.cardId);
-            if (card) {
-                cText = card.name; const spent = getCardSpending(card.id);
-                cLimit = `\n📊 *本月累積*: $${spent.toLocaleString()}`;
-                if (card.cap > 0) { cLimit += ` / $${card.cap.toLocaleString()} (${Math.round((spent/card.cap)*100)}%)`; if (spent >= card.cap) cLimit += `\n⚠️ *警告：已爆額！* 🚨`; }
-            }
-        }
-        const mStr = t.model === 'Pro Max' ? '大' : (t.model === 'Pro' ? '細' : t.model);
-        const cStr = t.condition === 'opened' ? '開封' : '原封';
-        let msg = `📱 *新炒賣*\n📦 ${cStr}${mStr}${t.color}${t.cap} x${t.qty}\n💰 成本: $${(t.cost * t.qty).toLocaleString()}\n`;
-        if (t.status === 'sold') msg += `🤝 賣出: ${t.shop} ($${t.price})\n📈 利潤: $${t.profit.toLocaleString()}\n`;
-        else msg += `📌 狀態: ${{'pending':'已訂未取','stock':'現貨在手'}[t.status]||t.status}\n`;
-        msg += `💳 ${cText}${cLimit}`;
-        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
-    }
-    
-    function sendTelegramTx(tx) {
-        if(!state.settings.tgToken || !state.settings.tgChatId) return;
-        const card = state.cards.find(c => c.id == tx.cardId);
-        const cardName = card ? card.name : '現金';
-        const dateStr = tx.date ? tx.date.replace('T', ' ') : '';
-        let msg = `🔔 *新增記賬*\n💰 HKD $${Number(tx.amount).toLocaleString()}\n💳 ${cardName}\n📝 ${tx.desc}\n📂 ${tx.category}`;
-        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg);
-    }
-    
-    function sendTradeReport() {
-        if (!state.settings.tgToken) { alert('請先設定 TG Token'); return; }
-        const filterMonth = document.getElementById('analysis-month') ? document.getElementById('analysis-month').value : new Date().toISOString().slice(0, 7);
-        const sold = (state.trades || []).filter(t => t.status === 'sold' && t.date && t.date.startsWith(filterMonth));
-        if (sold.length === 0) { alert('本月暫無已賣出的交易'); return; }
-        sold.sort((a,b) => new Date(b.date) - new Date(a.date));
-        const rep = {}; let tot = 0;
-        sold.forEach(t => { const d = t.date.slice(0, 10); if(!rep[d]) rep[d] = {}; const sh = t.shop || '其他'; if(!rep[d][sh]) rep[d][sh] = []; rep[d][sh].push(t); tot += (Number(t.profit)||0); });
-        let msg = `📊 *炒賣報告 (${filterMonth})*\n💰 總利潤: $${tot.toLocaleString()}\n------------------\n`;
-        for (const [date, shops] of Object.entries(rep)) {
-            msg += `📅 *${date}*\n`;
-            for (const [shop, items] of Object.entries(shops)) {
-                msg += `🏢 ${shop}\n`; const sum = {};
-                items.forEach(t => {
-                    const key = `${t.condition==='opened'?'開封':'原封'}${t.model==='Pro Max'?'大':'細'}${t.color}${t.cap}`;
-                    if(!sum[key]) sum[key] = {q:0, p:0}; sum[key].q += (Number(t.qty)||1); sum[key].p += (Number(t.profit)||0);
-                });
-                for (const [k, v] of Object.entries(sum)) msg += `- ${k}: ${v.q} (賺$${v.p})\n`;
-            } msg += `\n`;
-        }
-        sendTGMessage(state.settings.tgToken, state.settings.tgChatId, msg); showToast('✅ 報告已發送');
-    }
-
-    // --- Utility / UI Helpers ---
-    function importPresetCards() { if(!confirm('確定匯入最新神卡?')) return; PRESET_CARDS.forEach(p=> { if(p.cap>0 && !state.cards.find(c=>c.name===p.name)) state.cards.push({...p, id: Date.now()+Math.random()}) }); saveData(); renderAll(); showToast('✅ 已匯入'); }
-    function exportData(type) { const str = type==='json' ? JSON.stringify(state) : 'Date,Desc,Amount\n'+state.transactions.map(t=>`${t.date},${t.desc},${t.amount}`).join('\n'); const blob = new Blob([str], {type: type==='json'?'application/json':'text/csv'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backup.'+type; a.click(); }
-    function triggerImport() { const f = document.getElementById('file-input'); if(f) f.click(); }
-    function importData(input) { const reader = new FileReader(); reader.onload = e => { try { state = JSON.parse(e.target.result); saveData(); location.reload(); } catch(err) { alert("還原失敗，檔案損壞！"); } }; reader.readAsText(input.files[0]); }
-    function rescueData() { exportData('json'); showToast('💾 資料已下載'); }
-    function resetData() { if(confirm('⚠️ 警告：這將會清除所有資料！確定嗎？')) { localStorage.removeItem(DB_KEY); location.reload(); } }
-    
-    // Start App
-    init();
-</script>
 </body>
 </html>
